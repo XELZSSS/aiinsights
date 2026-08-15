@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AIInsights - AI 模型数据看板，聚合排名、评测、价格、发布动态、提供商分析" />
+    <meta name="theme-color" content="#141418" />
+    <title>AIInsights</title>
+    <link rel="icon" type="image/svg+xml" href="/icons/app-icon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <script>
+      (function () {
+        var stored = null;
+        try {
+          var raw = localStorage.getItem("theme");
+          if (raw) {
+            var parsed = JSON.parse(raw);
+            if (parsed && (parsed.state.themeMode === "dark" || parsed.state.themeMode === "light")) {
+              stored = parsed.state.themeMode;
+            }
+          }
+        } catch (e) {}
+        var dark = stored === "dark" || (stored == null && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) {
+          document.documentElement.classList.add("dark");
+        }
+        var meta = document.querySelector("meta[name='theme-color']");
+        if (meta) {
+          meta.setAttribute("content", dark ? "#07080a" : "#f8f9fb");
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="/src/styles/globals.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/app/main.tsx"></script>
+  </body>
+</html>

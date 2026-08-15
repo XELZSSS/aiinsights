@@ -1,0 +1,78 @@
+import { XMLParser } from "fast-xml-parser";
+import { rssConfig, NEWS_TTL_MS, PARTIAL_FAIL_TTL_MS } from "../../shared/config";
+import { ValidationError } from "../core";
+import { decodeEntities, stripHtml } from "../parser";
+import type { NewsItem } from "../../shared/types";
+import { createSource, deduplicateBy } from "./misc";
+import type { AppContext } from "../context";
+
+const VALID_CATEGORIES = new Set(Object.keys(rssConfig));
+const MAX_ITEMS_PER_FEED = 50;
+const MAX_TOTAL = 50;
+
+const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
+
+function parseFeed(xml: string, sourceUrl: string): NewsItem[] {
+  const feed = parser.parse(xml);
+  const channel = feed?.rss?.channel || feed?.feed;
+  if (!channel) return [];
+  const rawTitle = channel.title;
+  const sourceName =
+    (typeof rawTitle === "string" ? rawTitle : rawTitle?.["#text"]) ||
+    (() => {
+      try {
+        return new URL(sourceUrl).hostname;
+      } catch {
+        return "Unknown";
+      }
+    })();
+  let items = channel.item || channel.entry || [];
+  if (!Array.isArray(items)) items = [items];
+  return items
+    .slice(0, MAX_ITEMS_PER_FEED)
+    .map((item: Record<string, unknown>) => {
+      const title = item.title;
+      const rawLink = item.link;
+      const link = typeof rawLink === "string" ? rawLink : (rawLink as Record<string, unknown>)?.href;
+      if (!title || !link) return null;
+      return {
+        id: String((item.guid as Record<string, unknown>)?.["#text"] || item.guid || item.id || link),
+        title: decodeEntities(stripHtml(String(title))),
+        link: String(link),
+        pubDate: String(item.pubDate || item.published || item.updated || "1970-01-01T00:00:00Z"),
+        source: String(sourceName),
+      };
+    })
+    .filter((x: NewsItem | null): x is NewsItem => x !== null);
+}
+
+export const getNews = createSource<{ category: string }, NewsItem[]>({
+  cacheKey: (p) => `news-${p.category}`,
+  defaultTtl: NEWS_TTL_MS,
+  fetch: async (ctx: AppContext, params) => {
+    const category = params.category;
+    if (!VALID_CATEGORIES.has(category)) {
+      throw new ValidationError(`Invalid news category "${category}". Valid: ${Array.from(VALID_CATEGORIES).join(", ")}`);
+    }
+    const urls = rssConfig[category as keyof typeof rssConfig];
+    const results = await Promise.allSettled(
+      urls.map(async (url) => parseFeed(await ctx.http.text(url, { headers: { accept: "application/rss+xml,application/xml,text/xml,*/*" } }), url)),
+    );
+    const allItems: NewsItem[] = [];
+    let failCount = 0;
+    for (const r of results) {
+      if (r.status === "fulfilled") allItems.push(...r.value);
+      else failCount++;
+    }
+    if (failCount === results.length && results.length > 0) throw new Error(`All ${results.length} RSS feed(s) for "${category}" failed`);
+    allItems.sort((a, b) => {
+      const ta = new Date(a.pubDate).getTime() || 0;
+      const tb = new Date(b.pubDate).getTime() || 0;
+      return tb - ta;
+    });
+    // The same story is often syndicated across feeds; keep the first
+    // occurrence per canonical link and per normalized title.
+    const unique = deduplicateBy(deduplicateBy(allItems, (i) => i.link), (i) => i.title.toLowerCase().trim());
+    return { data: unique.slice(0, MAX_TOTAL), ttl: failCount > 0 ? PARTIAL_FAIL_TTL_MS : NEWS_TTL_MS };
+  },
+});

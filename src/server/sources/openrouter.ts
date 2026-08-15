@@ -1,0 +1,218 @@
+import { upstreamConfig, DEFAULT_TTL_MS, PARTIAL_FAIL_TTL_MS } from "../../shared/config";
+import { numOr } from "../parser";
+import type { OpenRouterAppEntry, OpenRouterRankingsPayload, OpenRouterRankEntry } from "../../shared/types";
+import { createSource, formatSettleErrors } from "./misc";
+import type { AppContext } from "../context";
+
+const OPENROUTER = upstreamConfig.openrouter;
+
+const CREATORS: Record<string, string> = {
+  anthropic: "Anthropic",
+  cohere: "Cohere",
+  deepseek: "DeepSeek",
+  google: "Google",
+  mistralai: "Mistral",
+  "meta-llama": "Meta",
+  minimax: "MiniMax",
+  openai: "OpenAI",
+  qwen: "Qwen",
+  xiaomi: "Xiaomi",
+};
+
+interface ModelRow {
+  date: string;
+  model_permaslug: string;
+  variant: string;
+  variant_permaslug: string;
+  total_completion_tokens: number;
+  total_prompt_tokens: number;
+  total_native_tokens_reasoning: number;
+  count: number;
+  image_output_requests: number;
+  video_output_seconds: number;
+  change: number | null;
+}
+
+interface AppRow {
+  app_id: number;
+  total_tokens: string;
+  total_requests: number;
+  rank: number;
+  app: {
+    id: number;
+    title: string;
+    description: string;
+    origin_url: string;
+    categories: string[];
+  };
+}
+
+interface AppResponse {
+  day: AppRow[];
+  week: AppRow[];
+  month: AppRow[];
+}
+
+function creatorFromSlug(slug: string): string {
+  const p = slug.split("/")[0] || "Unknown";
+  return CREATORS[p.toLowerCase()] || p.charAt(0).toUpperCase() + p.slice(1);
+}
+
+function categoryFrom(slug: string, name: string): OpenRouterRankEntry["category"] {
+  const v = `${slug} ${name}`.toLowerCase();
+  if (/coder|coding|code/.test(v)) return "coding";
+  if (/reasoning|thought|r1|-o1/.test(v)) return "reasoning";
+  return "general";
+}
+
+function titleFromSlug(permaslug: string): string {
+  return (permaslug.split("/").slice(1).join("/") || permaslug)
+    .replace(/[:/]/g, " ")
+    .split("-")
+    .filter(Boolean)
+    .map((p) => (p.length <= 3 || /^\d/.test(p) ? p.toUpperCase() : p.charAt(0).toUpperCase() + p.slice(1)))
+    .join(" ");
+}
+
+const SUM_KEYS = [
+  "total_prompt_tokens",
+  "total_completion_tokens",
+  "total_native_tokens_reasoning",
+  "count",
+  "image_output_requests",
+  "video_output_seconds",
+] as const;
+
+function mergeRows(rows: ModelRow[]): ModelRow[] {
+  const grouped = new Map<string, ModelRow>();
+  let idx = 0;
+  for (const row of rows) {
+    const key = row.variant_permaslug || row.model_permaslug || `unknown-${idx++}`;
+    const existing = grouped.get(key);
+    if (!existing) {
+      grouped.set(key, { ...row, variant_permaslug: key });
+      continue;
+    }
+    for (const k of SUM_KEYS) {
+      existing[k] = numOr(existing[k]) + numOr(row[k]);
+    }
+    if (row.date && (!existing.date || row.date > existing.date)) existing.date = row.date;
+    if (row.change != null) existing.change = row.change;
+  }
+  return Array.from(grouped.values());
+}
+
+function mapModels(rows: ModelRow[], pricingMap: Map<string, { prompt: number; completion: number }>): OpenRouterRankEntry[] {
+  return mergeRows(rows)
+    .sort(
+      (a, b) =>
+        numOr(b.total_prompt_tokens) + numOr(b.total_completion_tokens) - (numOr(a.total_prompt_tokens) + numOr(a.total_completion_tokens)),
+    )
+    .map((row, i) => {
+      const id = row.model_permaslug;
+      const name = titleFromSlug(id);
+      const pricing = pricingMap.get(row.variant_permaslug || id) ?? pricingMap.get(id);
+      const isFree = pricing ? pricing.prompt === 0 && pricing.completion === 0 : undefined;
+      return {
+        rank: i + 1,
+        id,
+        name,
+        creator: creatorFromSlug(id),
+        category: categoryFrom(id, name),
+        variant: row.variant,
+        totalTokens: numOr(row.total_prompt_tokens) + numOr(row.total_completion_tokens),
+        promptTokens: numOr(row.total_prompt_tokens),
+        completionTokens: numOr(row.total_completion_tokens),
+        reasoningTokens: numOr(row.total_native_tokens_reasoning),
+        requestCount: numOr(row.count),
+        imageOutputRequests: numOr(row.image_output_requests),
+        videoOutputSeconds: numOr(row.video_output_seconds),
+        change: row.change ?? null,
+        pricing,
+        isFree,
+      };
+    });
+}
+
+function mapApps(rows: AppRow[]): OpenRouterAppEntry[] {
+  const seen = new Set<number>();
+  return rows
+    .filter((r) => {
+      if (!r.app_id || seen.has(r.app_id)) return false;
+      seen.add(r.app_id);
+      return true;
+    })
+    .sort((a, b) => numOr(b.total_tokens) - numOr(a.total_tokens))
+    .map((row, i) => ({
+      rank: row.rank ?? i + 1,
+      id: String(row.app_id),
+      name: row.app?.title || `App ${row.app_id}`,
+      description: row.app?.description,
+      url: row.app?.origin_url || null,
+      categories: row.app?.categories || [],
+      totalTokens: numOr(row.total_tokens),
+      requestCount: numOr(row.total_requests),
+    }));
+}
+
+interface PricingRow {
+  id: string;
+  pricing?: { prompt?: string | number; completion?: string | number };
+}
+
+type PricingRecord = Record<string, { prompt: number; completion: number }>;
+
+const PRICING_TTL_MS = 30 * 60_000;
+
+function toPricingMap(record: PricingRecord): Map<string, { prompt: number; completion: number }> {
+  return new Map(Object.entries(record));
+}
+
+async function fetchModelPricing(ctx: AppContext): Promise<Map<string, { prompt: number; completion: number }>> {
+  try {
+    const record = await ctx.cache.withTtl("openrouter:pricing-map", PRICING_TTL_MS, async () => {
+      const res = await ctx.http.json<{ data: PricingRow[] }>(`${OPENROUTER}/api/v1/models`);
+      const record: PricingRecord = {};
+      for (const m of res?.data ?? []) {
+        if (!m?.id || !m.pricing) continue;
+        const prompt = Number(m.pricing.prompt);
+        const completion = Number(m.pricing.completion);
+        if (Number.isFinite(prompt) && Number.isFinite(completion)) {
+          record[m.id] = { prompt, completion };
+        }
+      }
+      return { data: record };
+    });
+    return toPricingMap(record);
+  } catch {
+    return new Map<string, { prompt: number; completion: number }>();
+  }
+}
+
+export const getOpenRouterRankings = createSource<Record<string, never>, OpenRouterRankingsPayload>({
+  cacheKey: () => "openrouter-rankings",
+  defaultTtl: DEFAULT_TTL_MS,
+  fetch: async (ctx: AppContext) => {
+    const [modelResult, appResult, pricingResult] = await Promise.allSettled([
+      ctx.http.json<{ data: ModelRow[] }>(`${OPENROUTER}/api/frontend/v1/rankings/models`),
+      ctx.http.json<{ data: AppResponse }>(`${OPENROUTER}/api/frontend/v1/rankings/apps`),
+      fetchModelPricing(ctx),
+    ]);
+    const modelRows = modelResult.status === "fulfilled" ? (modelResult.value?.data ?? []) : [];
+    const appRows = appResult.status === "fulfilled" ? (appResult.value?.data?.day ?? []) : [];
+    const pricingMap = pricingResult.status === "fulfilled" ? pricingResult.value : new Map<string, { prompt: number; completion: number }>();
+    if (modelRows.length === 0 && appRows.length === 0) {
+      const reasons = formatSettleErrors([modelResult, appResult], ["models", "apps"]);
+      throw new Error(`OpenRouter: all upstream requests failed${reasons ? ` (${reasons})` : ""}`);
+    }
+    const partialFailure = modelResult.status !== "fulfilled" || appResult.status !== "fulfilled" || pricingResult.status !== "fulfilled";
+    return {
+      data: {
+        tokenUsageRankings: mapModels(modelRows, pricingMap),
+        appUsageRankings: mapApps(appRows),
+        fetchedAt: new Date().toISOString(),
+      },
+      ttl: partialFailure ? PARTIAL_FAIL_TTL_MS : DEFAULT_TTL_MS,
+    };
+  },
+});

@@ -1,0 +1,49 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "aiinsights",
+  "main": "src/server/worker.ts",
+  "compatibility_date": "2026-07-14",
+  "keep_vars": true,
+
+  "vars": {
+    "CACHE_VERSION": "v4"
+  },
+
+  "assets": {
+    "directory": "./dist/client",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application"
+  },
+
+  // Workers Cache: edge cache in front of the Worker for every response.
+  // Pairs with the Cache-Control / CDN-Cache-Control headers set in
+  // src/server/app.ts (stale-while-revalidate + stale-if-error).
+  "cache": {
+    "enabled": true
+  },
+
+  // Smart Placement: route invocations (including cron warm-ups) to a single
+  // home location so shared in-memory state and KV edge caches stay warm.
+  "placement": {
+    "mode": "smart"
+  },
+
+  "triggers": {
+    "crons": ["*/4 * * * *"]
+  },
+
+  "observability": {
+    "enabled": true
+  },
+
+  "kv_namespaces": [
+    {
+      "binding": "METRICS",
+      "id": "2da8406333284ec79307b7b75034fec7"
+    }
+  ],
+
+  "dev": {
+    "port": 3000
+  }
+}
