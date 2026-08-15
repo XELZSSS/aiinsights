@@ -1,8 +1,8 @@
-import { upstreamConfig, DEFAULT_TTL_MS } from "../../shared/config";
-import { getOpenLicense } from "../parser";
-import type { OpenSourceModelEntry } from "../../shared/types";
-import { createSource } from "./misc";
-import type { AppContext } from "../context";
+import { upstreamConfig, DEFAULT_TTL_MS } from "@/shared/config";
+import { getOpenLicense } from "@/server/parser";
+import type { OpenSourceModelEntry } from "@/shared/types";
+import { createSource } from "@/server/core";
+import type { AppContext } from "@/server/app";
 
 interface HFModel {
   id?: string;
@@ -31,18 +31,15 @@ function mapModel(m: HFModel): OpenSourceModelEntry {
 }
 
 const HF_API = upstreamConfig.huggingface;
-const ALLOWED_SORT = new Set(["trendingScore", "downloads", "likes", "createdAt", "lastModified"]);
-const ALLOWED_DIR = new Set(["-1", "1"]);
 
 export const getModels = createSource<{ sort: string; direction: string; limit: number }, OpenSourceModelEntry[]>({
-  cacheKey: (p) => `opensource-models:${p.sort}:${p.direction}:${p.limit}`,
+  cacheKey: (p) => `opensource-models:${p.sort}:${p.sort === "createdAt" ? p.direction : "-1"}`,
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext, p) => {
-    const safeSort = ALLOWED_SORT.has(p.sort) ? p.sort : "trendingScore";
-    const safeDir = ALLOWED_DIR.has(p.direction) ? p.direction : "-1";
-    const safeLimit = Math.min(Math.max(Math.floor(p.limit) || 50, 1), 500);
-    const items = await ctx.http.json<HFModel[]>(`${HF_API}?sort=${safeSort}&direction=${safeDir}&limit=${safeLimit}&full=true`);
-    if (!Array.isArray(items)) throw new Error(`HuggingFace API returned non-array response (got ${items === null ? "null" : typeof items})`);
+    const direction = p.sort === "createdAt" ? p.direction : "-1";
+    const items = await ctx.http.json<HFModel[]>(`${HF_API}?sort=${p.sort}&direction=${direction}&limit=500&full=true`);
+    if (!Array.isArray(items))
+      throw new Error(`HuggingFace API returned non-array response (got ${items === null ? "null" : typeof items})`);
     return { data: items.map(mapModel).filter((m) => m.downloads > 0) };
   },
 });
@@ -53,7 +50,13 @@ export const getReleases = createSource<Record<string, never>, OpenSourceModelEn
   fetch: async (ctx: AppContext) => {
     const items = await ctx.http.json<HFModel[]>(`${HF_API}?sort=createdAt&direction=-1&limit=500&full=true`);
     const releases = items
-      .filter((m) => Array.isArray(m.tags) && getOpenLicense(m.tags) !== null && typeof m.createdAt === "string" && m.createdAt.length > 0)
+      .filter(
+        (m) =>
+          Array.isArray(m.tags) &&
+          getOpenLicense(m.tags) !== null &&
+          typeof m.createdAt === "string" &&
+          m.createdAt.length > 0,
+      )
       .map(mapModel)
       .sort((a, b) => {
         const da = Date.parse(a.createdAt!);

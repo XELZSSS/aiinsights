@@ -1,12 +1,33 @@
-import { useState, useRef, useEffect, useId, type KeyboardEvent as ReactKeyboardEvent } from "react";
-import { Search, X } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useTranslation } from "../../i18n";
-import { useSearchAllRankings } from "../../hooks";
-import { useSearchStore } from "../../stores";
-import type { SearchResult } from "../../../shared/types";
+import { Suspense, Component, Fragment, memo, useEffect, useId, useRef, useState, type ReactNode, type ErrorInfo, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeft, Loader2, Search, X } from "lucide-react";
+import { useTranslation } from "@/app/i18n";
+import { useSearchAllRankings } from "@/app/hooks";
+import { useSearchStore } from "@/app/stores";
+import { Button } from "@/app/components/ui";
+import { PageContainer } from "@/app/components/layout";
+import type { SearchResult } from "@/shared/types";
+import { cn } from "@/shared/utils";
 
-import { cn } from "../../../shared/utils";
+export function NotFound() {
+  const { t } = useTranslation();
+  return (
+    <PageContainer>
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="text-6xl font-bold text-accent/20 mb-4">404</div>
+        <h1 className="text-2xl font-bold text-text-primary">{t("notFoundTitle")}</h1>
+        <p className="mt-2 text-sm text-text-secondary">{t("notFound")}</p>
+        <Link
+          to="/"
+          className="mt-6 inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-accent border border-accent/30 rounded-lg hover:bg-accent-light transition-colors"
+        >
+          <ArrowLeft size={14} />
+          {t("backToHome")}
+        </Link>
+      </div>
+    </PageContainer>
+  );
+}
 
 const DEBOUNCE_MS = 250;
 
@@ -28,7 +49,6 @@ export function SearchInput() {
     return () => clearTimeout(timer);
   }, [inputValue, setSearchTerm]);
 
-  // Keep local input in sync when the store is reset externally (navigation).
   useEffect(() => {
     setInputValue(searchTerm);
   }, [searchTerm]);
@@ -119,7 +139,7 @@ export function SearchInput() {
         <div
           id={listboxId}
           role="listbox"
-          className="absolute top-full left-0 right-0 mt-1.5 max-h-80 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden bg-bg-card border border-border rounded-lg shadow-lg z-50 sm:w-64"
+          className="absolute top-full left-0 right-0 mt-1.5 max-h-80 overflow-y-auto overscroll-contain no-scrollbar bg-bg-card border border-border rounded-lg shadow-lg z-50 sm:w-64"
         >
           <div className="p-1">
             {results.map((result, index) => (
@@ -129,13 +149,20 @@ export function SearchInput() {
                 type="button"
                 role="option"
                 aria-selected={activeIndex === index}
-                className={cn("w-full text-left p-2.5 rounded-md transition-colors", activeIndex === index ? "bg-hover" : "hover:bg-hover")}
+                className={cn(
+                  "w-full text-left p-2.5 rounded-md transition-colors",
+                  activeIndex === index ? "bg-hover" : "hover:bg-hover",
+                )}
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={() => handleResultClick(result)}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-text-primary truncate">{result.name}</span>
-                  {result.score != null && <span className="text-xs text-text-secondary ml-2 shrink-0 font-mono">{result.score.toFixed(1)}</span>}
+                  {result.score != null && (
+                    <span className="text-xs text-text-secondary ml-2 shrink-0 font-mono">
+                      {result.score.toFixed(1)}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-xs text-text-secondary">{t(result.source as Parameters<typeof t>[0])}</span>
@@ -147,5 +174,73 @@ export function SearchInput() {
         </div>
       )}
     </div>
+  );
+}
+
+interface ErrorBoundaryProps {
+  fallback?: ReactNode;
+  errorTitle?: string;
+  retryLabel?: string;
+  children: ReactNode;
+}
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+  resetKey: number;
+}
+
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  static displayName = "ErrorBoundary";
+  state: ErrorBoundaryState = { hasError: false, error: null, resetKey: 0 };
+  static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error("[ErrorBoundary]", error, info.componentStack);
+  }
+  private handleRetry = () => {
+    this.setState((s) => ({ hasError: false, error: null, resetKey: s.resetKey + 1 }));
+  };
+  render() {
+    if (this.state.hasError) {
+      const title = this.props.errorTitle ?? "Error";
+      const retry = this.props.retryLabel ?? "Retry";
+      return (
+        this.props.fallback ?? (
+          <div className="flex flex-col items-center justify-center min-h-[200px] gap-2 p-4">
+            <p className="text-sm font-bold text-destructive">{title}</p>
+            <p className="text-xs text-text-secondary">{this.state.error?.message}</p>
+            <Button variant="link" size="sm" onClick={this.handleRetry}>
+              {retry}
+            </Button>
+          </div>
+        )
+      );
+    }
+    return <Fragment key={this.state.resetKey}>{this.props.children}</Fragment>;
+  }
+}
+
+export const Spinner = memo(function Spinner({ label }: { label?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-16" role="status" aria-live="polite">
+      <Loader2 className="size-6 animate-spin text-text-secondary" />
+      {label && <p className="text-sm text-text-secondary">{label}</p>}
+    </div>
+  );
+});
+
+interface SuspenseQueryProps {
+  children: ReactNode;
+  fallback?: ReactNode;
+}
+
+export function SuspenseQuery({ children, fallback }: SuspenseQueryProps) {
+  const { t } = useTranslation();
+  const location = useLocation();
+  return (
+    <ErrorBoundary key={location.pathname} errorTitle={t("errorBoundaryTitle")} retryLabel={t("errorBoundaryRetry")}>
+      <Suspense fallback={fallback ?? <Spinner />}>{children}</Suspense>
+    </ErrorBoundary>
   );
 }

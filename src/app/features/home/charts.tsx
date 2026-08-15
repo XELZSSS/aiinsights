@@ -1,20 +1,42 @@
 import { memo, useMemo, useState } from "react";
-import { Cell, Pie, PieChart, ResponsiveContainer, Line, LineChart, CartesianGrid, Tooltip, XAxis, YAxis, Legend } from "recharts";
-import { useTranslation } from "../../i18n";
-import { Card, CardContent } from "../../components/ui";
-import { PageSection } from "../../components/layout";
-import { getModelColor, COOL_COLORS } from "../../../shared/utils";
-import { chartTooltipStyle, formatShortNumber } from "../../../shared/utils/format";
-import { useElementWidth } from "../../hooks";
-import type { ArtificialAnalysisModel } from "../../../shared/types";
-import type { HomeBarStat, HomeToolUsage } from "./HomeView";
+import {
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Line,
+  LineChart,
+  CartesianGrid,
+  Tooltip,
+  XAxis,
+  YAxis,
+  Legend,
+} from "recharts";
+import { useTranslation } from "@/app/i18n";
+import { Card, CardContent, Dot } from "@/app/components/ui";
+import { PageSection } from "@/app/components/layout";
+import { getModelColor, COOL_COLORS, chartTooltipStyle, formatShortNumber } from "@/shared/utils";
+import { useElementWidth } from "@/app/hooks";
+import type { ArtificialAnalysisModel } from "@/shared/types";
+import type { HomeBarStat, HomeToolUsage } from "@/app/features/home/HomeView";
 
-export const ToolUsageShareDonut = memo(function ToolUsageShareDonut({ total, rows }: { total: number; rows: Array<{ name: string; value: number; share: number }> }) {
+export const ToolUsageShareDonut = memo(function ToolUsageShareDonut({
+  total,
+  rows,
+}: {
+  total: number;
+  rows: Array<{ name: string; value: number; share: number }>;
+}) {
   const { t, lang } = useTranslation();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const center = hoveredIndex != null ? rows[hoveredIndex] : null;
 
-  const percent = (v: number) => v.toLocaleString(lang === "zh" ? "zh-CN" : "en-US", { style: "percent", minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const percent = (v: number) =>
+    v.toLocaleString(lang === "zh" ? "zh-CN" : "en-US", {
+      style: "percent",
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
 
   return (
     <div className="flex flex-col gap-3">
@@ -52,9 +74,13 @@ export const ToolUsageShareDonut = memo(function ToolUsageShareDonut({ total, ro
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               {center ? (
                 <>
-                  <span className="text-xs font-bold leading-none text-center">{center.name}</span>
-                  <span className="text-base font-bold leading-none mt-1 font-mono">{formatShortNumber(center.value)}</span>
-                  <span className="text-xs text-text-secondary leading-none mt-0.5">{(center.share * 100).toFixed(1)}%</span>
+                  <span className="text-xs font-bold leading-none text-center max-w-full px-2 truncate">{center.name}</span>
+                  <span className="text-base font-bold leading-none mt-1 font-mono">
+                    {formatShortNumber(center.value)}
+                  </span>
+                  <span className="text-xs text-text-secondary leading-none mt-0.5">
+                    {(center.share * 100).toFixed(1)}%
+                  </span>
                 </>
               ) : (
                 <>
@@ -64,10 +90,10 @@ export const ToolUsageShareDonut = memo(function ToolUsageShareDonut({ total, ro
               )}
             </div>
           </div>
-          <div className="hidden md:flex flex-col gap-2 min-w-0 flex-1">
+          <div className="flex flex-col gap-2 min-w-0 flex-1 w-full">
             {rows.map((row, index) => (
               <div key={row.name} className="grid grid-cols-[10px_1fr_auto] gap-2.5 items-center min-w-0">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getModelColor(index) }} />
+                <Dot color={getModelColor(index)} />
                 <span className="text-sm truncate">{row.name}</span>
                 <span className="text-sm font-semibold font-mono">{percent(row.share)}</span>
               </div>
@@ -108,7 +134,12 @@ export const IndexLineChart = memo(function IndexLineChart({ models }: { models:
         </p>
         <div ref={chartRef} className="w-full h-[200px]">
           {chartWidth > 0 && top10.length > 0 && (
-            <LineChart width={chartWidth} height={200} data={chartData} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
+            <LineChart
+              width={chartWidth}
+              height={200}
+              data={chartData}
+              margin={{ top: 4, right: 12, bottom: 4, left: 0 }}
+            >
               <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
               <XAxis dataKey="name" tick={false} stroke="var(--border)" />
               <YAxis
@@ -188,7 +219,15 @@ export const StatisticsSection = memo(function StatisticsSection({
   );
 });
 
-const RankedStatCard = memo(function RankedStatCard({ title, source, rows }: { title: string; source: string; rows: HomeBarStat[] }) {
+const RankedStatCard = memo(function RankedStatCard({
+  title,
+  source,
+  rows,
+}: {
+  title: string;
+  source: string;
+  rows: HomeBarStat[];
+}) {
   const { t } = useTranslation();
   return (
     <Card accent="top">
@@ -201,7 +240,10 @@ const RankedStatCard = memo(function RankedStatCard({ title, source, rows }: { t
           <div className="flex flex-col gap-2">
             {rows.map((row, i) => (
               <div key={`${row.label}-${i}`} className="flex items-center gap-3 h-6">
-                <span className="text-xs font-bold w-5 text-center shrink-0" style={{ color: COOL_COLORS[i % COOL_COLORS.length] }}>
+                <span
+                  className="text-xs font-bold w-5 text-center shrink-0"
+                  style={{ color: COOL_COLORS[i % COOL_COLORS.length] }}
+                >
                   {i + 1}
                 </span>
                 <span className="text-sm truncate min-w-0 flex-1">{row.label}</span>

@@ -1,8 +1,14 @@
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import type { SearchResult } from "../../shared/types";
-import { useArtificialRankings, useTts, useOpenRouterRankings, useOpenSourceSearchModels, useHallucinationRankings } from "../api/queries";
-import { useSearchStore } from "../stores";
+import type { SearchResult } from "@/shared/types";
+import {
+  useArtificialRankings,
+  useTtsLeaderboard,
+  useOpenRouterRankings,
+  useOpenSourceSearchModels,
+  useHallucinationRankings,
+} from "@/app/api/queries";
+import { useSearchStore } from "@/app/stores";
 
 interface SearchIndex<T> {
   haystacks: string[][];
@@ -29,7 +35,7 @@ export function useSearchAllRankings(searchTerm: string): SearchResult[] {
   const enabled = searchTerm.length >= 2;
   const artificialQ = useArtificialRankings(enabled);
   const openSourceQ = useOpenSourceSearchModels(enabled);
-  const ttsQ = useTts(enabled);
+  const ttsQ = useTtsLeaderboard(enabled);
   const orQ = useOpenRouterRankings(enabled);
 
   const artificialData = artificialQ.data ?? [];
@@ -38,10 +44,16 @@ export function useSearchAllRankings(searchTerm: string): SearchResult[] {
   const openRouterData = orQ.data?.tokenUsageRankings ?? [];
   const hallucinationRankings = useHallucinationRankings(artificialData, enabled);
 
-  const artificialIndex = useMemo(() => buildIndex(artificialData, (m) => [m.name, m.slug, m.model_creators?.name]), [artificialData]);
+  const artificialIndex = useMemo(
+    () => buildIndex(artificialData, (m) => [m.name, m.slug, m.model_creators?.name]),
+    [artificialData],
+  );
   const openRouterIndex = useMemo(() => buildIndex(openRouterData, (m) => [m.name, m.id]), [openRouterData]);
   const openSourceIndex = useMemo(() => buildIndex(openSourceRankings, (m) => [m.id]), [openSourceRankings]);
-  const hallucinationIndex = useMemo(() => buildIndex(hallucinationRankings, (m) => [m.model]), [hallucinationRankings]);
+  const hallucinationIndex = useMemo(
+    () => buildIndex(hallucinationRankings, (m) => [m.model]),
+    [hallucinationRankings],
+  );
   const ttsIndex = useMemo(() => buildIndex(ttsData, (m) => [m.name]), [ttsData]);
 
   const deferredTerm = useDeferredValue(searchTerm);
@@ -133,7 +145,9 @@ export function useFilteredData<T>(data: T[], getSearchFields: (item: T) => stri
 }
 
 export function useIsMobile(breakpoint = 768): boolean {
-  const [isMobile, setIsMobile] = useState(() => (typeof window !== "undefined" ? window.innerWidth < breakpoint : false));
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < breakpoint : false,
+  );
 
   useEffect(() => {
     const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
@@ -162,12 +176,6 @@ export function useElementWidth<T extends HTMLElement>(): [React.RefObject<T | n
   }, []);
 
   return [ref, width];
-}
-
-export function useDocumentTitle(title: string) {
-  useEffect(() => {
-    document.title = title;
-  }, [title]);
 }
 
 export function useSearchResetOnNavigate() {

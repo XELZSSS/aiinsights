@@ -1,8 +1,8 @@
-import { upstreamConfig, DEFAULT_TTL_MS, POLYMARKET_TAGS_TTL_MS } from "../../shared/config";
-import { errorMessage } from "../core";
-import type { ModelPrediction, ReleasePrediction, ProviderPrediction, PredictionsPayload } from "../../shared/types";
-import { createSource, deduplicateBy, formatSettleErrors, settledValues } from "./misc";
-import type { AppContext } from "../context";
+import { upstreamConfig, DEFAULT_TTL_MS, POLYMARKET_TAGS_TTL_MS } from "@/shared/config";
+import { errorMessage } from "@/server/core";
+import type { ModelPrediction, ReleasePrediction, ProviderPrediction, PredictionsPayload } from "@/shared/types";
+import { createSource, deduplicateBy, settleOrThrow } from "@/server/core";
+import type { AppContext } from "@/server/app";
 
 const API = upstreamConfig.polymarket;
 const TOP_N = 6;
@@ -35,7 +35,9 @@ async function discoverAiTags(ctx: AppContext): Promise<Tag[]> {
 
     while (pageNumber < TAGS_MAX_PAGES && found.length < MAX_AI_TAGS) {
       const batchOffsets = Array.from({ length: TAGS_CONCURRENCY }, (_, i) => (pageNumber + i) * TAGS_PAGE_LIMIT);
-      const pageResults = await Promise.allSettled(batchOffsets.map((offset) => ctx.http.json<Tag[]>(`${API}/tags?limit=${TAGS_PAGE_LIMIT}&offset=${offset}`)));
+      const pageResults = await Promise.allSettled(
+        batchOffsets.map((offset) => ctx.http.json<Tag[]>(`${API}/tags?limit=${TAGS_PAGE_LIMIT}&offset=${offset}`)),
+      );
       let batchProgress = false;
       for (const r of pageResults) {
         if (r.status !== "fulfilled" || !Array.isArray(r.value) || r.value.length === 0) {
@@ -162,24 +164,14 @@ function sortByActivity<T extends { volume: number }>(items: T[]): T[] {
   return items.sort((a, b) => b.volume - a.volume).slice(0, TOP_N);
 }
 
-function settleOrThrow<T>(results: PromiseSettledResult<T[]>[], label: string): T[] {
-  const valid = settledValues(results)
-    .filter((v): v is T[] => Array.isArray(v))
-    .flatMap((v) => v);
-  if (valid.length === 0) {
-    const reasons = formatSettleErrors(
-      results,
-      results.map((_, i) => `${label} #${i + 1}`),
-    );
-    throw new Error(`${label}: all upstream requests failed${reasons ? ` (${reasons})` : ""}`);
-  }
-  return valid;
-}
-
 async function fetchLiveMarkets(ctx: AppContext): Promise<Market[]> {
   const tags = await discoverAiTags(ctx);
   const results = await Promise.allSettled(
-    tags.map((tag) => ctx.http.json<Market[]>(`${API}/markets?tag_id=${tag.id}&active=true&closed=false&limit=50&order=volume24hr&ascending=false`)),
+    tags.map((tag) =>
+      ctx.http.json<Market[]>(
+        `${API}/markets?tag_id=${tag.id}&active=true&closed=false&limit=50&order=volume24hr&ascending=false`,
+      ),
+    ),
   );
   const markets = settleOrThrow(results, "Polymarket");
 

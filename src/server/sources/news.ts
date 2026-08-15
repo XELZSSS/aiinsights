@@ -1,10 +1,10 @@
 import { XMLParser } from "fast-xml-parser";
-import { rssConfig, NEWS_TTL_MS, PARTIAL_FAIL_TTL_MS } from "../../shared/config";
-import { ValidationError } from "../core";
-import { decodeEntities, stripHtml } from "../parser";
-import type { NewsItem } from "../../shared/types";
-import { createSource, deduplicateBy } from "./misc";
-import type { AppContext } from "../context";
+import { rssConfig, NEWS_TTL_MS, PARTIAL_FAIL_TTL_MS } from "@/shared/config";
+import { ValidationError } from "@/server/core";
+import { decodeEntities, stripHtml } from "@/server/parser";
+import type { NewsItem } from "@/shared/types";
+import { createSource, deduplicateBy } from "@/server/core";
+import type { AppContext } from "@/server/app";
 
 const VALID_CATEGORIES = new Set(Object.keys(rssConfig));
 const MAX_ITEMS_PER_FEED = 50;
@@ -52,11 +52,18 @@ export const getNews = createSource<{ category: string }, NewsItem[]>({
   fetch: async (ctx: AppContext, params) => {
     const category = params.category;
     if (!VALID_CATEGORIES.has(category)) {
-      throw new ValidationError(`Invalid news category "${category}". Valid: ${Array.from(VALID_CATEGORIES).join(", ")}`);
+      throw new ValidationError(
+        `Invalid news category "${category}". Valid: ${Array.from(VALID_CATEGORIES).join(", ")}`,
+      );
     }
     const urls = rssConfig[category as keyof typeof rssConfig];
     const results = await Promise.allSettled(
-      urls.map(async (url) => parseFeed(await ctx.http.text(url, { headers: { accept: "application/rss+xml,application/xml,text/xml,*/*" } }), url)),
+      urls.map(async (url) =>
+        parseFeed(
+          await ctx.http.text(url, { headers: { accept: "application/rss+xml,application/xml,text/xml,*/*" } }),
+          url,
+        ),
+      ),
     );
     const allItems: NewsItem[] = [];
     let failCount = 0;
@@ -64,15 +71,17 @@ export const getNews = createSource<{ category: string }, NewsItem[]>({
       if (r.status === "fulfilled") allItems.push(...r.value);
       else failCount++;
     }
-    if (failCount === results.length && results.length > 0) throw new Error(`All ${results.length} RSS feed(s) for "${category}" failed`);
+    if (failCount === results.length && results.length > 0)
+      throw new Error(`All ${results.length} RSS feed(s) for "${category}" failed`);
     allItems.sort((a, b) => {
       const ta = new Date(a.pubDate).getTime() || 0;
       const tb = new Date(b.pubDate).getTime() || 0;
       return tb - ta;
     });
-    // The same story is often syndicated across feeds; keep the first
-    // occurrence per canonical link and per normalized title.
-    const unique = deduplicateBy(deduplicateBy(allItems, (i) => i.link), (i) => i.title.toLowerCase().trim());
+    const unique = deduplicateBy(
+      deduplicateBy(allItems, (i) => i.link),
+      (i) => i.title.toLowerCase().trim(),
+    );
     return { data: unique.slice(0, MAX_TOTAL), ttl: failCount > 0 ? PARTIAL_FAIL_TTL_MS : NEWS_TTL_MS };
   },
 });

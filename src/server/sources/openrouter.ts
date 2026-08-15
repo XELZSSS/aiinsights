@@ -1,8 +1,8 @@
-import { upstreamConfig, DEFAULT_TTL_MS, PARTIAL_FAIL_TTL_MS } from "../../shared/config";
-import { numOr } from "../parser";
-import type { OpenRouterAppEntry, OpenRouterRankingsPayload, OpenRouterRankEntry } from "../../shared/types";
-import { createSource, formatSettleErrors } from "./misc";
-import type { AppContext } from "../context";
+import { upstreamConfig, DEFAULT_TTL_MS, PARTIAL_FAIL_TTL_MS } from "@/shared/config";
+import { numOr } from "@/server/parser";
+import type { OpenRouterAppEntry, OpenRouterRankingsPayload, OpenRouterRankEntry } from "@/shared/types";
+import { createSource, formatSettleErrors } from "@/server/core";
+import type { AppContext } from "@/server/app";
 
 const OPENROUTER = upstreamConfig.openrouter;
 
@@ -102,11 +102,16 @@ function mergeRows(rows: ModelRow[]): ModelRow[] {
   return Array.from(grouped.values());
 }
 
-function mapModels(rows: ModelRow[], pricingMap: Map<string, { prompt: number; completion: number }>): OpenRouterRankEntry[] {
+function mapModels(
+  rows: ModelRow[],
+  pricingMap: Map<string, { prompt: number; completion: number }>,
+): OpenRouterRankEntry[] {
   return mergeRows(rows)
     .sort(
       (a, b) =>
-        numOr(b.total_prompt_tokens) + numOr(b.total_completion_tokens) - (numOr(a.total_prompt_tokens) + numOr(a.total_completion_tokens)),
+        numOr(b.total_prompt_tokens) +
+        numOr(b.total_completion_tokens) -
+        (numOr(a.total_prompt_tokens) + numOr(a.total_completion_tokens)),
     )
     .map((row, i) => {
       const id = row.model_permaslug;
@@ -200,12 +205,16 @@ export const getOpenRouterRankings = createSource<Record<string, never>, OpenRou
     ]);
     const modelRows = modelResult.status === "fulfilled" ? (modelResult.value?.data ?? []) : [];
     const appRows = appResult.status === "fulfilled" ? (appResult.value?.data?.day ?? []) : [];
-    const pricingMap = pricingResult.status === "fulfilled" ? pricingResult.value : new Map<string, { prompt: number; completion: number }>();
+    const pricingMap =
+      pricingResult.status === "fulfilled"
+        ? pricingResult.value
+        : new Map<string, { prompt: number; completion: number }>();
     if (modelRows.length === 0 && appRows.length === 0) {
       const reasons = formatSettleErrors([modelResult, appResult], ["models", "apps"]);
       throw new Error(`OpenRouter: all upstream requests failed${reasons ? ` (${reasons})` : ""}`);
     }
-    const partialFailure = modelResult.status !== "fulfilled" || appResult.status !== "fulfilled" || pricingResult.status !== "fulfilled";
+    const partialFailure =
+      modelResult.status !== "fulfilled" || appResult.status !== "fulfilled" || pricingResult.status !== "fulfilled";
     return {
       data: {
         tokenUsageRankings: mapModels(modelRows, pricingMap),

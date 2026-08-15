@@ -1,14 +1,32 @@
 import { memo, type ComponentType, type KeyboardEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, X, Trash2, ArrowLeftRight } from "lucide-react";
-import { Card, CardContent, Button } from "../ui";
-import { useTranslation } from "../../i18n";
-import type { TranslationKey, TFunction } from "../../../shared/i18n";
-import type { ArtificialAnalysisModel } from "../../../shared/types";
-import { PRICING_BLENDS } from "../../../shared/config";
-import { cn, modelId, formatBoolean, formatContext, formatCost, formatPricePerMillion, formatScore, benchmarkLabel, orNA } from "../../../shared/utils";
+import { Card, CardContent, Button } from "@/app/components/ui";
+import { useTranslation } from "@/app/i18n";
+import type { TranslationKey, TFunction } from "@/shared/i18n";
+import type { ArtificialAnalysisModel } from "@/shared/types";
+import { PRICING_BLENDS } from "@/shared/config";
+import {
+  cn,
+  modelId,
+  formatBoolean,
+  formatContext,
+  formatCost,
+  formatPricePerMillion,
+  formatScore,
+  benchmarkLabel,
+  orNA,
+} from "@/shared/utils";
 
-export function BackButton({ labelKey = "backToHome", to, state }: { labelKey?: TranslationKey; to: string; state?: unknown }) {
+export function BackButton({
+  labelKey = "backToHome",
+  to,
+  state,
+}: {
+  labelKey?: TranslationKey;
+  to: string;
+  state?: unknown;
+}) {
   const navigate = useNavigate();
   const { t } = useTranslation();
   return (
@@ -37,9 +55,18 @@ export function CompareChipBar({
     <div className="flex flex-wrap gap-3 items-center justify-between p-3 rounded-lg border border-border bg-bg-secondary/50">
       <div className="flex flex-wrap gap-2 items-center">
         {models.map((model) => (
-          <span key={modelId(model)} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg-card border border-border text-sm">
+          <span
+            key={modelId(model)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg-card border border-border text-sm"
+          >
             <span className="text-sm font-medium truncate max-w-[120px]">{model.short_name || model.name}</span>
-            <Button variant="ghost" size="icon" onClick={() => onRemove(model)} className="shrink-0 -mr-1" aria-label={`${t("remove")} ${model.short_name || model.name}`}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onRemove(model)}
+              className="shrink-0 -mr-1"
+              aria-label={`${t("remove")} ${model.short_name || model.name}`}
+            >
               <X size={14} />
             </Button>
           </span>
@@ -55,7 +82,49 @@ export function CompareChipBar({
           </Button>
         )}
       </div>
-      {onCompare && !canCompare && models.length > 0 && <p className="text-xs text-text-secondary w-full">{t("compareLimit")}</p>}
+      {onCompare && !canCompare && models.length > 0 && (
+        <p className="text-xs text-text-secondary w-full">{t("compareLimit")}</p>
+      )}
+    </div>
+  );
+}
+
+export function SegmentedGroup({
+  className,
+  children,
+  ...rest
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div className={cn("flex gap-1 p-0.5 rounded-lg bg-bg-secondary", className)} {...rest}>
+      {children}
+    </div>
+  );
+}
+
+export function CardGrid({
+  cols = 3,
+  gap = 2,
+  className,
+  children,
+}: {
+  cols?: 2 | 3 | 4;
+  gap?: 2 | 3 | 4;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={cn(
+        "grid grid-cols-1 sm:grid-cols-2",
+        cols === 3 && "lg:grid-cols-3",
+        cols === 4 && "lg:grid-cols-4",
+        gap === 2 && "gap-2",
+        gap === 3 && "gap-3",
+        gap === 4 && "gap-4",
+        className,
+      )}
+    >
+      {children}
     </div>
   );
 }
@@ -65,7 +134,18 @@ export function DetailLayout({ children }: { children: ReactNode }) {
 }
 
 export function StatGrid({ columns = 4, children }: { columns?: 2 | 3 | 4; children: ReactNode }) {
-  return <div className={cn("grid gap-3", columns === 2 && "grid-cols-2", columns === 3 && "grid-cols-3", columns === 4 && "grid-cols-2 md:grid-cols-4")}>{children}</div>;
+  return (
+    <div
+      className={cn(
+        "grid gap-3",
+        columns === 2 && "grid-cols-2",
+        columns === 3 && "grid-cols-3",
+        columns === 4 && "grid-cols-2 md:grid-cols-4",
+      )}
+    >
+      {children}
+    </div>
+  );
 }
 
 export function InfoGrid({ children }: { children: ReactNode }) {
@@ -83,12 +163,22 @@ export const InfoCard = memo(function InfoCard({ title, children }: { title: str
   );
 });
 
-export const InfoRow = memo(function InfoRow({ label, value, compact = false }: { label: string; value: ReactNode; compact?: boolean }) {
+export const InfoRow = memo(function InfoRow({
+  label,
+  value,
+  compact = false,
+}: {
+  label: string;
+  value: ReactNode;
+  compact?: boolean;
+}) {
   const textSize = compact ? "text-xs" : "text-sm";
   return (
     <div className={cn("flex flex-row justify-between min-w-0 py-1", compact ? "gap-2" : "gap-4")}>
       <p className={cn(textSize, "text-text-secondary truncate")}>{label}</p>
-      <p className={cn(textSize, "font-mono tabular-nums text-right truncate text-text-primary font-medium")}>{value}</p>
+      <p className={cn(textSize, "font-mono tabular-nums text-right truncate text-text-primary font-medium")}>
+        {value}
+      </p>
     </div>
   );
 });
@@ -100,7 +190,17 @@ const MODALITY_STYLES = {
   video: "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
 } as const;
 
-function ModalitySection({ label, prefix, model, t }: { label: string; prefix: "input" | "output"; model: ArtificialAnalysisModel; t: TFunction }) {
+function ModalitySection({
+  label,
+  prefix,
+  model,
+  t,
+}: {
+  label: string;
+  prefix: "input" | "output";
+  model: ArtificialAnalysisModel;
+  t: TFunction;
+}) {
   const key = (m: string) => `${prefix}_modality_${m}` as keyof ArtificialAnalysisModel;
   return (
     <div>
@@ -139,13 +239,21 @@ export function ModelDetailContent({ model }: { model: ArtificialAnalysisModel }
         <InfoCard title={t("pricing")}>
           <InfoRow compact label={t("promptPrice")} value={formatPricePerMillion(pricing?.input, t)} />
           <InfoRow compact label={t("completionPrice")} value={formatPricePerMillion(pricing?.output, t)} />
-          <InfoRow compact label={t("blendedPrice")} value={formatPricePerMillion(pricing?.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1], t)} />
+          <InfoRow
+            compact
+            label={t("blendedPrice")}
+            value={formatPricePerMillion(pricing?.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1], t)}
+          />
         </InfoCard>
       </InfoGrid>
       {model.benchmarks && Object.values(model.benchmarks).some((v) => v != null) && (
         <InfoCard title={t("benchmarks")}>
           <StatGrid columns={4}>
-            {Object.entries(model.benchmarks).map(([key, value]) => (value == null ? null : <StatCard key={key} label={benchmarkLabel(key, t)} value={formatScore(t, value)} />))}
+            {Object.entries(model.benchmarks).map(([key, value]) =>
+              value == null ? null : (
+                <StatCard key={key} label={benchmarkLabel(key, t)} value={formatScore(t, value)} />
+              ),
+            )}
           </StatGrid>
         </InfoCard>
       )}
@@ -182,18 +290,6 @@ export const RightAlignedText = memo(function RightAlignedText({ children, class
   return <p className={cn("overflow-hidden text-ellipsis whitespace-nowrap text-right", className)}>{children}</p>;
 });
 
-export const SectionHeader = memo(function SectionHeader({ title, meta, className, accent = false }: { title: string; meta?: string; className?: string; accent?: boolean }) {
-  return (
-    <div className={cn("flex flex-col sm:flex-row gap-1 items-start sm:items-center justify-between", className)}>
-      <div className="flex items-center gap-3">
-        {accent && <div className="w-1 h-5 rounded-full bg-accent shrink-0" />}
-        <p className="text-lg font-bold tracking-tight text-text-primary">{title}</p>
-      </div>
-      {meta && <p className="text-xs text-text-secondary">{meta}</p>}
-    </div>
-  );
-});
-
 interface StatCardProps {
   label: string;
   value: ReactNode;
@@ -203,9 +299,16 @@ interface StatCardProps {
   trend?: "up" | "down" | "neutral";
 }
 
-export const StatCard = memo(function StatCard({ label, value, icon: Icon, className, valueClassName, trend }: StatCardProps) {
+export const StatCard = memo(function StatCard({
+  label,
+  value,
+  icon: Icon,
+  className,
+  valueClassName,
+  trend,
+}: StatCardProps) {
   return (
-    <Card className={cn(className)}>
+    <Card className={className}>
       <CardContent padding="sm" className="text-center">
         <div className="flex items-center justify-center gap-1.5 mb-1.5 min-w-0">
           {Icon && (
@@ -213,9 +316,18 @@ export const StatCard = memo(function StatCard({ label, value, icon: Icon, class
               <Icon className="size-3.5" />
             </span>
           )}
-          <p className={cn("text-[11px] text-text-secondary font-medium uppercase tracking-wider truncate")}>{label}</p>
+          <p className="text-[11px] text-text-secondary font-medium uppercase tracking-wider truncate">{label}</p>
         </div>
-        <p className={cn("text-base font-bold tracking-tight", trend === "up" && "text-success", trend === "down" && "text-destructive", valueClassName)}>{value}</p>
+        <p
+          className={cn(
+            "text-base font-bold tracking-tight break-words min-w-0",
+            trend === "up" && "text-success",
+            trend === "down" && "text-destructive",
+            valueClassName,
+          )}
+        >
+          {value}
+        </p>
       </CardContent>
     </Card>
   );
@@ -232,7 +344,16 @@ interface TabButtonProps {
   "aria-controls"?: string;
 }
 
-export const TabButton = memo(function TabButton({ active, onClick, children, className, size = "md", id, tabIndex, "aria-controls": ariaControls }: TabButtonProps) {
+export const TabButton = memo(function TabButton({
+  active,
+  onClick,
+  children,
+  className,
+  size = "md",
+  id,
+  tabIndex,
+  "aria-controls": ariaControls,
+}: TabButtonProps) {
   return (
     <button
       type="button"
@@ -245,7 +366,9 @@ export const TabButton = memo(function TabButton({ active, onClick, children, cl
       className={cn(
         "rounded-md font-medium transition-colors duration-150 whitespace-nowrap shrink-0",
         size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm",
-        active ? "bg-bg-card text-text-primary shadow-sm border border-border" : "text-text-secondary hover:text-text-primary border border-transparent",
+        active
+          ? "bg-bg-card text-text-primary shadow-sm border border-border"
+          : "text-text-secondary hover:text-text-primary border border-transparent",
         "outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-1",
         className,
       )}
@@ -289,8 +412,8 @@ export function TabContainer({ tabs, activeTab, className, tabSize = "md", onTab
 
   return (
     <div className={cn("flex flex-col gap-5", className)}>
-      <div
-        className="flex gap-1 p-1 rounded-lg bg-bg-secondary w-fit max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      <SegmentedGroup
+        className="p-1 w-fit max-w-full overflow-x-auto no-scrollbar"
         role="tablist"
         onKeyDown={handleTablistKeyDown}
       >
@@ -307,7 +430,7 @@ export function TabContainer({ tabs, activeTab, className, tabSize = "md", onTab
             {tab.label}
           </TabButton>
         ))}
-      </div>
+      </SegmentedGroup>
       <div role="tabpanel" id={`panel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
         {content}
       </div>

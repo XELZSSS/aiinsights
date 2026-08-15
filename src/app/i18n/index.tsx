@@ -1,7 +1,7 @@
 import { createContext, use, useCallback, useEffect, useMemo, type ReactNode } from "react";
-import { useLangStore } from "../stores";
-import type { Lang, TFunction } from "../../shared/i18n";
-import { createT } from "../../shared/i18n";
+import { useLangStore } from "@/app/stores";
+import type { Lang, TFunction } from "@/shared/i18n";
+import { createT } from "@/shared/i18n";
 
 export interface I18nContextValue {
   lang: Lang;
@@ -22,12 +22,7 @@ function syncDocumentMeta(lang: Lang) {
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
   const desc = document.querySelector('meta[name="description"]');
   if (desc) {
-    desc.setAttribute(
-      "content",
-      lang === "zh"
-        ? "AIInsights - AI 模型数据看板，聚合排名、评测、价格、发布动态、提供商分析"
-        : "AIInsights - AI Model Dashboard aggregating rankings, benchmarks, pricing, releases, and provider analysis",
-    );
+    desc.setAttribute("content", createT(lang)("metaDescription"));
   }
 }
 
@@ -44,9 +39,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const t = useCallback(createT(lang), [lang]);
 
-  const contextValue = useMemo<I18nContextValue>(() => ({ lang, t, setLang, toggleLang }), [lang, t, setLang, toggleLang]);
+  const contextValue = useMemo<I18nContextValue>(
+    () => ({ lang, t, setLang, toggleLang }),
+    [lang, t, setLang, toggleLang],
+  );
 
   return <I18nContext.Provider value={contextValue}>{children}</I18nContext.Provider>;
 }
 
-export type { Lang, TranslationKey, TFunction } from "../../shared/i18n";
+export type { Lang, TranslationKey, TFunction } from "@/shared/i18n";

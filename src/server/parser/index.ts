@@ -14,8 +14,8 @@ export const strOr = (v: unknown): string | null | undefined => {
 
 export const bool = (v: unknown): boolean | undefined => (typeof v === "boolean" ? v : undefined);
 
-export const obj = (v: unknown): Record<string, unknown> | undefined => (typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : undefined);
-
+export const obj = (v: unknown): Record<string, unknown> | undefined =>
+  typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : undefined;
 
 const NAMED_ENTITIES: Record<string, string> = {
   amp: "&",
@@ -70,7 +70,6 @@ function safeFromCodePoint(cp: number): string {
 export function stripHtml(s: string): string {
   return s.replace(/<[^>]*>?/gm, "");
 }
-
 
 const OPEN_LICENSES = new Set([
   "apache-2.0",
@@ -129,7 +128,6 @@ export function getOpenLicense(tags: string[]): string | null {
   return null;
 }
 
-
 export function dfsCollect<T>(root: unknown, predicate: (node: unknown) => T | null): T[] {
   const results: T[] = [];
   const stack: unknown[] = [root];
@@ -178,7 +176,7 @@ export function parseRscScriptArray<T>(html: string, key: string): T[] {
       const arr = JSON.parse(body.slice(start, end + 1)) as T[];
       if (Array.isArray(arr) && arr.length > 0) return arr;
     } catch {
-      /* try next chunk */
+      continue;
     }
   }
   return [];

@@ -1,8 +1,18 @@
-import { DEFAULT_TTL_MS, PRICING_BLENDS, BENCHMARK_KEYS } from "../../shared/config";
-import type { ArtificialAnalysisModel, TtsModel } from "../../shared/types";
-import type { AppContext } from "../context";
-import { num, str, strOr, bool, obj, dfsCollect, findNextData } from "../parser";
-import { createSource, deduplicateBy, fetchAaRsc, parseAaPayload } from "./misc";
+import { upstreamConfig, DEFAULT_TTL_MS, PRICING_BLENDS, BENCHMARK_KEYS } from "@/shared/config";
+import type { ArtificialAnalysisModel, TtsModel } from "@/shared/types";
+import type { AppContext } from "@/server/app";
+import { num, str, strOr, bool, obj, dfsCollect, findNextData, parseRscPayload } from "@/server/parser";
+import { createSource, deduplicateBy } from "@/server/core";
+
+const RSC_HEADERS = { RSC: "1", "Next-Router-State-Tree": "%5B%5D" } as const;
+
+async function fetchAaRsc(ctx: AppContext, path: string): Promise<string> {
+  return ctx.http.text(`${upstreamConfig.artificialAnalysis}${path}`, {
+    headers: { ...RSC_HEADERS },
+    retries: 0,
+    timeoutMs: 30_000,
+  });
+}
 
 function compactBenchmarks(m: Record<string, unknown>): Record<string, number | null> {
   const nested = obj(m.benchmarks);
@@ -13,7 +23,10 @@ function compactBenchmarks(m: Record<string, unknown>): Record<string, number | 
   return benchmarks;
 }
 
-function compactPricing(m: Record<string, unknown>, iic: Record<string, unknown> | undefined): ArtificialAnalysisModel["pricing"] {
+function compactPricing(
+  m: Record<string, unknown>,
+  iic: Record<string, unknown> | undefined,
+): ArtificialAnalysisModel["pricing"] {
   return {
     input: num(m.price_1m_input_tokens),
     output: num(m.price_1m_output_tokens),
@@ -29,7 +42,10 @@ function compactPricing(m: Record<string, unknown>, iic: Record<string, unknown>
   };
 }
 
-function compactSpeed(m: Record<string, unknown>, td: Record<string, unknown> | undefined): ArtificialAnalysisModel["speed"] {
+function compactSpeed(
+  m: Record<string, unknown>,
+  td: Record<string, unknown> | undefined,
+): ArtificialAnalysisModel["speed"] {
   const median_output_speed = num(td?.median_output_speed) ?? num(m.median_output_speed);
   return { median_output_speed };
 }
@@ -95,8 +111,12 @@ export const getIntelligenceIndex = createSource<Record<string, never>, Artifici
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext) => {
     const body = await fetchAaRsc(ctx, "/evaluations/artificial-analysis-intelligence-index");
-    const raw = parseAaPayload<Record<string, unknown>>(body, "defaultData", (tree) => findNextData(tree, "defaultData"));
-    const models = raw.map(compact).sort((a, b) => (b.intelligence_index ?? -Infinity) - (a.intelligence_index ?? -Infinity));
+    const raw = parseRscPayload<Record<string, unknown>>(body, "defaultData", (tree) =>
+      findNextData(tree, "defaultData"),
+    );
+    const models = raw
+      .map(compact)
+      .sort((a, b) => (b.intelligence_index ?? -Infinity) - (a.intelligence_index ?? -Infinity));
     const invalid = models.filter((m) => !m.id || !m.name);
     if (invalid.length > 0) ctx.log("warn", `[artificial] ${invalid.length} models with empty id/name after mapping`);
     return { data: models };
@@ -108,7 +128,7 @@ export const getTtsLeaderboard = createSource<Record<string, never>, TtsModel[]>
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext) => {
     const body = await fetchAaRsc(ctx, "/text-to-speech/models");
-    const entries = parseAaPayload<TtsModel>(body, "pricePer1mCharacters", (tree) =>
+    const entries = parseRscPayload<TtsModel>(body, "pricePer1mCharacters", (tree) =>
       dfsCollect(tree, (node) => {
         if (typeof node !== "object" || !node || Array.isArray(node)) return null;
         const obj = node as Record<string, unknown>;
@@ -124,7 +144,9 @@ export const getTtsLeaderboard = createSource<Record<string, never>, TtsModel[]>
         return {
           id: typeof model.id === "string" ? model.id : name,
           name,
-          provider: (typeof creator?.name === "string" ? creator.name : null) ?? (typeof host?.name === "string" ? host.name : null),
+          provider:
+            (typeof creator?.name === "string" ? creator.name : null) ??
+            (typeof host?.name === "string" ? host.name : null),
           quality_elo: qualityElo,
           speed_chars_per_sec: num(perf?.medianCharactersPerSecond),
           price_per_1m_chars: price,

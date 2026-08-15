@@ -1,11 +1,23 @@
 import { memo, useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Home, Award, Megaphone, ShieldCheck, Newspaper, Settings, MoreHorizontal, Languages, Moon, Sun, X } from "lucide-react";
-import { Sheet, Button } from "../ui";
-import { useTranslation } from "../../i18n";
-import { useThemeStore } from "../../stores";
-import { REPO_URL } from "../../../shared/config";
-import { cn } from "../../../shared/utils";
+import {
+  Home,
+  Award,
+  Megaphone,
+  ShieldCheck,
+  Newspaper,
+  Settings,
+  MoreHorizontal,
+  Languages,
+  Moon,
+  Sun,
+  X,
+} from "lucide-react";
+import { Sheet, Button } from "@/app/components/ui";
+import { useTranslation } from "@/app/i18n";
+import { useThemeStore } from "@/app/stores";
+import { REPO_URL } from "@/shared/config";
+import { cn } from "@/shared/utils";
 
 interface NavItem {
   path: string;
@@ -20,7 +32,12 @@ export function useNavigation() {
   return useMemo(() => {
     const primary: NavItem[] = [
       { path: "/", label: t("home"), icon: <Home size={18} /> },
-      { path: "/models", label: t("rankings"), icon: <Award size={18} />, matchPrefix: ["/model/", "/compare", "/price-compare"] },
+      {
+        path: "/models",
+        label: t("rankings"),
+        icon: <Award size={18} />,
+        matchPrefix: ["/model/", "/compare", "/price-compare"],
+      },
     ];
     const secondary: NavItem[] = [
       { path: "/releases", label: t("releases"), icon: <Megaphone size={18} />, matchPrefix: ["/score-release"] },
@@ -49,42 +66,51 @@ export function DesktopNav({ onSettingsOpen }: { onSettingsOpen: () => void }) {
   const { t } = useTranslation();
 
   return (
-    <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 h-14 items-center border-b border-border bg-nav-bg backdrop-blur-lg px-6">
-      <button type="button" onClick={() => navigate("/")} aria-label={t("home")} className="flex items-center gap-2 mr-8 shrink-0">
-        <svg fill="#8B5CF6" viewBox="0 0 24 24" className="size-5" xmlns="http://www.w3.org/2000/svg">
-          <path d="M4.59 7.41l4.94 3.54L4.59 24zm0-7.41v6.36l9.53 5.29 4.59-3.52zm0 24l14.82-8.47v-6.7Z" />
-        </svg>
-        <span className="text-sm font-bold">AIInsights</span>
-      </button>
-      <div className="flex items-center gap-1">
-        {all.map((item) => {
-          const active = isNavActive(pathname, item);
-          return (
-            <button
-              type="button"
-              key={item.path}
-              aria-label={item.label}
-              aria-current={active ? "page" : undefined}
-              onClick={() => navigate(item.path)}
-              className={`relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                active ? "text-accent bg-accent-light" : "text-text-secondary hover:text-text-primary hover:bg-hover"
-              }`}
-            >
-              {item.label}
-              {active && <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-accent rounded-full" />}
-            </button>
-          );
-        })}
-      </div>
-      <div className="ml-auto">
+    <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 h-14 items-center border-b border-border bg-nav-bg backdrop-blur-lg">
+      <div className="max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 flex items-center">
         <button
           type="button"
-          aria-label={t("settings")}
-          onClick={onSettingsOpen}
-          className="p-2 text-text-secondary hover:text-text-primary rounded-md hover:bg-hover transition-colors"
+          onClick={() => navigate("/")}
+          aria-label={t("home")}
+          className="flex items-center gap-2 mr-8 shrink-0"
         >
-          <Settings size={16} />
+          <svg fill="#8B5CF6" viewBox="0 0 24 24" className="size-5" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4.59 7.41l4.94 3.54L4.59 24zm0-7.41v6.36l9.53 5.29 4.59-3.52zm0 24l14.82-8.47v-6.7Z" />
+          </svg>
+          <span className="text-sm font-bold">AIInsights</span>
         </button>
+        <div className="flex items-center gap-1">
+          {all.map((item) => {
+            const active = isNavActive(pathname, item);
+            return (
+              <button
+                type="button"
+                key={item.path}
+                aria-label={item.label}
+                aria-current={active ? "page" : undefined}
+                onClick={() => navigate(item.path)}
+                className={`relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                  active ? "text-accent bg-accent-light" : "text-text-secondary hover:text-text-primary hover:bg-hover"
+                }`}
+              >
+                {item.label}
+                {active && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-accent rounded-full" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <div className="ml-auto">
+          <button
+            type="button"
+            aria-label={t("settings")}
+            onClick={onSettingsOpen}
+            className="p-2 text-text-secondary hover:text-text-primary rounded-md hover:bg-hover transition-colors"
+          >
+            <Settings size={16} />
+          </button>
+        </div>
       </div>
     </nav>
   );
@@ -129,7 +155,15 @@ export function MobileNav({ onMoreOpen }: { onMoreOpen: () => void }) {
   );
 }
 
-export function MobileMoreSheet({ open, onClose, onSettingsOpen }: { open: boolean; onClose: () => void; onSettingsOpen: () => void }) {
+export function MobileMoreSheet({
+  open,
+  onClose,
+  onSettingsOpen,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSettingsOpen: () => void;
+}) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -175,7 +209,15 @@ export function MobileMoreSheet({ open, onClose, onSettingsOpen }: { open: boole
   );
 }
 
-const SettingRow = memo(function SettingRow({ icon, label, button }: { icon: ReactNode; label: string; button: ReactNode }) {
+const SettingRow = memo(function SettingRow({
+  icon,
+  label,
+  button,
+}: {
+  icon: ReactNode;
+  label: string;
+  button: ReactNode;
+}) {
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-2">
@@ -211,7 +253,13 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
           }
         />
         <SettingRow
-          icon={themeMode === "light" ? <Moon size={16} className="text-text-secondary" /> : <Sun size={16} className="text-text-secondary" />}
+          icon={
+            themeMode === "light" ? (
+              <Moon size={16} className="text-text-secondary" />
+            ) : (
+              <Sun size={16} className="text-text-secondary" />
+            )
+          }
           label={t("themeToggle")}
           button={
             <Button variant="outline" size="sm" className="w-24" onClick={toggleTheme}>
@@ -227,7 +275,12 @@ export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () =>
           }
           label="GitHub"
           button={
-            <Button variant="outline" size="sm" className="w-24" onClick={() => window.open(REPO_URL, "_blank", "noopener,noreferrer")}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-24"
+              onClick={() => window.open(REPO_URL, "_blank", "noopener,noreferrer")}
+            >
               GitHub
             </Button>
           }
@@ -241,11 +294,19 @@ export function PageContainer({ children, className }: { children: ReactNode; cl
   return <div className={cn("max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6", className)}>{children}</div>;
 }
 
-export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: ReactNode }) {
+export function PageHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+}) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary">{title}</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary break-words min-w-0">{title}</h1>
         {description && <p className="text-sm text-text-secondary mt-0.5">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
@@ -253,7 +314,17 @@ export function PageHeader({ title, description, actions }: { title: string; des
   );
 }
 
-export function PageSection({ title, description, children, className }: { title?: string; description?: string; children: ReactNode; className?: string }) {
+export function PageSection({
+  title,
+  description,
+  children,
+  className,
+}: {
+  title?: string;
+  description?: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
     <div className={cn("mb-8", className)}>
       {title && (
@@ -290,7 +361,11 @@ export function AppShell({ children }: { children: ReactNode }) {
         {t("skipToContent")}
       </a>
       <DesktopNav onSettingsOpen={() => setSettingsOpen(true)} />
-      <main id="main-content" tabIndex={-1} className="flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable] pt-0 md:pt-16 pb-14 md:pb-4">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable] pt-0 md:pt-16 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-4"
+      >
         {children}
       </main>
       <MobileNav onMoreOpen={() => setMobileMoreOpen(true)} />

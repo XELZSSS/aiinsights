@@ -1,14 +1,14 @@
 import { Plus, Check } from "lucide-react";
-import type { DataTableColumn } from "../../components/data/DataTable";
-import { Badge, TagBadge, Button } from "../../components/ui";
-import { RightAlignedText, ModelDetailContent, RankingNameCell } from "../../components/composite";
-import { formatContext, formatScore, formatDollar, formatShortNumber, formatTrend } from "../../../shared/utils/format";
-import { cn } from "../../../shared/utils";
-import type { ArtificialAnalysisModel, OpenRouterRankEntry, OpenRouterAppEntry } from "../../../shared/types";
-import type { TFunction, TranslationKey } from "../../../shared/i18n";
-import { useTranslation } from "../../i18n";
-import { useCompareStore } from "../../stores";
-import { PRICING_BLENDS } from "../../../shared/config";
+import type { DataTableColumn } from "@/app/components/data";
+import { Badge, TagBadge, Button } from "@/app/components/ui";
+import { RightAlignedText, ModelDetailContent, RankingNameCell } from "@/app/components/composite";
+import { formatContext, formatScore, formatDollar, formatShortNumber, formatTrend } from "@/shared/utils";
+import { cn } from "@/shared/utils";
+import type { ArtificialAnalysisModel, OpenRouterRankEntry, OpenRouterAppEntry } from "@/shared/types";
+import type { TFunction, TranslationKey } from "@/shared/i18n";
+import { useTranslation } from "@/app/i18n";
+import { useCompareStore } from "@/app/stores";
+import { PRICING_BLENDS } from "@/shared/config";
 
 function useIsCompared(model: ArtificialAnalysisModel): boolean {
   return useCompareStore((s) => s.compareIds.includes(model.id || model.slug));
@@ -85,7 +85,11 @@ function priceCell(get: (m: PricedModel) => number | null | undefined, t: TFunct
   return (m: PricedModel) => formatDollar(get(m), t);
 }
 
-function scoreColumn(id: string, accessor: (m: ArtificialAnalysisModel) => number | null | undefined, t: TFunction): DataTableColumn<ArtificialAnalysisModel> {
+function scoreColumn(
+  id: string,
+  accessor: (m: ArtificialAnalysisModel) => number | null | undefined,
+  t: TFunction,
+): DataTableColumn<ArtificialAnalysisModel> {
   return {
     id,
     align: "right",
@@ -119,9 +123,6 @@ export function buildRankingColumns(t: TFunction): DataTableColumn<ArtificialAna
   ];
 }
 
-// Pricing columns are computed once per `t`, independent of the token inputs;
-// per-model monthly cost is derived upstream (see useCostEstimator in the view)
-// so this array is never rebuilt when the user edits token counts.
 export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[] {
   return [
     {
@@ -192,13 +193,17 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
 
 function trendClass(change?: number | null) {
   if (change == null || change === 0) return "bg-bg-tertiary text-text-secondary border-border";
-  return change > 0 ? "bg-success/10 text-success border-success/20" : "bg-destructive/10 text-destructive border-destructive/20";
+  return change > 0
+    ? "bg-success/10 text-success border-success/20"
+    : "bg-destructive/10 text-destructive border-destructive/20";
 }
 
 const tokenColumn = <T extends { totalTokens?: number | null }>(): DataTableColumn<T> => ({
   id: "tokens",
   align: "right",
-  cell: (item) => <span className="font-mono font-semibold text-text-primary">{formatShortNumber(item.totalTokens || 0)}</span>,
+  cell: (item) => (
+    <span className="font-mono font-semibold text-text-primary">{formatShortNumber(item.totalTokens || 0)}</span>
+  ),
 });
 
 const requestColumn = <T extends { requestCount?: number | null }>(): DataTableColumn<T> => ({
@@ -212,14 +217,18 @@ const imageColumn = <T extends { imageOutputRequests?: number | null }>(): DataT
   id: "images",
   align: "right",
   hiddenMd: true,
-  cell: (item) => <span className="font-mono text-text-secondary">{formatShortNumber(item.imageOutputRequests || 0)}</span>,
+  cell: (item) => (
+    <span className="font-mono text-text-secondary">{formatShortNumber(item.imageOutputRequests || 0)}</span>
+  ),
 });
 
 const videoColumn = <T extends { videoOutputSeconds?: number | null }>(): DataTableColumn<T> => ({
   id: "video",
   align: "right",
   hiddenMd: true,
-  cell: (item) => <span className="font-mono text-text-secondary">{formatShortNumber(item.videoOutputSeconds || 0)}</span>,
+  cell: (item) => (
+    <span className="font-mono text-text-secondary">{formatShortNumber(item.videoOutputSeconds || 0)}</span>
+  ),
 });
 
 export function buildOpenRouterColumns(t: (key: TranslationKey) => string): {
@@ -248,14 +257,9 @@ export function buildOpenRouterColumns(t: (key: TranslationKey) => string): {
               </TagBadge>
             ) : null}
             {item.creator && <TagBadge>{item.creator}</TagBadge>}
-            <span
-              className={cn(
-                "inline-flex items-center text-[11px] leading-[16px] px-1.5 py-0.5 rounded-[4px] border",
-                item.change != null ? trendClass(item.change) : "border-border bg-bg-secondary text-text-secondary",
-              )}
-            >
+            <TagBadge className={item.change != null ? trendClass(item.change) : undefined}>
               {formatTrend(item.change, t)}
-            </span>
+            </TagBadge>
           </div>
         </>
       ),
@@ -274,7 +278,11 @@ export function buildOpenRouterColumns(t: (key: TranslationKey) => string): {
       id: "trend",
       align: "right",
       hiddenMd: true,
-      cell: (item) => <span className={cn(trendClass(item.change), "border rounded text-xs py-0 px-1 font-mono inline-block")}>{formatTrend(item.change, t)}</span>,
+      cell: (item) => (
+        <span className={cn(trendClass(item.change), "border rounded text-xs py-0 px-1 font-mono inline-block")}>
+          {formatTrend(item.change, t)}
+        </span>
+      ),
     },
   ];
 
@@ -300,14 +308,21 @@ export function buildOpenRouterColumns(t: (key: TranslationKey) => string): {
       id: "category",
       align: "right",
       hiddenMd: true,
-      cell: (item) => <RightAlignedText className="text-xs">{item.categories?.length ? item.categories.join(", ") : t("notAvailable")}</RightAlignedText>,
+      cell: (item) => (
+        <RightAlignedText className="text-xs">
+          {item.categories?.length ? item.categories.join(", ") : t("notAvailable")}
+        </RightAlignedText>
+      ),
     },
   ];
 
   return { modelColumns, appColumns };
 }
 
-export function buildBenchmarkColumns(t: (key: TranslationKey) => string, selectedBenchmark: string): DataTableColumn<ArtificialAnalysisModel>[] {
+export function buildBenchmarkColumns(
+  t: (key: TranslationKey) => string,
+  selectedBenchmark: string,
+): DataTableColumn<ArtificialAnalysisModel>[] {
   return [
     {
       id: "name",

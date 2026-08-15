@@ -1,8 +1,8 @@
-import { createApp } from "./app";
-import { routeDefs } from "./routes";
-import type { RouteDef } from "./routes/register";
-import type { QuerySpec } from "./core";
-import type { Env } from "./context";
+import { createApp } from "@/server/app";
+import { routeDefs } from "@/server/routes";
+import type { RouteDef } from "@/server/routes";
+import type { QuerySpec } from "@/server/core";
+import type { Env } from "@/server/app";
 
 const app = createApp(routeDefs);
 
@@ -10,9 +10,6 @@ function isEnumParam(entry: [string, QuerySpec]): entry is [string, QuerySpec & 
   return entry[1].type === "enum";
 }
 
-// Build one URL per route. Enum query params are fully enumerated (cartesian
-// product) so every variant is warmed, not just the schema defaults; otherwise
-// e.g. the video arena category or the "funding" news feed would stay cold.
 function buildWarmUrls(routes: RouteDef[]): URL[] {
   const urls: URL[] = [];
   for (const route of routes) {
@@ -42,8 +39,6 @@ function buildWarmUrls(routes: RouteDef[]): URL[] {
   return urls;
 }
 
-// Keep the shared cache warm so users never pay cold-start upstream latency;
-// runs via the cron trigger in wrangler.jsonc (every 4 minutes by default).
 async function warmUrls(urls: URL[], env: Env): Promise<void> {
   const CONCURRENCY = 8;
   for (let i = 0; i < urls.length; i += CONCURRENCY) {
@@ -64,8 +59,6 @@ export default {
   },
 
   async scheduled(_controller: ScheduledController, env: Env): Promise<void> {
-    // Warm in small batches: keeps upstream fan-out bounded and stays well
-    // under the 1000 subrequest / 15 min cron execution limits.
     await warmUrls(buildWarmUrls(routeDefs), env);
   },
 };

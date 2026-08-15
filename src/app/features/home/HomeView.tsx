@@ -1,26 +1,31 @@
 import { memo, useState, useEffect, useMemo, lazy, Suspense, type ReactNode } from "react";
 import { Rocket, Image, BarChart3, Mic } from "lucide-react";
-import { useTranslation } from "../../i18n";
-import { useSuspenseArtificialRankings, useSuspenseHomeDashboard, useHallucinationRankings, useSuspenseHealthStatus, useSystemStats } from "../../api/queries";
-import { SuspenseQuery } from "../../components/feedback/SuspenseQuery";
-import { PredictionsSection } from "../../components/data/PredictionCards";
-import { StatCard } from "../../components/composite";
-import { Card, CardContent } from "../../components/ui";
-import { PageContainer, PageSection } from "../../components/layout";
-import { getModelColor, groupByProvider, formatShortNumber } from "../../../shared/utils";
-import { formatDateTime } from "../../../shared/utils/format";
-import type { ArenaModel, ArtificialAnalysisModel, HallucinationRankingEntry, HomeDashboardData } from "../../../shared/types";
-import type { TranslationKey } from "../../../shared/i18n";
+import { useTranslation } from "@/app/i18n";
+import {
+  useSuspenseArtificialRankings,
+  useSuspenseHomeDashboard,
+  useHallucinationRankings,
+  useSuspenseHealthStatus,
+  useSystemStats,
+} from "@/app/api/queries";
+import { SuspenseQuery } from "@/app/components/shared";
+import { PredictionsSection } from "@/app/components/data";
+import { StatCard, CardGrid } from "@/app/components/composite";
+import { Card, CardContent, Dot } from "@/app/components/ui";
+import { PageContainer, PageSection } from "@/app/components/layout";
+import { getModelColor, groupByProvider, formatShortNumber, formatDateTime } from "@/shared/utils";
+import type { ArenaModel, ArtificialAnalysisModel, HallucinationRankingEntry, HomeDashboardData } from "@/shared/types";
+import type { TranslationKey } from "@/shared/i18n";
 
-import { SearchInput } from "./SearchInput";
+import { SearchInput } from "@/app/components/shared";
 
-export interface HomeKpi {
+interface HomeKpi {
   label: string;
   value: string;
   Icon: typeof Rocket;
 }
 
-export interface HomeProviderStat {
+interface HomeProviderStat {
   name: string;
   color: string;
   avgSpeed: number;
@@ -38,7 +43,7 @@ export interface HomeToolUsage {
   rows: Array<{ name: string; value: number; share: number }>;
 }
 
-export function useHomeDashboardData(
+function useHomeDashboardData(
   artificialData: ArtificialAnalysisModel[],
   hallucinationRankings: HallucinationRankingEntry[],
   dashboardData: HomeDashboardData,
@@ -88,13 +93,23 @@ export function useHomeDashboardData(
         .map((app) => ({ name: app.name, value: app.totalTokens, share: app.totalTokens / total }));
       const topTotal = topRows.reduce((sum, row) => sum + row.value, 0);
       const otherValue = total - topTotal;
-      toolUsageShare = { total, rows: otherValue > 0 ? [...topRows, { name: t("otherTools"), value: otherValue, share: otherValue / total }] : topRows };
+      toolUsageShare = {
+        total,
+        rows:
+          otherValue > 0
+            ? [...topRows, { name: t("otherTools"), value: otherValue, share: otherValue / total }]
+            : topRows,
+      };
     }
 
     const kpiStrip: HomeKpi[] = [
       { label: t("openRouterRankings"), value: latestOpenRouterModel?.name || t("notAvailable"), Icon: BarChart3 },
       { label: t("bestT2IModel"), value: arenaT2IModels[0]?.model || t("notAvailable"), Icon: Image },
-      { label: t("latestRelease"), value: latestRelease?.short_name || latestRelease?.name || t("notAvailable"), Icon: Rocket },
+      {
+        label: t("latestRelease"),
+        value: latestRelease?.short_name || latestRelease?.name || t("notAvailable"),
+        Icon: Rocket,
+      },
       { label: t("bestTtsModel"), value: bestTtsModel?.name || t("notAvailable"), Icon: Mic },
     ];
 
@@ -115,7 +130,11 @@ const IndexLineChart = lazy(() => import("./charts").then((m) => ({ default: m.I
 const StatisticsSection = lazy(() => import("./charts").then((m) => ({ default: m.StatisticsSection })));
 
 const StatusBarPill = memo(function StatusBarPill({ children }: { children: ReactNode }) {
-  return <div className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg bg-bg-card text-xs text-text-secondary">{children}</div>;
+  return (
+    <div className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg bg-bg-card text-xs text-text-secondary">
+      {children}
+    </div>
+  );
 });
 
 const UptimeDisplay = memo(function UptimeDisplay() {
@@ -130,7 +149,7 @@ const UptimeDisplay = memo(function UptimeDisplay() {
   };
   return (
     <StatusBarPill>
-      <span className="inline-block w-1.5 h-1.5 rounded-full bg-success" />
+      <Dot size="xs" color="var(--success)" />
       {t("uptime")}: {fmt(uptime)}
     </StatusBarPill>
   );
@@ -166,7 +185,7 @@ const ProviderSpeedCard = memo(function ProviderSpeedCard({ providerStats }: { p
           {providerStats.slice(0, 6).map((p) => (
             <div key={p.name} className="flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: p.color }} />
+                <Dot color={p.color} />
                 <span className="text-sm font-medium truncate">{p.name}</span>
               </div>
               <span className="text-sm font-semibold font-mono ml-3 shrink-0">
@@ -180,7 +199,15 @@ const ProviderSpeedCard = memo(function ProviderSpeedCard({ providerStats }: { p
   );
 });
 
-const ArenaT2ICard = memo(function ArenaT2ICard({ entry, rank, color }: { entry: ArenaModel; rank: number; color: string }) {
+const ArenaT2ICard = memo(function ArenaT2ICard({
+  entry,
+  rank,
+  color,
+}: {
+  entry: ArenaModel;
+  rank: number;
+  color: string;
+}) {
   const { t } = useTranslation();
   return (
     <Card accent="left">
@@ -189,7 +216,10 @@ const ArenaT2ICard = memo(function ArenaT2ICard({ entry, rank, color }: { entry:
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-bold truncate">{entry.model}</span>
           </div>
-          <span className="text-xs font-bold shrink-0 px-2 py-0.5 rounded-full" style={{ backgroundColor: color + "18", color }}>
+          <span
+            className="text-xs font-bold shrink-0 px-2 py-0.5 rounded-full"
+            style={{ backgroundColor: color + "18", color }}
+          >
             #{rank}
           </span>
         </div>
@@ -201,10 +231,14 @@ const ArenaT2ICard = memo(function ArenaT2ICard({ entry, rank, color }: { entry:
             </strong>
           </span>
           <span>
-            {t("votes")}: <strong className="text-text-primary font-semibold">{entry.votes != null ? entry.votes.toLocaleString() : t("notAvailable")}</strong>
+            {t("votes")}:{" "}
+            <strong className="text-text-primary font-semibold">
+              {entry.votes != null ? entry.votes.toLocaleString() : t("notAvailable")}
+            </strong>
           </span>
           <span>
-            {t("license")}: <strong className="text-text-primary font-semibold">{entry.license || t("notAvailable")}</strong>
+            {t("license")}:{" "}
+            <strong className="text-text-primary font-semibold">{entry.license || t("notAvailable")}</strong>
           </span>
         </div>
       </div>
@@ -217,11 +251,11 @@ const ArenaT2ISection = memo(function ArenaT2ISection({ models }: { models: Aren
   if (models.length === 0) return null;
   return (
     <PageSection title={t("textToImage")} description={t("arenaAISource")}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <CardGrid cols={4} gap={3}>
         {models.slice(0, 8).map((entry, index) => (
           <ArenaT2ICard key={entry.model} entry={entry} rank={index + 1} color={getModelColor(index)} />
         ))}
-      </div>
+      </CardGrid>
     </PageSection>
   );
 });
@@ -235,12 +269,8 @@ const HomeContent = memo(function HomeContent() {
   const { data: healthData } = useSuspenseHealthStatus();
 
   const predictions = dashboardData.predictions ?? null;
-  const { downloadStats, hallucinationStats, toolUsageShare, kpiStrip, providerStats, arenaT2IModels } = useHomeDashboardData(
-    artificialData,
-    hallucinationRankings,
-    dashboardData,
-    t,
-  );
+  const { downloadStats, hallucinationStats, toolUsageShare, kpiStrip, providerStats, arenaT2IModels } =
+    useHomeDashboardData(artificialData, hallucinationRankings, dashboardData, t);
 
   const healthyCount = healthData.filter((e) => e.status === "ok").length;
   const totalCount = healthData.length;
@@ -251,7 +281,7 @@ const HomeContent = memo(function HomeContent() {
         <ClockDisplay />
         <UptimeDisplay />
         <StatusBarPill>
-          <span className={`inline-block w-1.5 h-1.5 rounded-full ${totalCount > 0 && healthyCount === totalCount ? "bg-success" : "bg-destructive"}`} />
+          <Dot size="xs" color={totalCount > 0 && healthyCount === totalCount ? "var(--success)" : "var(--destructive)"} />
           {t("dataSources")}: {healthyCount}/{totalCount}
         </StatusBarPill>
         <div className="ml-auto">
@@ -289,7 +319,11 @@ const HomeContent = memo(function HomeContent() {
       </PageSection>
 
       <Suspense fallback={null}>
-        <StatisticsSection downloadStats={downloadStats} hallucinationStats={hallucinationStats} toolUsageShare={toolUsageShare} />
+        <StatisticsSection
+          downloadStats={downloadStats}
+          hallucinationStats={hallucinationStats}
+          toolUsageShare={toolUsageShare}
+        />
       </Suspense>
 
       <ArenaT2ISection models={arenaT2IModels} />

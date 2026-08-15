@@ -1,16 +1,44 @@
-import type { RouteDef } from "./register";
-import type { AppContext } from "../context";
-import { getArenaLeaderboard } from "../sources/arena";
-import { getIntelligenceIndex } from "../sources/aa";
-import { getModels, getReleases } from "../sources/huggingface";
-import { getNews } from "../sources/news";
-import { getOpenRouterRankings } from "../sources/openrouter";
-import { getPredictions } from "../sources/polymarket";
-import { checkAllUpstreams } from "../sources/misc";
-import { getSystemStats } from "../sources/misc";
-import { getTtsLeaderboard } from "../sources/aa";
-import { settled } from "../sources/misc";
-import { ARENA_CATEGORIES } from "../../shared/config";
+import type { Hono } from "hono";
+import type { Context } from "hono";
+import { startTime, endTime } from "hono/timing";
+import type { AppContext } from "@/server/app";
+import { buildContext } from "@/server/app";
+import { validateQuery, type QuerySpec, settled } from "@/server/core";
+import { getArenaLeaderboard } from "@/server/sources/misc";
+import { getIntelligenceIndex } from "@/server/sources/aa";
+import { getModels, getReleases } from "@/server/sources/huggingface";
+import { getNews } from "@/server/sources/news";
+import { getOpenRouterRankings } from "@/server/sources/openrouter";
+import { getPredictions } from "@/server/sources/polymarket";
+import { checkAllUpstreams, getSystemStats } from "@/server/sources/misc";
+import { getTtsLeaderboard } from "@/server/sources/aa";
+import { ARENA_CATEGORIES } from "@/shared/config";
+
+export interface RouteDef<P extends Record<string, string> = Record<string, string>, R = unknown> {
+  path: string;
+  query?: { [K in keyof P]: QuerySpec };
+  handler(ctx: AppContext, params: P): Promise<R>;
+}
+
+function ctx(c: Context): AppContext {
+  return buildContext(c.env as AppContext["env"]);
+}
+
+export function registerRoutes(app: Hono, routes: RouteDef[]): void {
+  for (const route of routes) {
+    app.get(route.path, async (c) => {
+      const context = ctx(c);
+      startTime(c, "upstream");
+      try {
+        const params = validateQuery(c.req.query(), route.query ?? {});
+        const data = await route.handler(context, params as Record<string, string>);
+        return c.json({ data });
+      } finally {
+        endTime(c, "upstream");
+      }
+    });
+  }
+}
 
 export const routeDefs: RouteDef[] = [
   {
@@ -25,11 +53,23 @@ export const routeDefs: RouteDef[] = [
   {
     path: "/api/open-source-models",
     query: {
-      sort: { type: "enum", values: ["trendingScore", "downloads", "likes", "createdAt", "lastModified"], default: "trendingScore" },
+      sort: {
+        type: "enum",
+        values: ["trendingScore", "downloads", "likes", "createdAt", "lastModified"],
+        default: "trendingScore",
+      },
       direction: { type: "enum", values: ["-1", "1"], default: "-1" },
       limit: { type: "number", default: "500", min: 1, max: 500 },
     },
-    handler: (ctx, params) => getModels(ctx, { sort: params.sort ?? "trendingScore", direction: params.direction ?? "-1", limit: Number(params.limit ?? 500) }),
+    handler: async (ctx, params) => {
+      const limit = Number(params.limit ?? 500);
+      const models = await getModels(ctx, {
+        sort: params.sort ?? "trendingScore",
+        direction: params.direction ?? "-1",
+        limit,
+      });
+      return models.slice(0, limit);
+    },
   },
   {
     path: "/api/open-source-releases",
@@ -37,7 +77,9 @@ export const routeDefs: RouteDef[] = [
   },
   {
     path: "/api/news",
-    query: { category: { type: "enum", values: ["industry", "opensource", "hardware", "funding"], default: "industry" } },
+    query: {
+      category: { type: "enum", values: ["industry", "opensource", "hardware", "funding"], default: "industry" },
+    },
     handler: (ctx, params) => getNews(ctx, { category: params.category ?? "industry" }),
   },
   {

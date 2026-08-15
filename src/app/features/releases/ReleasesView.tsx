@@ -1,19 +1,80 @@
 import { useMemo, useState } from "react";
-import type { DataTableColumn } from "../../components/data/DataTable";
-import { DataTable } from "../../components/data/DataTable";
-import { useTranslation } from "../../i18n";
-import { useDocumentTitle } from "../../hooks";
+import type { DataTableColumn } from "@/app/components/data";
+import { DataTable } from "@/app/components/data";
+import { useTranslation } from "@/app/i18n";
+import { useFilteredData } from "@/app/hooks";
 
-import { cn } from "../../../shared/utils";
-import { useFilteredData } from "../../hooks";
-import { useSuspenseOpenSourceReleases, useSuspenseArtificialRankings } from "../../api/queries";
-import { SuspenseQuery } from "../../components/feedback/SuspenseQuery";
-import { TabContainer, type TabItem } from "../../components/composite";
-import { useReleaseFeedEntries, useReleaseDateRows, type FeedEntry, type DatedModel } from "./useReleaseData";
-import { PageContainer, PageHeader } from "../../components/layout";
-import { RightAlignedText } from "../../components/composite";
-import { SearchInput } from "../home/SearchInput";
-import { formatDate } from "../../../shared/utils/format";
+import { cn, formatDate } from "@/shared/utils";
+import { useSuspenseOpenSourceReleases, useSuspenseArtificialRankings } from "@/app/api/queries";
+import { SuspenseQuery, SearchInput } from "@/app/components/shared";
+import { TabContainer, type TabItem, RightAlignedText } from "@/app/components/composite";
+import { PageContainer, PageHeader } from "@/app/components/layout";
+import type { OpenSourceModelEntry, ArtificialAnalysisModel } from "@/shared/types";
+
+export interface FeedEntry {
+  id: string;
+  name: string;
+  date: string;
+  ts: number;
+  type: "new" | "update" | "opensource";
+  source: "huggingface" | "artificial";
+}
+
+export interface DatedModel {
+  model: ArtificialAnalysisModel;
+  time: number;
+}
+
+function useReleaseFeedEntries(openSourceReleases: OpenSourceModelEntry[]): FeedEntry[] {
+  return useMemo(() => {
+    const seen = new Map<string, FeedEntry>();
+    for (const m of openSourceReleases) {
+      const name = m.id.split("/").pop() || m.id;
+      if (m.createdAt) {
+        const ts = Date.parse(m.createdAt);
+        if (Number.isFinite(ts)) {
+          const key = `${m.id}|opensource|${ts}`;
+          if (!seen.has(key))
+            seen.set(key, {
+              id: m.id,
+              name,
+              date: new Date(ts).toISOString().split("T")[0]!,
+              ts,
+              type: "opensource",
+              source: "huggingface",
+            });
+        }
+      }
+      if (m.lastModified && m.lastModified !== m.createdAt) {
+        const ts = Date.parse(m.lastModified);
+        if (Number.isFinite(ts)) {
+          const key = `${m.id}_mod|update|${ts}`;
+          if (!seen.has(key))
+            seen.set(key, {
+              id: m.id + "_mod",
+              name,
+              date: new Date(ts).toISOString().split("T")[0]!,
+              ts,
+              type: "update",
+              source: "huggingface",
+            });
+        }
+      }
+    }
+    return Array.from(seen.values()).sort((a, b) => b.ts - a.ts);
+  }, [openSourceReleases]);
+}
+
+function useReleaseDateRows(artificialRankings: ArtificialAnalysisModel[]): DatedModel[] {
+  return useMemo(
+    () =>
+      artificialRankings
+        .map((model) => ({ model, time: model.release_date ? Date.parse(`${model.release_date}T00:00:00Z`) : NaN }))
+        .filter((item): item is DatedModel => Number.isFinite(item.time))
+        .sort((a, b) => b.time - a.time),
+    [artificialRankings],
+  );
+}
 
 const getFeedSearchFields = (e: FeedEntry) => [e.name, e.id];
 const getFeedRowId = (e: FeedEntry) => e.id;
@@ -37,12 +98,13 @@ function FeedTab({ allEntries }: { allEntries: FeedEntry[] }) {
     return [
       {
         id: "model",
-        header: t("modelNameOrId"),
         cell: (row) => (
           <div className="min-w-0">
-            <p className="text-sm font-medium break-words overflow-wrap-anywhere">{row.name}</p>
+            <p className="text-sm font-medium break-words">{row.name}</p>
             <div className="flex md:hidden mt-1 items-center gap-1.5">
-              <span className={cn("text-xs font-semibold", getTypeMeta(row.type).color)}>{getTypeMeta(row.type).label}</span>
+              <span className={cn("text-xs font-semibold", getTypeMeta(row.type).color)}>
+                {getTypeMeta(row.type).label}
+              </span>
               <span className="text-xs text-text-tertiary">{formatDate(row.ts, lang)}</span>
             </div>
           </div>
@@ -76,7 +138,10 @@ function ReleaseDatesTab({ releaseRows }: { releaseRows: DatedModel[] }) {
 
   const releaseColumns = useMemo<DataTableColumn<DatedModel>[]>(
     () => [
-      { id: "model", cell: (row) => <span className="text-sm font-semibold break-words min-w-0">{row.model.name}</span> },
+      {
+        id: "model",
+        cell: (row) => <span className="text-sm font-semibold break-words min-w-0">{row.model.name}</span>,
+      },
       {
         id: "creator",
         align: "right",
@@ -117,16 +182,27 @@ function ReleasesContent({ defaultMode, lockedMode }: { defaultMode: "feed" | "r
 
   return (
     <PageContainer>
-      <PageHeader title={t(lockedMode ? "scoreRelease" : "releases")} description={mode === "feed" ? t("releaseDataSource") : t("artificialSource")} actions={<SearchInput />} />
+      <PageHeader
+        title={t(lockedMode ? "scoreRelease" : "releases")}
+        description={mode === "feed" ? t("releaseDataSource") : t("artificialSource")}
+        actions={<SearchInput />}
+      />
       <div className="flex items-center gap-2 mb-4">
         <span className="text-xs text-text-secondary bg-bg-secondary px-2 py-1 rounded-md">
-          {mode === "feed" ? t("events", { count: allEntries.length }) : t("modelsTotal", { count: releaseRows.length })}
+          {mode === "feed"
+            ? t("events", { count: allEntries.length })
+            : t("modelsTotal", { count: releaseRows.length })}
         </span>
       </div>
       {lockedMode ? (
         <ReleaseDatesTab releaseRows={releaseRows} />
       ) : (
-        <TabContainer tabs={tabs} activeTab={mode} onTabChange={(id) => setMode(id as "feed" | "release-dates")} tabSize="sm">
+        <TabContainer
+          tabs={tabs}
+          activeTab={mode}
+          onTabChange={(id) => setMode(id as "feed" | "release-dates")}
+          tabSize="sm"
+        >
           {mode === "feed" ? <FeedTab allEntries={allEntries} /> : <ReleaseDatesTab releaseRows={releaseRows} />}
         </TabContainer>
       )}
@@ -134,9 +210,13 @@ function ReleasesContent({ defaultMode, lockedMode }: { defaultMode: "feed" | "r
   );
 }
 
-export function ReleasesView({ defaultMode, lockedMode = false }: { defaultMode?: "feed" | "release-dates"; lockedMode?: boolean }) {
-  const { t } = useTranslation();
-  useDocumentTitle(t("releases"));
+export function ReleasesView({
+  defaultMode,
+  lockedMode = false,
+}: {
+  defaultMode?: "feed" | "release-dates";
+  lockedMode?: boolean;
+}) {
   return (
     <SuspenseQuery>
       <ReleasesContent defaultMode={defaultMode || "feed"} lockedMode={lockedMode} />

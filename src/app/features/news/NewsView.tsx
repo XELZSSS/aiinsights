@@ -1,18 +1,17 @@
 import { useMemo, useState } from "react";
 import { ExternalLink, Clock, Search } from "lucide-react";
-import { useTranslation } from "../../i18n";
-import { useDocumentTitle } from "../../hooks";
-import type { TranslationKey } from "../../../shared/i18n";
-import { Card } from "../../components/ui";
-import { Pagination } from "../../components/ui";
-import { useNewsByCategory } from "../../api/queries";
-import { Spinner } from "../../components/feedback/SuspenseQuery";
-import { safeHref, formatRelativeTime } from "../../../shared/utils/format";
-import { COOL_COLORS } from "../../../shared/utils";
-import { TabContainer, type TabItem } from "../../components/composite";
-import type { NewsItem } from "../../../shared/types";
-import { useIsMobile } from "../../hooks";
-import { PageContainer, PageHeader } from "../../components/layout";
+import { useTranslation } from "@/app/i18n";
+import type { TranslationKey } from "@/shared/i18n";
+import { Card, Dot } from "@/app/components/ui";
+import { Pagination } from "@/app/components/ui";
+import { useNewsByCategory } from "@/app/api/queries";
+import { Spinner } from "@/app/components/shared";
+import { safeHref, formatRelativeTime } from "@/shared/utils";
+import { COOL_COLORS } from "@/shared/utils";
+import { TabContainer, type TabItem } from "@/app/components/composite";
+import type { NewsItem } from "@/shared/types";
+import { useIsMobile } from "@/app/hooks";
+import { PageContainer, PageHeader } from "@/app/components/layout";
 
 const CATEGORIES: { id: string; labelKey: TranslationKey; color: string }[] = [
   { id: "industry", labelKey: "catIndustry", color: COOL_COLORS[0]! },
@@ -21,7 +20,17 @@ const CATEGORIES: { id: string; labelKey: TranslationKey; color: string }[] = [
   { id: "funding", labelKey: "catFunding", color: COOL_COLORS[3]! },
 ];
 
-function NewsList({ news, color, isLoading, isError }: { news: NewsItem[]; color: string; isLoading: boolean; isError: boolean }) {
+function NewsList({
+  news,
+  color,
+  isLoading,
+  isError,
+}: {
+  news: NewsItem[];
+  color: string;
+  isLoading: boolean;
+  isError: boolean;
+}) {
   const { t } = useTranslation();
   const [currentPage, setCurrentPage] = useState(1);
   const isMobile = useIsMobile();
@@ -52,15 +61,27 @@ function NewsList({ news, color, isLoading, isError }: { news: NewsItem[]; color
   return (
     <div className="flex flex-col gap-3">
       {currentNews.map((item) => (
-        <a key={item.id} href={safeHref(item.link) ?? undefined} target="_blank" rel="noopener noreferrer" className="group block" aria-label={`${item.title} - ${item.source}`}>
+        <a
+          key={item.id}
+          href={safeHref(item.link) ?? undefined}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group block"
+          aria-label={`${item.title} - ${item.source}`}
+        >
           <Card className="p-4 hover:border-accent/30 transition-colors">
             <div className="flex items-start justify-between gap-4">
-              <h3 className="text-sm font-semibold text-text-primary leading-relaxed group-hover:text-accent transition-colors">{item.title}</h3>
-              <ExternalLink size={14} className="shrink-0 text-text-secondary mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <h3 className="text-sm font-semibold text-text-primary leading-relaxed group-hover:text-accent transition-colors min-w-0 break-words">
+                {item.title}
+              </h3>
+              <ExternalLink
+                size={14}
+                className="shrink-0 text-text-secondary mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+              />
             </div>
             <div className="flex items-center gap-3 mt-2.5">
               <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                <Dot size="sm" color={color} />
                 <span>{item.source}</span>
               </div>
               <div className="flex items-center gap-1 text-xs text-text-secondary">
@@ -82,12 +103,19 @@ function NewsList({ news, color, isLoading, isError }: { news: NewsItem[]; color
 
 function NewsCategoryContent({ categoryId, color }: { categoryId: string; color: string }) {
   const result = useNewsByCategory(categoryId);
-  return <NewsList key={categoryId} news={result.data || []} color={color} isLoading={result.isLoading} isError={result.isError} />;
+  return (
+    <NewsList
+      key={categoryId}
+      news={result.data || []}
+      color={color}
+      isLoading={result.isLoading}
+      isError={result.isError}
+    />
+  );
 }
 
 export function NewsView() {
   const { t } = useTranslation();
-  useDocumentTitle(t("aiNews"));
   const [activeCategory, setActiveCategory] = useState("industry");
 
   const activeColor = CATEGORIES.find((c) => c.id === activeCategory)?.color ?? COOL_COLORS[0]!;

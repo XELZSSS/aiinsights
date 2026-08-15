@@ -1,21 +1,21 @@
 import { memo, useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "../../../shared/utils";
-import { useTranslation } from "../../i18n";
+import { cn } from "@/shared/utils";
+import { useTranslation } from "@/app/i18n";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "default" | "outline" | "ghost" | "link" | "ghost-icon";
+  variant?: "default" | "outline" | "ghost" | "link";
   size?: "default" | "sm" | "icon";
 }
 
-const baseClass = "inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors disabled:pointer-events-none disabled:opacity-50";
+const baseClass =
+  "inline-flex items-center justify-center whitespace-nowrap font-medium transition-colors disabled:pointer-events-none disabled:opacity-50";
 
 const variantClass: Record<string, string> = {
   default: "bg-primary text-bg-primary hover:opacity-90",
   outline: "border border-border text-text-primary hover:bg-hover",
   ghost: "text-text-primary hover:bg-hover",
-  "ghost-icon": "p-1 rounded-md text-text-secondary hover:text-text-primary hover:bg-hover",
   link: "text-text-primary underline-offset-4 hover:underline",
 };
 
@@ -25,7 +25,13 @@ const sizeClass: Record<string, string> = {
   icon: "size-8 rounded-md",
 };
 
-export const Button = memo(function Button({ variant = "default", size = "default", className, children, ...props }: ButtonProps) {
+export const Button = memo(function Button({
+  variant = "default",
+  size = "default",
+  className,
+  children,
+  ...props
+}: ButtonProps) {
   return (
     <button type="button" className={cn(baseClass, variantClass[variant], sizeClass[size], className)} {...props}>
       {children}
@@ -39,7 +45,10 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Card = memo(function Card({ children, className, accent = "none", ...props }: CardProps) {
   return (
-    <div className={cn("rounded-lg border border-border bg-bg-card transition-shadow duration-200", className)} {...props}>
+    <div
+      className={cn("rounded-lg border border-border bg-bg-card transition-shadow duration-200", className)}
+      {...props}
+    >
       {accent === "top" && (
         <>
           <div className="h-1 bg-gradient-to-r from-accent to-info shrink-0" />
@@ -61,9 +70,23 @@ interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
   padding?: "sm" | "md" | "lg";
 }
 
-export const CardContent = memo(function CardContent({ className, children, padding = "md", ...props }: CardContentProps) {
+export const CardContent = memo(function CardContent({
+  className,
+  children,
+  padding = "md",
+  ...props
+}: CardContentProps) {
   return (
-    <div className={cn("w-full min-w-0", padding === "sm" && "p-3", padding === "md" && "p-4", padding === "lg" && "p-5", className)} {...props}>
+    <div
+      className={cn(
+        "w-full min-w-0",
+        padding === "sm" && "p-3",
+        padding === "md" && "p-4",
+        padding === "lg" && "p-5",
+        className,
+      )}
+      {...props}
+    >
       {children}
     </div>
   );
@@ -73,7 +96,8 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "
   className?: string;
 }
 
-const noSpinners = "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+const noSpinners =
+  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
 export function Input({ className, type, ...props }: InputProps) {
   return (
@@ -109,11 +133,86 @@ export const Badge = memo(function Badge({ variant = "default", className, child
   );
 });
 
-export const TagBadge = memo(function TagBadge({ children }: { children: ReactNode }) {
+export const TagBadge = memo(function TagBadge({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <span className="inline-flex items-center text-[11px] leading-[16px] px-1.5 py-0.5 rounded-[4px] border border-border bg-bg-secondary text-text-secondary">{children}</span>
+    <span
+      className={cn(
+        "inline-flex items-center text-[11px] leading-[16px] px-1.5 py-0.5 rounded-[4px] border border-border bg-bg-secondary text-text-secondary",
+        className,
+      )}
+    >
+      {children}
+    </span>
   );
 });
+
+const dotSizeClass = {
+  xs: "w-1.5 h-1.5",
+  sm: "w-2 h-2",
+  md: "w-2.5 h-2.5",
+} as const;
+
+export const Dot = memo(function Dot({
+  size = "md",
+  color,
+  className,
+}: {
+  size?: keyof typeof dotSizeClass;
+  color?: string;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn("inline-block rounded-full shrink-0", dotSizeClass[size], className)}
+      style={color ? { backgroundColor: color } : undefined}
+    />
+  );
+});
+
+interface ThProps {
+  align?: "left" | "right";
+  className?: string;
+  style?: React.CSSProperties;
+  children?: ReactNode;
+}
+
+export const Th = memo(function Th({ align = "left", className, style, children }: ThProps) {
+  return (
+    <th className={cn("px-2 py-2 font-bold", align === "right" ? "text-right" : "text-left", className)} style={style}>
+      {children}
+    </th>
+  );
+});
+
+interface TdProps {
+  align?: "left" | "right";
+  mono?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  children?: ReactNode;
+}
+
+export const Td = memo(function Td({ align = "left", mono, className, style, children }: TdProps) {
+  return (
+    <td className={cn("px-2 py-2", mono && "font-mono", align === "right" && "text-right", className)} style={style}>
+      {children}
+    </td>
+  );
+});
+
+export function Tr({ className, children, ...props }: React.HTMLAttributes<HTMLTableRowElement>) {
+  return (
+    <tr className={cn("border-b border-border last:border-b-0", className)} {...props}>
+      {children}
+    </tr>
+  );
+}
 
 interface PaginationProps {
   page: number;
@@ -128,20 +227,33 @@ export const Pagination = memo(function Pagination({ page, totalPages, onChange,
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <Button variant="outline" size="icon" aria-label={t("previousPage")} disabled={page <= 1} onClick={() => onChange(page - 1)}>
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label={t("previousPage")}
+        disabled={page <= 1}
+        onClick={() => onChange(page - 1)}
+      >
         <ChevronLeft size={16} />
       </Button>
       <span className="text-sm text-text-secondary tabular-nums" aria-live="polite">
         {page} / {totalPages}
       </span>
-      <Button variant="outline" size="icon" aria-label={t("nextPage")} disabled={page >= totalPages} onClick={() => onChange(page + 1)}>
+      <Button
+        variant="outline"
+        size="icon"
+        aria-label={t("nextPage")}
+        disabled={page >= totalPages}
+        onClick={() => onChange(page + 1)}
+      >
         <ChevronRight size={16} />
       </Button>
     </div>
   );
 });
 
-const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
 interface SheetProps {
   open: boolean;
@@ -194,7 +306,10 @@ export function Sheet({ open, onClose, children, className }: SheetProps) {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        className={cn("relative z-50 w-full max-w-md rounded-t-xl sm:rounded-xl border border-border bg-bg-primary shadow-lg", className)}
+        className={cn(
+          "relative z-50 w-full max-w-md rounded-t-xl sm:rounded-xl border border-border bg-bg-primary shadow-lg",
+          className,
+        )}
         onClick={(e) => e.stopPropagation()}
       >
         {children}

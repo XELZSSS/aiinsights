@@ -1,3 +1,6 @@
+import { USER_AGENT } from "@/shared/config";
+import type { AppContext } from "@/server/app";
+
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -6,8 +9,6 @@ export class ApiError extends Error {
     this.status = status;
   }
 }
-
-import { USER_AGENT } from "../../shared/config";
 
 export class ValidationError extends ApiError {
   constructor(msg: string) {
@@ -19,6 +20,7 @@ export class ValidationError extends ApiError {
 export function errorMessage(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
+
 export type QuerySpec =
   | { type: "string"; default?: string; maxLen?: number }
   | { type: "number"; default?: string; min?: number; max?: number }
@@ -84,9 +86,6 @@ class RetryableHttpError extends Error {
   }
 }
 
-// Network-level failures (DNS/connection refused) surface as TypeError and
-// request timeouts as DOMException "TimeoutError" — both are transient and
-// worth retrying. Explicit caller aborts ("AbortError") are not.
 function isRetryableError(e: unknown): boolean {
   if (e instanceof RetryableHttpError) return true;
   if (e instanceof TypeError) return true;
@@ -162,9 +161,8 @@ export class HttpClient {
   }
 }
 
-
 export interface CacheBackend {
-  get<T>(key: string): Promise<T | null>;
+  get<T>(key: string): Promise<T | undefined>;
   set<T>(key: string, value: T, ttlMs: number): Promise<void>;
 }
 
@@ -174,12 +172,12 @@ class MemoryBackend implements CacheBackend {
   private store = new Map<string, { data: unknown; expires: number }>();
   private writes = 0;
 
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     const entry = this.store.get(key);
-    if (!entry) return null;
+    if (!entry) return undefined;
     if (entry.expires <= Date.now()) {
       this.store.delete(key);
-      return null;
+      return undefined;
     }
     return entry.data as T;
   }
@@ -211,13 +209,13 @@ class MemoryBackend implements CacheBackend {
 class KvBackend implements CacheBackend {
   constructor(private kv: KVNamespace) {}
 
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     const raw = await this.kv.get(key, { type: "text", cacheTtl: 30 });
-    if (!raw) return null;
+    if (!raw) return undefined;
     try {
       return JSON.parse(raw) as T;
     } catch {
-      return null;
+      return undefined;
     }
   }
   async set<T>(key: string, value: T, ttlMs: number): Promise<void> {
@@ -258,7 +256,7 @@ export class CacheService {
     this.negCache.set(key, { ts: Date.now(), err });
   }
 
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     return this.backend.get<T>(this.versionedKey(key));
   }
 
@@ -269,7 +267,7 @@ export class CacheService {
   async withTtl<T>(key: string, defaultTtl: number, fn: () => Promise<{ data: T; ttl?: number }>): Promise<T> {
     const vKey = this.versionedKey(key);
     const cached = await this.backend.get<T>(vKey);
-    if (cached !== null) return cached;
+    if (cached !== undefined) return cached;
 
     const negErr = this.negCachedErr(vKey);
     if (negErr !== null) throw negErr;
@@ -291,4 +289,65 @@ export class CacheService {
     this.inflight.set(vKey, promise);
     return promise;
   }
+}
+
+export interface SourceResult<Data> {
+  data: Data;
+  ttl?: number;
+}
+
+export type SourceFn<Params, Data> = (ctx: AppContext, params: Params) => Promise<Data>;
+
+export function createSource<Params, Data>(opts: {
+  cacheKey: (params: Params) => string;
+  defaultTtl: number;
+  fetch: (ctx: AppContext, params: Params) => Promise<SourceResult<Data>>;
+}): SourceFn<Params, Data> {
+  return (ctx, params) => ctx.cache.withTtl(opts.cacheKey(params), opts.defaultTtl, () => opts.fetch(ctx, params));
+}
+
+export function settled<T>(result: PromiseSettledResult<T>, fallback: T): T {
+  return result.status === "fulfilled" ? result.value : fallback;
+}
+
+export function settledValues<T>(results: readonly PromiseSettledResult<T>[]): T[] {
+  return results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
+}
+
+export function deduplicateBy<T>(arr: T[], keyFn: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  return arr.filter((item) => {
+    const key = keyFn(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export function formatSettleErrors(
+  results: readonly PromiseSettledResult<unknown>[],
+  labels: readonly string[],
+): string {
+  return results
+    .map((r, i) =>
+      r.status === "rejected"
+        ? `${labels[i] ?? i}: ${r.reason instanceof Error ? r.reason.message : String(r.reason)}`
+        : null,
+    )
+    .filter(Boolean)
+    .join("; ");
+}
+
+export function settleOrThrow<T>(results: PromiseSettledResult<T[]>[], label: string): T[] {
+  const valid = settledValues(results)
+    .filter((v): v is T[] => Array.isArray(v))
+    .flatMap((v) => v);
+  if (valid.length === 0) {
+    const reasons = formatSettleErrors(
+      results,
+      results.map((_, i) => `${label} #${i + 1}`),
+    );
+    throw new Error(`${label}: all upstream requests failed${reasons ? ` (${reasons})` : ""}`);
+  }
+  return valid;
 }

@@ -4,9 +4,50 @@ import { timing } from "hono/timing";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { registerRoutes } from "./routes/register";
-import type { RouteDef } from "./routes/register";
-import { ApiError } from "./core";
+import { registerRoutes } from "@/server/routes";
+import type { RouteDef } from "@/server/routes";
+import { ApiError, CacheService, HttpClient } from "@/server/core";
+
+export interface Env {
+  METRICS?: KVNamespace;
+  CACHE_VERSION?: string;
+  ASSETS?: Fetcher;
+}
+
+export interface AppContext {
+  env: Env;
+  cache: CacheService;
+  http: HttpClient;
+  version: string;
+  now(): number;
+  log(level: "info" | "warn" | "error", msg: string, meta?: Record<string, unknown>): void;
+}
+
+let sharedHttp: HttpClient | null = null;
+let sharedCache: CacheService | null = null;
+let sharedCacheVersion: string | null = null;
+
+export function buildContext(env: Env): AppContext {
+  const version = env.CACHE_VERSION ?? "v1";
+  sharedHttp ??= new HttpClient();
+  if (!sharedCache || sharedCacheVersion !== version) {
+    sharedCache = new CacheService({ kv: env.METRICS ?? null, version });
+    sharedCacheVersion = version;
+  }
+  return {
+    env,
+    cache: sharedCache,
+    http: sharedHttp,
+    version,
+    now: () => Date.now(),
+    log: (level, msg, meta) => {
+      const line = meta ? `${msg} ${JSON.stringify(meta)}` : msg;
+      if (level === "error") console.error(`[${level}] ${line}`);
+      else if (level === "warn") console.warn(`[${level}] ${line}`);
+      else console.log(`[${level}] ${line}`);
+    },
+  };
+}
 
 export function createApp(routeDefs: RouteDef[]): Hono {
   const app = new Hono();
@@ -25,15 +66,6 @@ export function createApp(routeDefs: RouteDef[]): Hono {
     }),
   );
 
-  // Data changes at most once per cache TTL (5 min); the upstream TTLs are the
-  // source of truth. With Workers Cache (cache.enabled in wrangler.jsonc):
-  //   - Cache-Control (browser): fresh for 60s, then revalidate.
-  //   - CDN-Cache-Control (edge): fresh for 5 min, then serve stale while the
-  //     Worker revalidates in the background (stale-while-revalidate); if the
-  //     origin/upstream fails, keep serving the last good response for a day
-  //     (stale-if-error) instead of surfacing an error to users.
-  // Note: s-maxage / must-revalidate / proxy-revalidate would disable SWR and
-  // stale-if-error, so the edge TTL lives in CDN-Cache-Control instead.
   app.use("/api/*", async (c, next) => {
     await next();
     if (c.req.method === "GET" && c.res.status === 200) {

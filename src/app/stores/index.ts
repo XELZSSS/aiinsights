@@ -1,9 +1,9 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { Lang } from "../../shared/i18n";
-import type { ArtificialAnalysisModel, ThemeMode } from "../../shared/types";
-import { STORAGE_KEYS } from "../../shared/config";
-import { modelId } from "../../shared/utils";
+import type { Lang } from "@/shared/i18n";
+import type { ArtificialAnalysisModel, ThemeMode } from "@/shared/types";
+import { STORAGE_KEYS } from "@/shared/config";
+import { modelId } from "@/shared/utils";
 
 interface SearchState {
   searchTerm: string;
@@ -80,7 +80,8 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      themeMode: typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+      themeMode:
+        typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
       toggleTheme: () =>
         set((state) => ({
           themeMode: state.themeMode === "light" ? "dark" : "light",
