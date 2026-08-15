@@ -11,7 +11,7 @@ import { TabContainer, type TabItem, RightAlignedText } from "@/app/components/c
 import { PageContainer, PageHeader } from "@/app/components/layout";
 import type { OpenSourceModelEntry, ArtificialAnalysisModel } from "@/shared/types";
 
-export interface FeedEntry {
+interface FeedEntry {
   id: string;
   name: string;
   date: string;
@@ -20,7 +20,7 @@ export interface FeedEntry {
   source: "huggingface" | "artificial";
 }
 
-export interface DatedModel {
+interface DatedModel {
   model: ArtificialAnalysisModel;
   time: number;
 }

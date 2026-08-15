@@ -83,7 +83,6 @@ export function OpenRouterRankingsView({ data }: { data?: OpenRouterRankingsPayl
 
   return (
     <div className="flex flex-col gap-6">
-      <p className="text-xs text-text-secondary">{t("openRouterSource")}</p>
       <div className="flex flex-col gap-3">
         <DataTable
           data={data.tokenUsageRankings ?? []}

@@ -26,7 +26,7 @@ interface NavItem {
   matchPrefix?: string[];
 }
 
-export function useNavigation() {
+function useNavigation() {
   const { t } = useTranslation();
 
   return useMemo(() => {
@@ -53,13 +53,13 @@ export function useNavigation() {
   }, [t]);
 }
 
-export function isNavActive(pathname: string, item: NavItem): boolean {
+function isNavActive(pathname: string, item: NavItem): boolean {
   if (pathname === item.path) return true;
   if (item.matchPrefix) return item.matchPrefix.some((p) => pathname.startsWith(p));
   return false;
 }
 
-export function DesktopNav({ onSettingsOpen }: { onSettingsOpen: () => void }) {
+function DesktopNav({ onSettingsOpen }: { onSettingsOpen: () => void }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { all } = useNavigation();
@@ -116,7 +116,7 @@ export function DesktopNav({ onSettingsOpen }: { onSettingsOpen: () => void }) {
   );
 }
 
-export function MobileNav({ onMoreOpen }: { onMoreOpen: () => void }) {
+function MobileNav({ onMoreOpen }: { onMoreOpen: () => void }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -155,7 +155,7 @@ export function MobileNav({ onMoreOpen }: { onMoreOpen: () => void }) {
   );
 }
 
-export function MobileMoreSheet({
+function MobileMoreSheet({
   open,
   onClose,
   onSettingsOpen,
@@ -229,7 +229,7 @@ const SettingRow = memo(function SettingRow({
   );
 });
 
-export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
+function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, lang, toggleLang } = useTranslation();
   const themeMode = useThemeStore((s) => s.themeMode);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);

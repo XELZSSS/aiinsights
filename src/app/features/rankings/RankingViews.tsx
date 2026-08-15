@@ -2,10 +2,8 @@ import { useMemo } from "react";
 import { useTranslation } from "@/app/i18n";
 import { useFilteredData } from "@/app/hooks";
 import { DataTable, type DataTableColumn } from "@/app/components/data";
-import { TagBadge } from "@/app/components/ui";
-import { RankingNameCell, RightAlignedText } from "@/app/components/composite";
+import { RightAlignedText } from "@/app/components/composite";
 import { formatDollar, formatShortNumber } from "@/shared/utils";
-import type { TranslationKey } from "@/shared/i18n";
 import type { TtsModel, OpenSourceModelEntry, HallucinationRankingEntry } from "@/shared/types";
 import { useTtsLeaderboard } from "@/app/api/queries";
 
@@ -34,16 +32,14 @@ interface RankingTableProps<T> {
   columns: DataTableColumn<T>[];
   getRowId: (row: T) => string;
   getSearchFields: (row: T) => string[];
-  noteKey: TranslationKey;
 }
 
-export function RankingTable<T>({ data, columns, getRowId, getSearchFields, noteKey }: RankingTableProps<T>) {
+function RankingTable<T>({ data, columns, getRowId, getSearchFields }: RankingTableProps<T>) {
   const { t } = useTranslation();
   const filtered = useFilteredData(data, getSearchFields);
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-xs text-text-secondary">{t(noteKey)}</p>
       {filtered.length === 0 ? (
         <p className="text-sm text-text-secondary py-8 text-center">{t("noResults")}</p>
       ) : (
@@ -64,20 +60,21 @@ export function TtsView() {
     () => [
       {
         id: "model",
-        header: "",
         cell: (model) => (
-          <>
-            <RankingNameCell name={model.name} />
-            <div className="flex flex-wrap gap-1 mt-1 md:hidden">
-              {model.provider && <TagBadge>{model.provider}</TagBadge>}
+          <div className="min-w-0">
+            <p className="text-sm font-medium break-words">{model.name}</p>
+            <div className="flex md:hidden mt-1 items-center gap-1.5">
+              {model.provider && <span className="text-xs text-text-secondary">{model.provider}</span>}
               {model.speed_chars_per_sec != null && (
-                <TagBadge>
+                <span className="text-xs text-text-secondary">
                   {t("ttsSpeed")}: {model.speed_chars_per_sec.toFixed(1)}
-                </TagBadge>
+                </span>
               )}
-              {model.price_per_1m_chars != null && <TagBadge>{formatDollar(model.price_per_1m_chars, t)}</TagBadge>}
+              {model.price_per_1m_chars != null && (
+                <span className="text-xs text-text-tertiary">{formatDollar(model.price_per_1m_chars, t)}</span>
+              )}
             </div>
-          </>
+          </div>
         ),
       },
       {
@@ -121,7 +118,6 @@ export function TtsView() {
       columns={columns}
       getRowId={getTtsRowId}
       getSearchFields={getTtsSearchFields}
-      noteKey="ttsSource"
     />
   );
 }
@@ -136,17 +132,16 @@ export function OpenSourceRankingsView({ rankings }: { rankings: OpenSourceModel
     () => [
       {
         id: "model",
-        header: "",
         cell: (item) => (
-          <>
-            <RankingNameCell name={item.id.split("/").pop() || item.id} />
-            <div className="flex flex-wrap gap-1 mt-1 md:hidden">
-              <TagBadge>
+          <div className="min-w-0">
+            <p className="text-sm font-medium break-words">{item.id.split("/").pop() || item.id}</p>
+            <div className="flex md:hidden mt-1 items-center gap-1.5">
+              <span className="text-xs text-text-secondary">
                 {t("likes")}: {formatShortNumber(item.likes)}
-              </TagBadge>
-              {item.license && <TagBadge>{item.license}</TagBadge>}
+              </span>
+              {item.license && <span className="text-xs text-text-tertiary">{item.license}</span>}
             </div>
-          </>
+          </div>
         ),
       },
       {
@@ -176,7 +171,6 @@ export function OpenSourceRankingsView({ rankings }: { rankings: OpenSourceModel
       columns={columns}
       getRowId={getOpenSourceRowId}
       getSearchFields={getOpenSourceSearchFields}
-      noteKey="openSourceDataSource"
     />
   );
 }
@@ -199,22 +193,21 @@ export function HallucinationRankingsView({ rankings }: { rankings: Hallucinatio
     () => [
       {
         id: "model",
-        header: "",
         cell: (item) => (
-          <>
-            <RankingNameCell name={item.model} />
-            <div className="flex flex-wrap gap-1 mt-1 md:hidden">
-              <TagBadge>
+          <div className="min-w-0">
+            <p className="text-sm font-medium break-words">{item.model}</p>
+            <div className="flex md:hidden mt-1 items-center gap-1.5">
+              <span className="text-xs text-text-secondary">
                 {t("accuracy")}: {fmtRate(item.accuracy)}
-              </TagBadge>
-              <TagBadge>
+              </span>
+              <span className="text-xs text-text-secondary">
                 {t("attemptRate")}: {fmtRate(item.attemptRate)}
-              </TagBadge>
-              <TagBadge>
+              </span>
+              <span className="text-xs text-text-tertiary">
                 {t("omniscienceIndex")}: {fmtScore(item.omniscienceIndex)}
-              </TagBadge>
+              </span>
             </div>
-          </>
+          </div>
         ),
       },
       {
@@ -250,7 +243,6 @@ export function HallucinationRankingsView({ rankings }: { rankings: Hallucinatio
       columns={columns}
       getRowId={getHallRowId}
       getSearchFields={getHallSearchFields}
-      noteKey="hallucinationSource"
     />
   );
 }

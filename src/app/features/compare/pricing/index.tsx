@@ -9,7 +9,7 @@ import { PRICING_BLENDS } from "@/shared/config";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { TFunction } from "@/shared/i18n";
 
-export interface PriceRow {
+interface PriceRow {
   label: string;
   getValue: (m: ArtificialAnalysisModel) => number | null | undefined;
   format: (v: number) => string;
@@ -39,7 +39,7 @@ export function getBestPrice(rows: PriceRow[], models: ArtificialAnalysisModel[]
   return best;
 }
 
-export const WinnerMark = memo(function WinnerMark() {
+const WinnerMark = memo(function WinnerMark() {
   return (
     <span className={cn("inline-flex items-center gap-0.5", "text-xs font-bold", "text-success ml-1")}>
       <TrendingUp size={10} />
@@ -47,7 +47,7 @@ export const WinnerMark = memo(function WinnerMark() {
   );
 });
 
-export const PriceValue = memo(function PriceValue({
+const PriceValue = memo(function PriceValue({
   value,
   format,
   isBest,

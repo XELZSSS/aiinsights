@@ -76,7 +76,7 @@ function RankingModelCell({ model }: { model: ArtificialAnalysisModel }) {
   );
 }
 
-export interface PricedModel {
+interface PricedModel {
   model: ArtificialAnalysisModel;
   monthlyCost: number | null;
 }

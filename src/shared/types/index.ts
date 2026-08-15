@@ -24,12 +24,12 @@ export interface HallucinationRankingEntry {
   omniscienceIndex: number;
 }
 
-export interface ModelCreators {
+interface ModelCreators {
   name?: string;
   color?: string;
 }
 
-export interface ModelPricing {
+interface ModelPricing {
   input?: number | null;
   output?: number | null;
   cache_hit?: number | null;
@@ -39,11 +39,11 @@ export interface ModelPricing {
   };
 }
 
-export interface ModelSpeed {
+interface ModelSpeed {
   median_output_speed?: number | null;
 }
 
-export interface ModelOmniscienceBreakdown {
+interface ModelOmniscienceBreakdown {
   total?: {
     accuracy?: number | null;
     attempt_rate?: number | null;
@@ -182,8 +182,6 @@ export interface NewsItem {
   pubDate: string;
   source: string;
 }
-
-export type NewsCategory = "industry" | "opensource" | "hardware" | "funding";
 
 export interface HealthEntry {
   name: string;

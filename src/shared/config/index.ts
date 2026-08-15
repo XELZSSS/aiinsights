@@ -72,7 +72,7 @@ export const BENCHMARK_KEYS = [
   "omniscience",
 ] as const;
 
-export interface HealthProbe {
+interface HealthProbe {
   name: string;
   url: string;
   apiPath: string;

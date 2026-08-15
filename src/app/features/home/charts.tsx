@@ -20,7 +20,7 @@ import { useElementWidth } from "@/app/hooks";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { HomeBarStat, HomeToolUsage } from "@/app/features/home/HomeView";
 
-export const ToolUsageShareDonut = memo(function ToolUsageShareDonut({
+const ToolUsageShareDonut = memo(function ToolUsageShareDonut({
   total,
   rows,
 }: {

@@ -46,7 +46,7 @@ export function approxEq(a: number, b: number, eps = 1e-9): boolean {
   return Math.abs(a - b) < eps * Math.max(1, Math.abs(a), Math.abs(b));
 }
 
-export function clampPercent(value: number | null | undefined): number | null {
+function clampPercent(value: number | null | undefined): number | null {
   const norm = normalizePercent(value);
   if (norm == null) return null;
   return Math.max(0, Math.min(100, norm));
@@ -72,7 +72,7 @@ export function calcModelCost(
   return null;
 }
 
-export function getOutputSpeed(model: ArtificialAnalysisModel): number | null {
+function getOutputSpeed(model: ArtificialAnalysisModel): number | null {
   return model.speed?.median_output_speed ?? null;
 }
 

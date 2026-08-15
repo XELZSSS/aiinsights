@@ -22,8 +22,8 @@ import { PRICING_BLENDS, RANKING_BENCHMARK_KEYS, BENCHMARK_LABELS } from "@/shar
 import { useSearchStore } from "@/app/stores";
 import { buildBenchmarkColumns } from "@/app/features/rankings/columns";
 
-export type ViewMode = "rankings" | "pricing" | "benchmarks";
-export type ReasoningFilter = "all" | "reasoning" | "non-reasoning";
+type ViewMode = "rankings" | "pricing" | "benchmarks";
+type ReasoningFilter = "all" | "reasoning" | "non-reasoning";
 
 const REASONING_KEYWORDS = /\b(reasoning|thinking)\b/i;
 const REASONING_PREFIXES = /^(o[134]|gpt-5)/i;
@@ -145,7 +145,6 @@ function FilterToolbar({
     <div className="flex flex-col gap-4 min-w-0">
       <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-end min-w-0">
         <div className="flex-1 min-w-0">
-          <p className="text-xs text-text-secondary mb-1">{t("artificialSource")}</p>
           <div className="flex flex-wrap gap-1.5 items-center">
             <SegmentedGroup>
               <TabButton active={viewMode === "rankings"} onClick={() => onViewModeChange("rankings")}>

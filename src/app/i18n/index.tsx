@@ -3,14 +3,14 @@ import { useLangStore } from "@/app/stores";
 import type { Lang, TFunction } from "@/shared/i18n";
 import { createT } from "@/shared/i18n";
 
-export interface I18nContextValue {
+interface I18nContextValue {
   lang: Lang;
   t: TFunction;
   setLang: (lang: Lang) => void;
   toggleLang: () => void;
 }
 
-export const I18nContext = createContext<I18nContextValue | null>(null);
+const I18nContext = createContext<I18nContextValue | null>(null);
 
 export function useTranslation() {
   const ctx = use(I18nContext);

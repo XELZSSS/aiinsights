@@ -103,7 +103,7 @@ function HallDetailContent({
   );
 }
 
-export function HallDetail({ decodedId }: { decodedId: string }) {
+function HallDetail({ decodedId }: { decodedId: string }) {
   const { data: aaData } = useSuspenseArtificialRankings();
   const hallucinationRankings = useHallucinationRankings(aaData);
   const entry = findModel(hallucinationRankings, decodedId, "id", "slug");
@@ -157,7 +157,7 @@ function OrDetailInner({ model }: { model: OpenRouterRankEntry }) {
   );
 }
 
-export function OrDetail({ decodedId }: { decodedId: string }) {
+function OrDetail({ decodedId }: { decodedId: string }) {
   const { data: orPayload } = useSuspenseOpenRouterRankings();
   const orData = orPayload?.tokenUsageRankings ?? [];
   const model = findModel(orData, decodedId, "id");
@@ -165,7 +165,7 @@ export function OrDetail({ decodedId }: { decodedId: string }) {
   return <OrDetailInner model={model} />;
 }
 
-export function OsDetail({ model }: { model: OpenSourceModelEntry }) {
+function OsDetail({ model }: { model: OpenSourceModelEntry }) {
   const { t, lang } = useTranslation();
   return (
     <DetailLayout>
@@ -215,7 +215,7 @@ export function OsDetail({ model }: { model: OpenSourceModelEntry }) {
   );
 }
 
-export function TtsDetail({ model }: { model: TtsModel }) {
+function TtsDetail({ model }: { model: TtsModel }) {
   const { t } = useTranslation();
   return (
     <DetailLayout>

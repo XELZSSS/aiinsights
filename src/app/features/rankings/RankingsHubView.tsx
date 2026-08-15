@@ -140,7 +140,6 @@ function ProviderCompareContent({ data }: { data: ArtificialAnalysisModel[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-xs text-text-secondary">{t("artificialSource")}</p>
       <DataTable columns={columns} data={providerStats} getRowId={getProviderRowId} />
     </div>
   );

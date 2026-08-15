@@ -27,7 +27,7 @@ export type QuerySpec =
   | { type: "enum"; values: readonly string[]; default?: string }
   | { type: "boolean"; default?: string };
 
-export type QuerySchema = Record<string, QuerySpec>;
+type QuerySchema = Record<string, QuerySpec>;
 
 export function validateQuery(raw: Record<string, string>, schema: QuerySchema): Record<string, string> {
   const out: Record<string, string> = {};
@@ -74,7 +74,7 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 const DEFAULT_MAX_RETRIES = 2;
 const BASE_DELAY_MS = 500;
 
-export interface FetchOptions extends RequestInit {
+interface FetchOptions extends RequestInit {
   retries?: number;
   timeoutMs?: number;
 }
@@ -161,7 +161,7 @@ export class HttpClient {
   }
 }
 
-export interface CacheBackend {
+interface CacheBackend {
   get<T>(key: string): Promise<T | undefined>;
   set<T>(key: string, value: T, ttlMs: number): Promise<void>;
 }
@@ -291,12 +291,12 @@ export class CacheService {
   }
 }
 
-export interface SourceResult<Data> {
+interface SourceResult<Data> {
   data: Data;
   ttl?: number;
 }
 
-export type SourceFn<Params, Data> = (ctx: AppContext, params: Params) => Promise<Data>;
+type SourceFn<Params, Data> = (ctx: AppContext, params: Params) => Promise<Data>;
 
 export function createSource<Params, Data>(opts: {
   cacheKey: (params: Params) => string;
@@ -310,7 +310,7 @@ export function settled<T>(result: PromiseSettledResult<T>, fallback: T): T {
   return result.status === "fulfilled" ? result.value : fallback;
 }
 
-export function settledValues<T>(results: readonly PromiseSettledResult<T>[]): T[] {
+function settledValues<T>(results: readonly PromiseSettledResult<T>[]): T[] {
   return results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
 }
 
