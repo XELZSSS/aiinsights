@@ -18,7 +18,6 @@ import { formatScore, formatPricePerMillion, computeProviderStats, type Provider
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import {
   RANKING_TABS,
-  TtsView,
   OpenSourceRankingsView,
   HallucinationRankingsView,
   type RankingTabId,
@@ -33,7 +32,6 @@ const TAB_SOURCE_LABEL: Record<RankingTabId, TranslationKey> = {
   openRouterRankings: "openRouterSource",
   openSourceRankings: "openSourceDataSource",
   hallucinationRankings: "hallucinationSource",
-  tts: "ttsSource",
   providerCompare: "artificialSource",
 };
 
@@ -86,14 +84,6 @@ function HallucinationRankingsTab() {
   ) : (
     <TabPanel>
       <HallucinationRankingsView rankings={hallucinationRankings} />
-    </TabPanel>
-  );
-}
-
-function TtsTab() {
-  return (
-    <TabPanel>
-      <TtsView />
     </TabPanel>
   );
 }
@@ -166,8 +156,6 @@ function ActiveTabContent({ activeTabId }: { activeTabId: RankingTabId }) {
       return <OpenSourceTab />;
     case "hallucinationRankings":
       return <HallucinationRankingsTab />;
-    case "tts":
-      return <TtsTab />;
     case "providerCompare":
       return <ProviderCompareTab />;
     default:

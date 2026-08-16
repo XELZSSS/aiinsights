@@ -6,12 +6,9 @@ import type {
   NewsItem,
   OpenSourceModelEntry,
   OpenRouterRankingsPayload,
-  HealthEntry,
-  SystemStats,
-  TtsModel,
   HomeDashboardData,
 } from "@/shared/types";
-import { HEALTH_CHECK_INTERVAL, SYSTEM_STATS_INTERVAL, FIVE_MINUTES, THIRTY_MINUTES, apiBase } from "@/shared/config";
+import { FIVE_MINUTES, THIRTY_MINUTES, apiBase } from "@/shared/config";
 import { normalizePercent } from "@/shared/utils";
 
 const FETCH_TIMEOUT_MS = 30_000;
@@ -37,9 +34,6 @@ const api = {
     `/api/open-source-models?sort=${sort}&direction=${direction}&limit=${limit}`,
   openSourceReleases: "/api/open-source-releases",
   openRouterRankings: "/api/openrouter-rankings",
-  ttsLeaderboard: "/api/tts-leaderboard",
-  health: "/api/health",
-  systemStats: "/api/system-stats",
   news: (category: string) => `/api/news?category=${encodeURIComponent(category)}`,
   homeDashboard: "/api/home-dashboard",
 } as const;
@@ -70,7 +64,6 @@ const qArtificial = createApiQuery<ArtificialAnalysisModel[]>(
   api.artificialIndex,
   { staleTime: THIRTY_MINUTES },
 );
-const qTts = createApiQuery<TtsModel[]>(["api", "tts-leaderboard"], api.ttsLeaderboard, { staleTime: THIRTY_MINUTES });
 const qOpenSourceReleases = createApiQuery<OpenSourceModelEntry[]>(
   ["api", "open-source-releases"],
   api.openSourceReleases,
@@ -78,14 +71,6 @@ const qOpenSourceReleases = createApiQuery<OpenSourceModelEntry[]>(
 );
 const qOpenRouter = createApiQuery<OpenRouterRankingsPayload>(["api", "openrouter-rankings"], api.openRouterRankings, {
   staleTime: FIVE_MINUTES,
-});
-const qHealth = createApiQuery<HealthEntry[]>(["api", "health"], api.health, {
-  staleTime: 0,
-  refetchInterval: HEALTH_CHECK_INTERVAL,
-});
-const qSystemStats = createApiQuery<SystemStats>(["api", "system-stats"], api.systemStats, {
-  staleTime: 0,
-  refetchInterval: SYSTEM_STATS_INTERVAL,
 });
 const qHomeDashboard = createApiQuery<HomeDashboardData>(["api", "home-dashboard"], api.homeDashboard, {
   staleTime: FIVE_MINUTES,
@@ -105,11 +90,7 @@ const qOpenSourceSearch = createApiQuery<OpenSourceModelEntry[]>(
 
 export const useArtificialRankings = qArtificial.use;
 export const useSuspenseArtificialRankings = qArtificial.useSuspense;
-export const useTtsLeaderboard = qTts.use;
-export const useSuspenseTtsLeaderboard = qTts.useSuspense;
 export const useSuspenseOpenSourceReleases = qOpenSourceReleases.useSuspense;
-export const useSuspenseHealthStatus = qHealth.useSuspense;
-export const useSystemStats = qSystemStats.use;
 export const useSuspenseHomeDashboard = qHomeDashboard.useSuspense;
 export const useOpenRouterRankings = qOpenRouter.use;
 export const useSuspenseOpenRouterRankings = qOpenRouter.useSuspense;

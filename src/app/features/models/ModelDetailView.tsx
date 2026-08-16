@@ -19,7 +19,6 @@ import {
   useHallucinationRankings,
   useSuspenseOpenRouterRankings,
   useSuspenseOpenSourceReleases,
-  useSuspenseTtsLeaderboard,
 } from "@/app/api/queries";
 import { findModel, formatShortNumber, formatTrend, formatDollar, formatDate, categoryLabel, orNA, getModelRecommendation } from "@/shared/utils";
 import { MODEL_SOURCES, type ModelSource } from "@/shared/config";
@@ -28,7 +27,6 @@ import type {
   ArtificialAnalysisModel,
   OpenRouterRankEntry,
   OpenSourceModelEntry,
-  TtsModel,
 } from "@/shared/types";
 
 function useModelSourceParams(): { src: ModelSource | null; decodedId: string } {
@@ -53,14 +51,12 @@ function createDetailView<T>(
 
 const AADetail = createDetailView(useSuspenseArtificialRankings, ModelDetailContent, "id", "slug");
 const OSDetail = createDetailView(useSuspenseOpenSourceReleases, OsDetail, "id");
-const TTSDetail = createDetailView(useSuspenseTtsLeaderboard, TtsDetail, "id", "name");
 
 const SOURCE_LABELS: Record<ModelSource, string> = {
   aa: "artificialSource",
   or: "openRouterSource",
   os: "openSourceDataSource",
   hall: "hallucinationSource",
-  tts: "ttsSource",
 };
 
 const SOURCE_COMPONENTS: Record<ModelSource, ComponentType<{ decodedId: string }>> = {
@@ -68,7 +64,6 @@ const SOURCE_COMPONENTS: Record<ModelSource, ComponentType<{ decodedId: string }
   or: OrDetail,
   os: OSDetail,
   hall: HallDetail,
-  tts: TTSDetail,
 };
 
 function HallDetailContent({
@@ -211,23 +206,6 @@ function OsDetail({ model }: { model: OpenSourceModelEntry }) {
           </div>
         </InfoCard>
       )}
-    </DetailLayout>
-  );
-}
-
-function TtsDetail({ model }: { model: TtsModel }) {
-  const { t } = useTranslation();
-  return (
-    <DetailLayout>
-      <StatGrid columns={3}>
-        <StatCard label={t("ttsQualityElo")} value={model.quality_elo?.toFixed(0) ?? t("notAvailable")} />
-        <StatCard label={t("ttsSpeed")} value={model.speed_chars_per_sec?.toFixed(0) ?? t("notAvailable")} />
-        <StatCard label={t("ttsPrice")} value={formatDollar(model.price_per_1m_chars, t)} />
-      </StatGrid>
-      <InfoCard title={t("modelInfo")}>
-        <InfoRow compact label={t("provider")} value={orNA(model.provider, t)} />
-        <InfoRow compact label={t("modelNameOrId")} value={model.name} />
-      </InfoCard>
     </DetailLayout>
   );
 }

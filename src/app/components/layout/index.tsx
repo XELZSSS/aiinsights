@@ -4,7 +4,6 @@ import {
   Home,
   Award,
   Megaphone,
-  ShieldCheck,
   Newspaper,
   Settings,
   MoreHorizontal,
@@ -40,9 +39,8 @@ function useNavigation() {
       },
     ];
     const secondary: NavItem[] = [
-      { path: "/releases", label: t("releases"), icon: <Megaphone size={18} />, matchPrefix: ["/score-release"] },
+      { path: "/releases", label: t("releases"), icon: <Megaphone size={18} /> },
       { path: "/news", label: t("aiNews"), icon: <Newspaper size={18} /> },
-      { path: "/status", label: t("status"), icon: <ShieldCheck size={18} /> },
     ];
     const all = [...primary, ...secondary];
     const mobilePrimary = primary;

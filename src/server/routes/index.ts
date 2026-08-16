@@ -9,9 +9,6 @@ import { getIntelligenceIndex } from "@/server/sources/aa";
 import { getModels, getReleases } from "@/server/sources/huggingface";
 import { getNews } from "@/server/sources/news";
 import { getOpenRouterRankings } from "@/server/sources/openrouter";
-import { getPredictions } from "@/server/sources/polymarket";
-import { checkAllUpstreams, getSystemStats } from "@/server/sources/misc";
-import { getTtsLeaderboard } from "@/server/sources/aa";
 import { ARENA_CATEGORIES } from "@/shared/config";
 
 export interface RouteDef<P extends Record<string, string> = Record<string, string>, R = unknown> {
@@ -87,37 +84,17 @@ export const routeDefs: RouteDef[] = [
     handler: (ctx) => getOpenRouterRankings(ctx, {}),
   },
   {
-    path: "/api/predictions",
-    handler: (ctx) => getPredictions(ctx, {}),
-  },
-  {
-    path: "/api/tts-leaderboard",
-    handler: (ctx) => getTtsLeaderboard(ctx, {}),
-  },
-  {
-    path: "/api/health",
-    handler: (ctx) => checkAllUpstreams(ctx, {}),
-  },
-  {
-    path: "/api/system-stats",
-    handler: (ctx) => getSystemStats(ctx, {}),
-  },
-  {
     path: "/api/home-dashboard",
     handler: async (ctx: AppContext) => {
-      const [orRankings, arena, opensource, tts, predictions] = await Promise.allSettled([
+      const [orRankings, arena, opensource] = await Promise.allSettled([
         getOpenRouterRankings(ctx, {}),
         getArenaLeaderboard(ctx, { category: "text-to-image" }),
         getModels(ctx, { sort: "trendingScore", direction: "-1", limit: 500 }),
-        getTtsLeaderboard(ctx, {}),
-        getPredictions(ctx, {}),
       ]);
       return {
         orRankings: settled(orRankings, null),
         arena: settled(arena, null),
         opensource: settled(opensource, null),
-        tts: settled(tts, null),
-        predictions: settled(predictions, null),
       };
     },
   },

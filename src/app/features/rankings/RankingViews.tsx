@@ -2,17 +2,14 @@ import { useMemo } from "react";
 import { useTranslation } from "@/app/i18n";
 import { useFilteredData } from "@/app/hooks";
 import { DataTable, type DataTableColumn } from "@/app/components/data";
-import { RightAlignedText } from "@/app/components/composite";
-import { formatDollar, formatShortNumber } from "@/shared/utils";
-import type { TtsModel, OpenSourceModelEntry, HallucinationRankingEntry } from "@/shared/types";
-import { useTtsLeaderboard } from "@/app/api/queries";
+import { formatShortNumber } from "@/shared/utils";
+import type { OpenSourceModelEntry, HallucinationRankingEntry } from "@/shared/types";
 
 export const RANKING_TABS = [
   "modelRankings",
   "openRouterRankings",
   "openSourceRankings",
   "hallucinationRankings",
-  "tts",
   "providerCompare",
 ] as const;
 
@@ -23,8 +20,7 @@ export const RANKING_TAB_INDEX: Record<RankingTabId, number> = {
   openRouterRankings: 1,
   openSourceRankings: 2,
   hallucinationRankings: 3,
-  tts: 4,
-  providerCompare: 5,
+  providerCompare: 4,
 };
 
 interface RankingTableProps<T> {
@@ -46,79 +42,6 @@ function RankingTable<T>({ data, columns, getRowId, getSearchFields }: RankingTa
         <DataTable data={filtered} columns={columns} getRowId={getRowId} />
       )}
     </div>
-  );
-}
-
-const getTtsRowId = (model: TtsModel) => model.id;
-const getTtsSearchFields = (m: TtsModel) => [m.name, m.provider || ""];
-
-export function TtsView() {
-  const { t } = useTranslation();
-  const { data } = useTtsLeaderboard();
-
-  const columns = useMemo<Parameters<typeof RankingTable<TtsModel>>[0]["columns"]>(
-    () => [
-      {
-        id: "model",
-        cell: (model) => (
-          <div className="min-w-0">
-            <p className="text-sm font-medium break-words">{model.name}</p>
-            <div className="flex md:hidden mt-1 items-center gap-1.5">
-              {model.provider && <span className="text-xs text-text-secondary">{model.provider}</span>}
-              {model.speed_chars_per_sec != null && (
-                <span className="text-xs text-text-secondary">
-                  {t("ttsSpeed")}: {model.speed_chars_per_sec.toFixed(1)}
-                </span>
-              )}
-              {model.price_per_1m_chars != null && (
-                <span className="text-xs text-text-tertiary">{formatDollar(model.price_per_1m_chars, t)}</span>
-              )}
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: "provider",
-        hiddenMd: true,
-        align: "right",
-        cell: (model) => <RightAlignedText>{model.provider || t("notAvailable")}</RightAlignedText>,
-      },
-      {
-        id: "quality",
-        align: "right",
-        cell: (model) => (
-          <span className="text-sm font-semibold">
-            {model.quality_elo != null ? model.quality_elo.toFixed(0) : t("notAvailable")}
-          </span>
-        ),
-      },
-      {
-        id: "speed",
-        align: "right",
-        hiddenMd: true,
-        cell: (model) => (
-          <span className="text-sm">
-            {model.speed_chars_per_sec != null ? model.speed_chars_per_sec.toFixed(1) : t("notAvailable")}
-          </span>
-        ),
-      },
-      {
-        id: "price",
-        align: "right",
-        hiddenMd: true,
-        cell: (model) => <span className="text-sm">{formatDollar(model.price_per_1m_chars, t)}</span>,
-      },
-    ],
-    [t],
-  );
-
-  return (
-    <RankingTable
-      data={data ?? []}
-      columns={columns}
-      getRowId={getTtsRowId}
-      getSearchFields={getTtsSearchFields}
-    />
   );
 }
 

@@ -205,21 +205,6 @@ export function getOpenLicense(tags: string[]): string | null {
   return null;
 }
 
-export function dfsCollect<T>(root: unknown, predicate: (node: unknown) => T | null): T[] {
-  const results: T[] = [];
-  const stack: unknown[] = [root];
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current || typeof current !== "object") continue;
-    const result = predicate(current);
-    if (result !== null) results.push(result);
-    for (const v of Array.isArray(current) ? current : Object.values(current)) {
-      if (typeof v === "object" && v !== null) stack.push(v);
-    }
-  }
-  return results;
-}
-
 export function findNextData<T>(root: unknown, key: string): T[] | null {
   const stack: unknown[] = [root];
   while (stack.length > 0) {

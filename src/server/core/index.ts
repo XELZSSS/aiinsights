@@ -17,10 +17,6 @@ export class ValidationError extends ApiError {
   }
 }
 
-export function errorMessage(e: unknown): string {
-  return e instanceof Error ? e.message : String(e);
-}
-
 export type QuerySpec =
   | { type: "string"; default?: string; maxLen?: number }
   | { type: "number"; default?: string; min?: number; max?: number }
@@ -146,18 +142,6 @@ export class HttpClient {
 
   async text(url: string, init?: FetchOptions): Promise<string> {
     return (await this.doFetch(url, init ?? {}, "text/html,application/xhtml+xml,*/*")).text();
-  }
-
-  async probe(url: string, timeoutMs: number): Promise<{ responseTime: number; statusCode: number }> {
-    const start = Date.now();
-    const res = await fetch(url, {
-      method: "GET",
-      headers: { "user-agent": this.userAgent },
-      signal: AbortSignal.timeout(timeoutMs),
-    });
-    const responseTime = Date.now() - start;
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return { responseTime, statusCode: res.status };
   }
 }
 
@@ -310,10 +294,6 @@ export function settled<T>(result: PromiseSettledResult<T>, fallback: T): T {
   return result.status === "fulfilled" ? result.value : fallback;
 }
 
-function settledValues<T>(results: readonly PromiseSettledResult<T>[]): T[] {
-  return results.flatMap((r) => (r.status === "fulfilled" ? [r.value] : []));
-}
-
 export function deduplicateBy<T>(arr: T[], keyFn: (item: T) => string): T[] {
   const seen = new Set<string>();
   return arr.filter((item) => {
@@ -336,18 +316,4 @@ export function formatSettleErrors(
     )
     .filter(Boolean)
     .join("; ");
-}
-
-export function settleOrThrow<T>(results: PromiseSettledResult<T[]>[], label: string): T[] {
-  const valid = settledValues(results)
-    .filter((v): v is T[] => Array.isArray(v))
-    .flatMap((v) => v);
-  if (valid.length === 0) {
-    const reasons = formatSettleErrors(
-      results,
-      results.map((_, i) => `${label} #${i + 1}`),
-    );
-    throw new Error(`${label}: all upstream requests failed${reasons ? ` (${reasons})` : ""}`);
-  }
-  return valid;
 }

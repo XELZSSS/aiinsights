@@ -4,7 +4,7 @@ import { Badge, TagBadge, Button } from "@/app/components/ui";
 import { RightAlignedText, ModelDetailContent, RankingNameCell } from "@/app/components/composite";
 import { formatContext, formatScore, formatDollar, formatShortNumber, formatTrend } from "@/shared/utils";
 import { cn } from "@/shared/utils";
-import type { ArtificialAnalysisModel, OpenRouterRankEntry, OpenRouterAppEntry } from "@/shared/types";
+import type { ArtificialAnalysisModel, OpenRouterRankEntry } from "@/shared/types";
 import type { TFunction, TranslationKey } from "@/shared/i18n";
 import { useTranslation } from "@/app/i18n";
 import { useCompareStore } from "@/app/stores";
@@ -233,7 +233,6 @@ const videoColumn = <T extends { videoOutputSeconds?: number | null }>(): DataTa
 
 export function buildOpenRouterColumns(t: (key: TranslationKey) => string): {
   modelColumns: DataTableColumn<OpenRouterRankEntry>[];
-  appColumns: DataTableColumn<OpenRouterAppEntry>[];
 } {
   const modelColumns: DataTableColumn<OpenRouterRankEntry>[] = [
     {
@@ -286,37 +285,7 @@ export function buildOpenRouterColumns(t: (key: TranslationKey) => string): {
     },
   ];
 
-  const appColumns: DataTableColumn<OpenRouterAppEntry>[] = [
-    {
-      id: "app",
-      width: "45%",
-      cell: (item) => (
-        <>
-          <RankingNameCell name={item.name} />
-          <div className="flex flex-wrap gap-1 mt-1 md:hidden">
-            <TagBadge>
-              {t("requests")}: {formatShortNumber(item.requestCount || 0)}
-            </TagBadge>
-            {item.categories?.length ? <TagBadge>{item.categories.join(", ")}</TagBadge> : null}
-          </div>
-        </>
-      ),
-    },
-    tokenColumn<OpenRouterAppEntry>(),
-    requestColumn<OpenRouterAppEntry>(),
-    {
-      id: "category",
-      align: "right",
-      hiddenMd: true,
-      cell: (item) => (
-        <RightAlignedText className="text-xs">
-          {item.categories?.length ? item.categories.join(", ") : t("notAvailable")}
-        </RightAlignedText>
-      ),
-    },
-  ];
-
-  return { modelColumns, appColumns };
+  return { modelColumns };
 }
 
 export function buildBenchmarkColumns(

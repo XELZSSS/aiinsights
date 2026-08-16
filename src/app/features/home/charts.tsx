@@ -1,9 +1,5 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import {
-  Cell,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
   Line,
   LineChart,
   CartesianGrid,
@@ -13,97 +9,12 @@ import {
   Legend,
 } from "recharts";
 import { useTranslation } from "@/app/i18n";
-import { Card, CardContent, Dot } from "@/app/components/ui";
+import { Card, CardContent } from "@/app/components/ui";
 import { PageSection } from "@/app/components/layout";
-import { getModelColor, COOL_COLORS, chartTooltipStyle, formatShortNumber } from "@/shared/utils";
+import { getModelColor, COOL_COLORS, chartTooltipStyle } from "@/shared/utils";
 import { useElementWidth } from "@/app/hooks";
 import type { ArtificialAnalysisModel } from "@/shared/types";
-import type { HomeBarStat, HomeToolUsage } from "@/app/features/home/HomeView";
-
-const ToolUsageShareDonut = memo(function ToolUsageShareDonut({
-  total,
-  rows,
-}: {
-  total: number;
-  rows: Array<{ name: string; value: number; share: number }>;
-}) {
-  const { t, lang } = useTranslation();
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const center = hoveredIndex != null ? rows[hoveredIndex] : null;
-
-  const percent = (v: number) =>
-    v.toLocaleString(lang === "zh" ? "zh-CN" : "en-US", {
-      style: "percent",
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    });
-
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm font-semibold">{t("toolUsageShare")}</p>
-      <p className="text-xs text-text-secondary -mt-1">{t("openRouterSource")}</p>
-      {rows.length === 0 ? (
-        <p className="text-sm text-text-secondary">{t("notAvailable")}</p>
-      ) : (
-        <div className="flex flex-col md:flex-row gap-6 items-center">
-          <div className="relative w-full max-w-[220px] aspect-square shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart onMouseLeave={() => setHoveredIndex(null)} aria-label={t("toolUsageShare")}>
-                <Pie
-                  data={rows}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={36}
-                  outerRadius={68}
-                  paddingAngle={1}
-                  stroke="var(--bg-card)"
-                  strokeWidth={2}
-                  isAnimationActive={false}
-                >
-                  {rows.map((row, index) => (
-                    <Cell
-                      key={row.name}
-                      fill={getModelColor(index)}
-                      onMouseEnter={() => setHoveredIndex(index)}
-                      onClick={() => setHoveredIndex(hoveredIndex === index ? null : index)}
-                    />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              {center ? (
-                <>
-                  <span className="text-xs font-bold leading-none text-center max-w-full px-2 truncate">{center.name}</span>
-                  <span className="text-base font-bold leading-none mt-1 font-mono">
-                    {formatShortNumber(center.value)}
-                  </span>
-                  <span className="text-xs text-text-secondary leading-none mt-0.5">
-                    {(center.share * 100).toFixed(1)}%
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span className="text-lg font-bold leading-none font-mono">{formatShortNumber(total)}</span>
-                  <span className="text-xs text-text-secondary leading-none mt-0.5">{t("tokens")}</span>
-                </>
-              )}
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 min-w-0 flex-1 w-full">
-            {rows.map((row, index) => (
-              <div key={row.name} className="grid grid-cols-[10px_1fr_auto] gap-2.5 items-center min-w-0">
-                <Dot color={getModelColor(index)} />
-                <span className="text-sm truncate">{row.name}</span>
-                <span className="text-sm font-semibold font-mono">{percent(row.share)}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-});
+import type { HomeBarStat } from "@/app/features/home/HomeView";
 
 export const IndexLineChart = memo(function IndexLineChart({ models }: { models: ArtificialAnalysisModel[] }) {
   const { t } = useTranslation();
@@ -195,25 +106,16 @@ export const IndexLineChart = memo(function IndexLineChart({ models }: { models:
 export const StatisticsSection = memo(function StatisticsSection({
   downloadStats,
   hallucinationStats,
-  toolUsageShare,
 }: {
   downloadStats: HomeBarStat[];
   hallucinationStats: HomeBarStat[];
-  toolUsageShare: HomeToolUsage;
 }) {
   const { t } = useTranslation();
   return (
     <PageSection title={t("statistics")}>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <RankedStatCard title={t("openSourceDownloadsStats")} source={t("huggingFaceSource")} rows={downloadStats} />
         <RankedStatCard title={t("hallucinationStats")} source={t("hallucinationSource")} rows={hallucinationStats} />
-        <div className="md:col-span-1">
-          <Card accent="top" className="h-full">
-            <CardContent padding="md" className="h-full">
-              <ToolUsageShareDonut total={toolUsageShare.total} rows={toolUsageShare.rows} />
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </PageSection>
   );

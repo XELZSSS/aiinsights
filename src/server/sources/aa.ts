@@ -1,8 +1,8 @@
 import { upstreamConfig, DEFAULT_TTL_MS, PRICING_BLENDS, BENCHMARK_KEYS } from "@/shared/config";
-import type { ArtificialAnalysisModel, TtsModel } from "@/shared/types";
+import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { AppContext } from "@/server/app";
-import { num, str, strOr, bool, obj, dfsCollect, findNextData, parseRscPayload } from "@/server/parser";
-import { createSource, deduplicateBy } from "@/server/core";
+import { num, str, strOr, bool, obj, findNextData, parseRscPayload } from "@/server/parser";
+import { createSource } from "@/server/core";
 
 const RSC_HEADERS = { RSC: "1", "Next-Router-State-Tree": "%5B%5D" } as const;
 
@@ -120,39 +120,5 @@ export const getIntelligenceIndex = createSource<Record<string, never>, Artifici
     const invalid = models.filter((m) => !m.id || !m.name);
     if (invalid.length > 0) ctx.log("warn", `[artificial] ${invalid.length} models with empty id/name after mapping`);
     return { data: models };
-  },
-});
-
-export const getTtsLeaderboard = createSource<Record<string, never>, TtsModel[]>({
-  cacheKey: () => "tts-leaderboard",
-  defaultTtl: DEFAULT_TTL_MS,
-  fetch: async (ctx: AppContext) => {
-    const body = await fetchAaRsc(ctx, "/text-to-speech/models");
-    const entries = parseRscPayload<TtsModel>(body, "pricePer1mCharacters", (tree) =>
-      dfsCollect(tree, (node) => {
-        if (typeof node !== "object" || !node || Array.isArray(node)) return null;
-        const obj = node as Record<string, unknown>;
-        const price = num(obj.pricePer1mCharacters);
-        const model = obj.model as Record<string, unknown> | undefined;
-        if (!model || typeof model !== "object" || price === null) return null;
-        const qualityElo = num(model.qualityElo);
-        const name = typeof model.name === "string" ? model.name : "";
-        if (qualityElo === null || !name) return null;
-        const creator = model.creator as Record<string, unknown> | undefined;
-        const host = obj.host as Record<string, unknown> | undefined;
-        const perf = obj.performance as Record<string, unknown> | undefined;
-        return {
-          id: typeof model.id === "string" ? model.id : name,
-          name,
-          provider:
-            (typeof creator?.name === "string" ? creator.name : null) ??
-            (typeof host?.name === "string" ? host.name : null),
-          quality_elo: qualityElo,
-          speed_chars_per_sec: num(perf?.medianCharactersPerSecond),
-          price_per_1m_chars: price,
-        } as TtsModel;
-      }),
-    );
-    return { data: deduplicateBy(entries, (e) => e.id).sort((a, b) => (b.quality_elo ?? 0) - (a.quality_elo ?? 0)) };
   },
 });

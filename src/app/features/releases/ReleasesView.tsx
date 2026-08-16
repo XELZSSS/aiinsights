@@ -163,9 +163,9 @@ function ReleaseDatesTab({ releaseRows }: { releaseRows: DatedModel[] }) {
   return <DataTable data={releaseRows} columns={releaseColumns} />;
 }
 
-function ReleasesContent({ defaultMode, lockedMode }: { defaultMode: "feed" | "release-dates"; lockedMode: boolean }) {
+function ReleasesContent() {
   const { t } = useTranslation();
-  const [mode, setMode] = useState<"feed" | "release-dates">(defaultMode);
+  const [mode, setMode] = useState<"feed" | "release-dates">("feed");
   const { data: openSourceReleases } = useSuspenseOpenSourceReleases();
   const { data: artificialRankings } = useSuspenseArtificialRankings();
 
@@ -183,7 +183,7 @@ function ReleasesContent({ defaultMode, lockedMode }: { defaultMode: "feed" | "r
   return (
     <PageContainer>
       <PageHeader
-        title={t(lockedMode ? "scoreRelease" : "releases")}
+        title={t("releases")}
         description={mode === "feed" ? t("releaseDataSource") : t("artificialSource")}
         actions={<SearchInput />}
       />
@@ -194,32 +194,22 @@ function ReleasesContent({ defaultMode, lockedMode }: { defaultMode: "feed" | "r
             : t("modelsTotal", { count: releaseRows.length })}
         </span>
       </div>
-      {lockedMode ? (
-        <ReleaseDatesTab releaseRows={releaseRows} />
-      ) : (
-        <TabContainer
-          tabs={tabs}
-          activeTab={mode}
-          onTabChange={(id) => setMode(id as "feed" | "release-dates")}
-          tabSize="sm"
-        >
-          {mode === "feed" ? <FeedTab allEntries={allEntries} /> : <ReleaseDatesTab releaseRows={releaseRows} />}
-        </TabContainer>
-      )}
+      <TabContainer
+        tabs={tabs}
+        activeTab={mode}
+        onTabChange={(id) => setMode(id as "feed" | "release-dates")}
+        tabSize="sm"
+      >
+        {mode === "feed" ? <FeedTab allEntries={allEntries} /> : <ReleaseDatesTab releaseRows={releaseRows} />}
+      </TabContainer>
     </PageContainer>
   );
 }
 
-export function ReleasesView({
-  defaultMode,
-  lockedMode = false,
-}: {
-  defaultMode?: "feed" | "release-dates";
-  lockedMode?: boolean;
-}) {
+export function ReleasesView() {
   return (
     <SuspenseQuery>
-      <ReleasesContent defaultMode={defaultMode || "feed"} lockedMode={lockedMode} />
+      <ReleasesContent />
     </SuspenseQuery>
   );
 }

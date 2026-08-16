@@ -29,7 +29,6 @@ AI model data dashboard, aggregating model rankings, benchmarks, pricing, and re
 | 🏆 **Model Rankings & Details** | Multi-dimensional model rankings, intelligence index, speed, pricing, provider analysis |
 | 📢 **Model Release Tracking** | Latest model releases, open source download statistics |
 | 📰 **News Aggregation** | AI news from multiple sources, categorized by topic |
-| 📈 **Market Predictions** | AI market predictions from Polymarket |
 | 🔍 **Model Comparison** | Radar chart and metric comparison for selected models |
 
 ---

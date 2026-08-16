@@ -1,19 +1,12 @@
-import { memo, useState, useEffect, useMemo, lazy, Suspense, type ReactNode } from "react";
-import { Rocket, Image, BarChart3, Mic } from "lucide-react";
+import { memo, useMemo, lazy, Suspense } from "react";
+import { Rocket, Image, BarChart3 } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
-import {
-  useSuspenseArtificialRankings,
-  useSuspenseHomeDashboard,
-  useHallucinationRankings,
-  useSuspenseHealthStatus,
-  useSystemStats,
-} from "@/app/api/queries";
+import { useSuspenseArtificialRankings, useSuspenseHomeDashboard, useHallucinationRankings } from "@/app/api/queries";
 import { SuspenseQuery } from "@/app/components/shared";
-import { PredictionsSection } from "@/app/components/data";
 import { StatCard, CardGrid } from "@/app/components/composite";
 import { Card, CardContent, Dot } from "@/app/components/ui";
 import { PageContainer, PageSection } from "@/app/components/layout";
-import { getModelColor, groupByProvider, formatShortNumber, formatDateTime } from "@/shared/utils";
+import { getModelColor, groupByProvider, formatShortNumber } from "@/shared/utils";
 import type { ArenaModel, ArtificialAnalysisModel, HallucinationRankingEntry, HomeDashboardData } from "@/shared/types";
 import type { TranslationKey } from "@/shared/i18n";
 
@@ -38,11 +31,6 @@ export interface HomeBarStat {
   valueLabel: string;
 }
 
-export interface HomeToolUsage {
-  total: number;
-  rows: Array<{ name: string; value: number; share: number }>;
-}
-
 function useHomeDashboardData(
   artificialData: ArtificialAnalysisModel[],
   hallucinationRankings: HallucinationRankingEntry[],
@@ -52,10 +40,7 @@ function useHomeDashboardData(
   return useMemo(() => {
     const openSourceRankings = dashboardData.opensource ?? [];
     const arenaT2IModels = dashboardData.arena?.models ?? [];
-    const openRouterApps = dashboardData.orRankings?.appUsageRankings ?? [];
     const latestOpenRouterModel = dashboardData.orRankings?.tokenUsageRankings?.[0] ?? null;
-    const ttsData = dashboardData.tts ?? [];
-    const bestTtsModel = ttsData[0] ?? null;
 
     const downloadStats: HomeBarStat[] = openSourceRankings.slice(0, 7).map((model) => ({
       label: model.id.split("/").pop() || model.id,
@@ -82,26 +67,6 @@ function useHomeDashboardData(
       null as ArtificialAnalysisModel | null,
     );
 
-    const total = openRouterApps.reduce((sum, app) => sum + app.totalTokens, 0);
-    let toolUsageShare: HomeToolUsage;
-    if (total <= 0) {
-      toolUsageShare = { total, rows: [] };
-    } else {
-      const topRows = [...openRouterApps]
-        .sort((a, b) => b.totalTokens - a.totalTokens)
-        .slice(0, 5)
-        .map((app) => ({ name: app.name, value: app.totalTokens, share: app.totalTokens / total }));
-      const topTotal = topRows.reduce((sum, row) => sum + row.value, 0);
-      const otherValue = total - topTotal;
-      toolUsageShare = {
-        total,
-        rows:
-          otherValue > 0
-            ? [...topRows, { name: t("otherTools"), value: otherValue, share: otherValue / total }]
-            : topRows,
-      };
-    }
-
     const kpiStrip: HomeKpi[] = [
       { label: t("openRouterRankings"), value: latestOpenRouterModel?.name || t("notAvailable"), Icon: BarChart3 },
       { label: t("bestT2IModel"), value: arenaT2IModels[0]?.model || t("notAvailable"), Icon: Image },
@@ -110,7 +75,6 @@ function useHomeDashboardData(
         value: latestRelease?.short_name || latestRelease?.name || t("notAvailable"),
         Icon: Rocket,
       },
-      { label: t("bestTtsModel"), value: bestTtsModel?.name || t("notAvailable"), Icon: Mic },
     ];
 
     const providers = groupByProvider(artificialData);
@@ -122,52 +86,16 @@ function useHomeDashboardData(
       })
       .sort((a, b) => b.avgSpeed - a.avgSpeed);
 
-    return { downloadStats, hallucinationStats, toolUsageShare, kpiStrip, providerStats, arenaT2IModels };
+    return { downloadStats, hallucinationStats, kpiStrip, providerStats, arenaT2IModels };
   }, [artificialData, hallucinationRankings, dashboardData, t]);
 }
 
 const IndexLineChart = lazy(() => import("./charts").then((m) => ({ default: m.IndexLineChart })));
 const StatisticsSection = lazy(() => import("./charts").then((m) => ({ default: m.StatisticsSection })));
 
-const StatusBarPill = memo(function StatusBarPill({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex items-center gap-1.5 px-3 py-1.5 border border-border rounded-lg bg-bg-card text-xs text-text-secondary">
-      {children}
-    </div>
-  );
-});
-
-const UptimeDisplay = memo(function UptimeDisplay() {
-  const { t } = useTranslation();
-  const statsQ = useSystemStats();
-  const uptime = statsQ.data?.uptime ?? 0;
-  const fmt = (s: number) => {
-    if (s < 60) return t("uptimeSeconds", { value: Math.round(s) });
-    if (s < 3600) return t("uptimeMinutes", { value: Math.floor(s / 60), value2: Math.round(s % 60) });
-    if (s < 86400) return t("uptimeHours", { value: Math.floor(s / 3600), value2: Math.floor((s % 3600) / 60) });
-    return t("uptimeDays", { value: Math.floor(s / 86400), value2: Math.floor((s % 86400) / 3600) });
-  };
-  return (
-    <StatusBarPill>
-      <Dot size="xs" color="var(--success)" />
-      {t("uptime")}: {fmt(uptime)}
-    </StatusBarPill>
-  );
-});
-
-const ClockDisplay = memo(function ClockDisplay() {
-  const { lang } = useTranslation();
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30000);
-    return () => clearInterval(id);
-  }, []);
-  return <StatusBarPill>{formatDateTime(now, lang)}</StatusBarPill>;
-});
-
 const KpiStrip = memo(function KpiStrip({ kpis }: { kpis: HomeKpi[] }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
       {kpis.map((kpi) => (
         <StatCard key={kpi.label} icon={kpi.Icon} label={kpi.label} value={kpi.value} />
       ))}
@@ -266,24 +194,13 @@ const HomeContent = memo(function HomeContent() {
   const { data: artificialData } = useSuspenseArtificialRankings();
   const hallucinationRankings = useHallucinationRankings(artificialData);
   const { data: dashboardData } = useSuspenseHomeDashboard();
-  const { data: healthData } = useSuspenseHealthStatus();
 
-  const predictions = dashboardData.predictions ?? null;
-  const { downloadStats, hallucinationStats, toolUsageShare, kpiStrip, providerStats, arenaT2IModels } =
+  const { downloadStats, hallucinationStats, kpiStrip, providerStats, arenaT2IModels } =
     useHomeDashboardData(artificialData, hallucinationRankings, dashboardData, t);
-
-  const healthyCount = healthData.filter((e) => e.status === "ok").length;
-  const totalCount = healthData.length;
 
   return (
     <PageContainer>
       <div className="flex items-center gap-2 flex-wrap mb-4">
-        <ClockDisplay />
-        <UptimeDisplay />
-        <StatusBarPill>
-          <Dot size="xs" color={totalCount > 0 && healthyCount === totalCount ? "var(--success)" : "var(--destructive)"} />
-          {t("dataSources")}: {healthyCount}/{totalCount}
-        </StatusBarPill>
         <div className="ml-auto">
           <SearchInput />
         </div>
@@ -319,20 +236,10 @@ const HomeContent = memo(function HomeContent() {
       </PageSection>
 
       <Suspense fallback={null}>
-        <StatisticsSection
-          downloadStats={downloadStats}
-          hallucinationStats={hallucinationStats}
-          toolUsageShare={toolUsageShare}
-        />
+        <StatisticsSection downloadStats={downloadStats} hallucinationStats={hallucinationStats} />
       </Suspense>
 
       <ArenaT2ISection models={arenaT2IModels} />
-
-      {predictions && (
-        <PageSection title={t("marketPredictions")} description={t("predictionsSource")}>
-          <PredictionsSection data={predictions} />
-        </PageSection>
-      )}
     </PageContainer>
   );
 });

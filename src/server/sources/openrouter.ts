@@ -1,6 +1,6 @@
 import { upstreamConfig, DEFAULT_TTL_MS, PARTIAL_FAIL_TTL_MS } from "@/shared/config";
 import { numOr } from "@/server/parser";
-import type { OpenRouterAppEntry, OpenRouterRankingsPayload, OpenRouterRankEntry } from "@/shared/types";
+import type { OpenRouterRankingsPayload, OpenRouterRankEntry } from "@/shared/types";
 import { createSource, formatSettleErrors } from "@/server/core";
 import type { AppContext } from "@/server/app";
 
@@ -31,26 +31,6 @@ interface ModelRow {
   image_output_requests: number;
   video_output_seconds: number;
   change: number | null;
-}
-
-interface AppRow {
-  app_id: number;
-  total_tokens: string;
-  total_requests: number;
-  rank: number;
-  app: {
-    id: number;
-    title: string;
-    description: string;
-    origin_url: string;
-    categories: string[];
-  };
-}
-
-interface AppResponse {
-  day: AppRow[];
-  week: AppRow[];
-  month: AppRow[];
 }
 
 function creatorFromSlug(slug: string): string {
@@ -105,8 +85,7 @@ function mergeRows(rows: ModelRow[]): ModelRow[] {
 function mapModels(
   rows: ModelRow[],
   pricingMap: Map<string, { prompt: number; completion: number }>,
-): OpenRouterRankEntry[] {
-  return mergeRows(rows)
+): OpenRouterRankEntry[] {  return mergeRows(rows)
     .sort(
       (a, b) =>
         numOr(b.total_prompt_tokens) +
@@ -137,27 +116,6 @@ function mapModels(
         isFree,
       };
     });
-}
-
-function mapApps(rows: AppRow[]): OpenRouterAppEntry[] {
-  const seen = new Set<number>();
-  return rows
-    .filter((r) => {
-      if (!r.app_id || seen.has(r.app_id)) return false;
-      seen.add(r.app_id);
-      return true;
-    })
-    .sort((a, b) => numOr(b.total_tokens) - numOr(a.total_tokens))
-    .map((row, i) => ({
-      rank: row.rank ?? i + 1,
-      id: String(row.app_id),
-      name: row.app?.title || `App ${row.app_id}`,
-      description: row.app?.description,
-      url: row.app?.origin_url || null,
-      categories: row.app?.categories || [],
-      totalTokens: numOr(row.total_tokens),
-      requestCount: numOr(row.total_requests),
-    }));
 }
 
 interface PricingRow {
@@ -198,27 +156,23 @@ export const getOpenRouterRankings = createSource<Record<string, never>, OpenRou
   cacheKey: () => "openrouter-rankings",
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext) => {
-    const [modelResult, appResult, pricingResult] = await Promise.allSettled([
+    const [modelResult, pricingResult] = await Promise.allSettled([
       ctx.http.json<{ data: ModelRow[] }>(`${OPENROUTER}/api/frontend/v1/rankings/models`),
-      ctx.http.json<{ data: AppResponse }>(`${OPENROUTER}/api/frontend/v1/rankings/apps`),
       fetchModelPricing(ctx),
     ]);
     const modelRows = modelResult.status === "fulfilled" ? (modelResult.value?.data ?? []) : [];
-    const appRows = appResult.status === "fulfilled" ? (appResult.value?.data?.day ?? []) : [];
     const pricingMap =
       pricingResult.status === "fulfilled"
         ? pricingResult.value
         : new Map<string, { prompt: number; completion: number }>();
-    if (modelRows.length === 0 && appRows.length === 0) {
-      const reasons = formatSettleErrors([modelResult, appResult], ["models", "apps"]);
+    if (modelRows.length === 0) {
+      const reasons = formatSettleErrors([modelResult], ["models"]);
       throw new Error(`OpenRouter: all upstream requests failed${reasons ? ` (${reasons})` : ""}`);
     }
-    const partialFailure =
-      modelResult.status !== "fulfilled" || appResult.status !== "fulfilled" || pricingResult.status !== "fulfilled";
+    const partialFailure = modelResult.status !== "fulfilled" || pricingResult.status !== "fulfilled";
     return {
       data: {
         tokenUsageRankings: mapModels(modelRows, pricingMap),
-        appUsageRankings: mapApps(appRows),
         fetchedAt: new Date().toISOString(),
       },
       ttl: partialFailure ? PARTIAL_FAIL_TTL_MS : DEFAULT_TTL_MS,

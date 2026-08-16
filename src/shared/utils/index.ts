@@ -268,16 +268,6 @@ export function formatScore(t: TFunction, n?: number | null) {
   return n.toFixed(2);
 }
 
-export function formatCompactDollar(n: number): string {
-  if (!Number.isFinite(n)) return "—";
-  const sign = n < 0 ? "-" : "";
-  const abs = Math.abs(n);
-  if (abs >= 1e9) return `${sign}$${(abs / 1e9).toFixed(1)}B`;
-  if (abs >= 1e6) return `${sign}$${(abs / 1e6).toFixed(1)}M`;
-  if (abs >= 1e3) return `${sign}$${(abs / 1e3).toFixed(0)}K`;
-  return `${sign}$${abs.toFixed(2)}`;
-}
-
 export function formatCost(t: TFunction, n?: number | null) {
   if (typeof n !== "number" || !Number.isFinite(n)) return t("notAvailable");
   return `${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -336,18 +326,6 @@ export function formatDate(isoString: string | number | Date, lang: string): str
   const date = new Date(isoString);
   if (isNaN(date.getTime())) return String(isoString);
   return date.toLocaleDateString(localeOf(lang));
-}
-
-export function formatDateTime(isoString: string | number | Date, lang: string): string {
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return String(isoString);
-  return date.toLocaleString(localeOf(lang), {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
 
 export function orNA(value: string | null | undefined, t: TFunction): string {

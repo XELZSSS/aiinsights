@@ -80,15 +80,6 @@ export interface ArtificialAnalysisModel {
   omniscience_breakdown?: ModelOmniscienceBreakdown;
 }
 
-export interface TtsModel {
-  id: string;
-  name: string;
-  provider: string | null;
-  quality_elo: number | null;
-  speed_chars_per_sec: number | null;
-  price_per_1m_chars: number | null;
-}
-
 export interface OpenSourceModelEntry {
   id: string;
   author: string;
@@ -123,56 +114,9 @@ export interface OpenRouterRankEntry {
   isFree?: boolean;
 }
 
-export interface OpenRouterAppEntry {
-  rank: number;
-  id: string;
-  name: string;
-  description?: string;
-  url?: string | null;
-  categories: string[];
-  totalTokens: number;
-  requestCount: number;
-}
-
 export interface OpenRouterRankingsPayload {
   tokenUsageRankings: OpenRouterRankEntry[];
-  appUsageRankings: OpenRouterAppEntry[];
   fetchedAt: string;
-}
-
-export interface ModelPrediction {
-  id: string;
-  question: string;
-  company: string;
-  probability: number;
-  volume: number;
-  deadline: string;
-  url: string;
-}
-
-export interface ReleasePrediction {
-  id: string;
-  question: string;
-  model: string;
-  predictions: { window: string; probability: number }[];
-  volume: number;
-  url: string;
-}
-
-export interface ProviderPrediction {
-  id: string;
-  question: string;
-  provider: string;
-  options: { label: string; probability: number }[];
-  volume: number;
-  deadline: string;
-  url: string;
-}
-
-export interface PredictionsPayload {
-  modelRankings: ModelPrediction[];
-  releases: ReleasePrediction[];
-  providers: ProviderPrediction[];
 }
 
 export interface NewsItem {
@@ -183,28 +127,12 @@ export interface NewsItem {
   source: string;
 }
 
-export interface HealthEntry {
-  name: string;
-  status: "ok" | "error";
-  detail: string;
-  responseTime: number;
-  statusCode: number | null;
-  url: string;
-}
-
-export interface SystemStats {
-  runtime: "cloudflare" | "standard";
-  uptime: number;
-}
-
 export type ThemeMode = "light" | "dark";
 
 export interface HomeDashboardData {
   orRankings: OpenRouterRankingsPayload | null;
   arena: ArenaPayload | null;
   opensource: OpenSourceModelEntry[] | null;
-  tts: TtsModel[] | null;
-  predictions: PredictionsPayload | null;
 }
 
 export interface SearchResult {

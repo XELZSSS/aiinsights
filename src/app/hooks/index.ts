@@ -3,7 +3,6 @@ import { useLocation } from "react-router-dom";
 import type { SearchResult } from "@/shared/types";
 import {
   useArtificialRankings,
-  useTtsLeaderboard,
   useOpenRouterRankings,
   useOpenSourceSearchModels,
   useHallucinationRankings,
@@ -35,12 +34,10 @@ export function useSearchAllRankings(searchTerm: string): SearchResult[] {
   const enabled = searchTerm.length >= 2;
   const artificialQ = useArtificialRankings(enabled);
   const openSourceQ = useOpenSourceSearchModels(enabled);
-  const ttsQ = useTtsLeaderboard(enabled);
   const orQ = useOpenRouterRankings(enabled);
 
   const artificialData = artificialQ.data ?? [];
   const openSourceRankings = openSourceQ.data ?? [];
-  const ttsData = ttsQ.data ?? [];
   const openRouterData = orQ.data?.tokenUsageRankings ?? [];
   const hallucinationRankings = useHallucinationRankings(artificialData, enabled);
 
@@ -54,7 +51,6 @@ export function useSearchAllRankings(searchTerm: string): SearchResult[] {
     () => buildIndex(hallucinationRankings, (m) => [m.model]),
     [hallucinationRankings],
   );
-  const ttsIndex = useMemo(() => buildIndex(ttsData, (m) => [m.name]), [ttsData]);
 
   const deferredTerm = useDeferredValue(searchTerm);
 
@@ -110,18 +106,6 @@ export function useSearchAllRankings(searchTerm: string): SearchResult[] {
         })),
       );
     }
-    if (ttsIndex) {
-      results.push(
-        ...searchIndex(ttsIndex, term, (m) => ({
-          id: m.id,
-          name: m.name,
-          source: "tts",
-          score: m.quality_elo,
-          provider: m.provider || null,
-          link: `/model/tts/${m.name}`,
-        })),
-      );
-    }
     return results
       .sort((a, b) => {
         const aExact = a.name.toLowerCase() === term ? 1 : 0;
@@ -129,7 +113,7 @@ export function useSearchAllRankings(searchTerm: string): SearchResult[] {
         return aExact !== bExact ? bExact - aExact : (b.score ?? 0) - (a.score ?? 0);
       })
       .slice(0, 20);
-  }, [enabled, deferredTerm, artificialIndex, openRouterIndex, openSourceIndex, hallucinationIndex, ttsIndex]);
+  }, [enabled, deferredTerm, artificialIndex, openRouterIndex, openSourceIndex, hallucinationIndex]);
 }
 
 export function useFilteredData<T>(data: T[], getSearchFields: (item: T) => string[]): T[] {

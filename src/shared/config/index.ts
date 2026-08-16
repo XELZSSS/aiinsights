@@ -2,18 +2,14 @@ import type { TranslationKey } from "@/shared/i18n";
 
 export const FIVE_MINUTES = 5 * 60_000;
 export const THIRTY_MINUTES = 30 * 60_000;
-export const HEALTH_CHECK_INTERVAL = 60 * 1000;
-export const SYSTEM_STATS_INTERVAL = 30 * 1_000;
 
 export const upstreamConfig = {
   arena: "https://arena.ai/leaderboard",
   artificialAnalysis: "https://artificialanalysis.ai",
   huggingface: "https://huggingface.co/api/models",
   openrouter: "https://openrouter.ai",
-  polymarket: "https://gamma-api.polymarket.com",
 } as const;
 
-export const HEALTH_TIMEOUT_MS = 5_000;
 export const USER_AGENT = "AIInsights/2.0";
 
 export const PRICING_BLENDS = {
@@ -26,9 +22,6 @@ export const PRICING_BLENDS = {
 
 export const DEFAULT_TTL_MS = FIVE_MINUTES;
 export const NEWS_TTL_MS = THIRTY_MINUTES;
-export const HEALTH_TTL_MS = 60 * 1_000;
-export const POLYMARKET_TAGS_TTL_MS = 24 * 60 * 60 * 1_000;
-export const START_MARKER_TTL_MS = 365 * 24 * 60 * 60 * 1_000;
 export const PARTIAL_FAIL_TTL_MS = 60_000;
 
 export const ARENA_CATEGORIES = ["text", "text-to-image", "image-editing", "video", "audio"] as const;
@@ -72,29 +65,6 @@ export const BENCHMARK_KEYS = [
   "omniscience",
 ] as const;
 
-interface HealthProbe {
-  name: string;
-  url: string;
-  apiPath: string;
-}
-
-export const HEALTH_PROBES: readonly HealthProbe[] = [
-  { name: "HuggingFace Models", url: `${upstreamConfig.huggingface}?limit=1`, apiPath: "/api/open-source-models" },
-  {
-    name: "HuggingFace Releases",
-    url: `${upstreamConfig.huggingface}?sort=createdAt&direction=-1&limit=1`,
-    apiPath: "/api/open-source-releases",
-  },
-  { name: "Artificial Analysis", url: upstreamConfig.artificialAnalysis, apiPath: "/api/artificial-analysis-index" },
-  {
-    name: "OpenRouter Rankings",
-    url: `${upstreamConfig.openrouter}/api/v1/models`,
-    apiPath: "/api/openrouter-rankings",
-  },
-  { name: "Arena.ai Leaderboard", url: `${upstreamConfig.arena}/`, apiPath: "/api/arena-leaderboard" },
-  { name: "Polymarket Predictions", url: `${upstreamConfig.polymarket}/markets?limit=1`, apiPath: "/api/predictions" },
-];
-
 export const STORAGE_KEYS = {
   lang: "lang",
   theme: "theme",
@@ -106,13 +76,8 @@ const DEFAULT_BACK = "backToModelRankings" as const;
 export const MODEL_SOURCES = {
   aa: { labelKey: "modelRankings" as const, backTo: "/models", backLabelKey: DEFAULT_BACK },
   or: { labelKey: "openRouterRankings" as const, backTo: "/models", backLabelKey: DEFAULT_BACK },
-  os: {
-    labelKey: "openSourceRankings" as const,
-    backTo: "/open-source",
-    backLabelKey: "backToOpenSourceRankings" as const,
-  },
-  hall: { labelKey: "hallucinationRankings" as const, backTo: "/hallucinations", backLabelKey: DEFAULT_BACK },
-  tts: { labelKey: "tts" as const, backTo: "/tts", backLabelKey: DEFAULT_BACK },
+  os: { labelKey: "openSourceRankings" as const, backTo: "/models", backLabelKey: DEFAULT_BACK },
+  hall: { labelKey: "hallucinationRankings" as const, backTo: "/models", backLabelKey: DEFAULT_BACK },
 } as const;
 
 export type ModelSource = keyof typeof MODEL_SOURCES;
