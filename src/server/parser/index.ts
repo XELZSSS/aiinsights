@@ -1,7 +1,16 @@
 export const num = (v: unknown): number | null => (typeof v === "number" && Number.isFinite(v) ? v : null);
 
 export const numOr = (v: unknown, fallback = 0): number => {
-  const n = typeof v === "number" ? v : Number(v ?? fallback);
+  if (typeof v === "number") return Number.isFinite(v) ? v : fallback;
+  if (typeof v === "string") {
+    const trimmed = v.trim();
+    if (trimmed === "") return fallback;
+    const n = Number(trimmed);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  if (typeof v === "boolean") return v ? 1 : 0;
+  if (v == null) return fallback;
+  const n = Number(v);
   return Number.isFinite(n) ? n : fallback;
 };
 
@@ -23,7 +32,12 @@ const NAMED_ENTITIES: Record<string, string> = {
   gt: ">",
   quot: '"',
   apos: "'",
-  nbsp: " ",
+  nbsp: "\u00A0",
+  ensp: "\u2002",
+  emsp: "\u2003",
+  thinsp: "\u2009",
+  zwnj: "\u200C",
+  zwj: "\u200D",
   mdash: "\u2014",
   ndash: "\u2013",
   hellip: "\u2026",
@@ -31,13 +45,47 @@ const NAMED_ENTITIES: Record<string, string> = {
   rsquo: "\u2019",
   ldquo: "\u201C",
   rdquo: "\u201D",
+  sbquo: "\u201A",
+  bdquo: "\u201E",
+  lsaquo: "\u2039",
+  rsaquo: "\u203A",
   laquo: "\u00AB",
   raquo: "\u00BB",
-  ensp: "\u2002",
-  emsp: "\u2003",
-  thinsp: "\u2009",
-  zwnj: "\u200C",
-  zwj: "\u200D",
+  copy: "\u00A9",
+  reg: "\u00AE",
+  trade: "\u2122",
+  times: "\u00D7",
+  divide: "\u00F7",
+  minus: "\u2212",
+  micro: "\u00B5",
+  deg: "\u00B0",
+  plusmn: "\u00B1",
+  sup2: "\u00B2",
+  sup3: "\u00B3",
+  frac12: "\u00BD",
+  frac14: "\u00BC",
+  frac34: "\u00BE",
+  bull: "\u2022",
+  middot: "\u00B7",
+  permil: "\u2030",
+  prime: "\u2032",
+  Prime: "\u2033",
+  oline: "\u203E",
+  frasl: "\u2044",
+  dagger: "\u2020",
+  Dagger: "\u2021",
+  sect: "\u00A7",
+  para: "\u00B6",
+  euro: "\u20AC",
+  pound: "\u00A3",
+  yen: "\u00A5",
+  cent: "\u00A2",
+  curren: "\u00A4",
+  brvbar: "\u00A6",
+  iexcl: "\u00A1",
+  iquest: "\u00BF",
+  ordf: "\u00AA",
+  ordm: "\u00BA",
   eacute: "\u00E9",
   egrave: "\u00E8",
   agrave: "\u00E0",
@@ -48,7 +96,7 @@ const NAMED_ENTITIES: Record<string, string> = {
   auml: "\u00E4",
 };
 
-const ENTITY_RE = /&(?:#x([0-9a-fA-F]+)|#([0-9]+)|([a-zA-Z][a-zA-Z0-9]*));/g;
+const ENTITY_RE = /&(?:#x([0-9a-fA-F]+)|#([0-9]+)|([a-zA-Z][a-zA-Z0-9]*))(?![a-zA-Z0-9]);?/g;
 
 export function decodeEntities(s: string): string {
   return s.replace(ENTITY_RE, (m, hex?: string, dec?: string, name?: string) => {
@@ -59,7 +107,7 @@ export function decodeEntities(s: string): string {
 }
 
 function safeFromCodePoint(cp: number): string {
-  if (!Number.isFinite(cp) || cp < 0 || cp > 0x10ffff) return "";
+  if (!Number.isFinite(cp) || cp <= 0 || cp > 0x10ffff) return "";
   try {
     return String.fromCodePoint(cp);
   } catch {
@@ -68,7 +116,36 @@ function safeFromCodePoint(cp: number): string {
 }
 
 export function stripHtml(s: string): string {
-  return s.replace(/<[^>]*>?/gm, "");
+  let out = "";
+  let i = 0;
+  const len = s.length;
+  while (i < len) {
+    const lt = s.indexOf("<", i);
+    if (lt === -1) {
+      out += s.slice(i);
+      break;
+    }
+    let j = lt + 1;
+    let quote: string | null = null;
+    for (; j < len; j++) {
+      const ch = s[j];
+      if (quote !== null) {
+        if (ch === quote) quote = null;
+      } else if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === ">") {
+        break;
+      }
+    }
+    if (j >= len) {
+      out += s.slice(i, lt + 1);
+      i = lt + 1;
+      continue;
+    }
+    out += s.slice(i, lt);
+    i = j + 1;
+  }
+  return out;
 }
 
 const OPEN_LICENSES = new Set([
@@ -208,65 +285,53 @@ function findArrayEnd(s: string, start: number): number {
   return -1;
 }
 
+const SIMPLE_ESCAPES: Record<string, string> = {
+  '"': '"',
+  "\\": "\\",
+  "/": "/",
+  n: "\n",
+  t: "\t",
+  r: "\r",
+  b: "\b",
+  f: "\f",
+  "0": "\0",
+};
+
 function unescape(s: string): string {
   let out = "";
-  for (let i = 0; i < s.length; i++) {
-    if (s[i] === "\\" && i + 1 < s.length) {
-      const next = s[i + 1];
-      switch (next) {
-        case '"':
-          out += '"';
-          break;
-        case "\\":
-          out += "\\";
-          break;
-        case "/":
-          out += "/";
-          break;
-        case "n":
-          out += "\n";
-          break;
-        case "t":
-          out += "\t";
-          break;
-        case "r":
-          out += "\r";
-          break;
-        case "b":
-          out += "\b";
-          break;
-        case "f":
-          out += "\f";
-          break;
-        case "u": {
-          const hex = s.slice(i + 2, i + 6);
-          if (/^[0-9a-fA-F]{4}$/.test(hex)) {
-            const code = parseInt(hex, 16);
-            if (code >= 0xd800 && code <= 0xdbff && s[i + 6] === "\\" && s[i + 7] === "u") {
-              const lowHex = s.slice(i + 8, i + 12);
-              if (/^[0-9a-fA-F]{4}$/.test(lowHex)) {
-                const low = parseInt(lowHex, 16);
-                if (low >= 0xdc00 && low <= 0xdfff) {
-                  out += String.fromCodePoint(((code - 0xd800) << 10) + (low - 0xdc00) + 0x10000);
-                  i += 11;
-                  break;
-                }
-              }
-            }
-            out += String.fromCharCode(code);
-            i += 4;
-          } else {
-            out += next;
-          }
-          break;
-        }
-        default:
-          out += next;
-      }
+  let i = 0;
+  const len = s.length;
+  while (i < len) {
+    const ch = s[i];
+    if (ch !== "\\" || i + 1 >= len) {
+      out += ch;
       i++;
-    } else {
-      out += s[i];
+      continue;
     }
+    if (s[i + 1] === "u") {
+      const hex = s.slice(i + 2, i + 6);
+      if (/^[0-9a-fA-F]{4}$/.test(hex)) {
+        const code = parseInt(hex, 16);
+        const lowHex = s.slice(i + 6, i + 12);
+        if (code >= 0xd800 && code <= 0xdbff && /^\\u[0-9a-fA-F]{4}$/.test(lowHex)) {
+          const low = parseInt(lowHex.slice(2), 16);
+          if (low >= 0xdc00 && low <= 0xdfff) {
+            out += String.fromCodePoint(((code - 0xd800) << 10) + (low - 0xdc00) + 0x10000);
+            i += 12;
+            continue;
+          }
+        }
+        out += String.fromCharCode(code);
+        i += 6;
+        continue;
+      }
+      out += "u";
+      i += 2;
+      continue;
+    }
+    const esc = s[i + 1] ?? "";
+    out += SIMPLE_ESCAPES[esc] ?? esc;
+    i += 2;
   }
   return out;
 }
@@ -282,20 +347,26 @@ function isMarkerBoundary(line: string, marker: string): boolean {
   return false;
 }
 
+const STREAM_LINE_RE = /^([^":]*):(.*)$/;
+
 export function parseRscPayload<T>(body: string, marker: string, extract: (data: unknown) => T[] | null): T[] {
-  for (const line of body.split("\n")) {
+  for (const line of body.split(/\r?\n/)) {
     if (!isMarkerBoundary(line, marker)) continue;
-    const colonIndex = line.indexOf(":");
-    if (colonIndex < 0) continue;
-    const raw = line.slice(colonIndex + 1);
-    let tree: unknown;
-    try {
-      tree = JSON.parse(raw);
-    } catch {
-      continue;
+    const candidates: string[] = [];
+    const prefixed = STREAM_LINE_RE.exec(line);
+    if (prefixed) candidates.push(prefixed[2] ?? "");
+    candidates.push(line);
+    for (const raw of candidates) {
+      if (!raw) continue;
+      let tree: unknown;
+      try {
+        tree = JSON.parse(raw);
+      } catch {
+        continue;
+      }
+      const result = extract(tree);
+      if (result && result.length > 0) return result;
     }
-    const result = extract(tree);
-    if (result && result.length > 0) return result;
   }
   throw new Error(`RSC marker "${marker}" not found or payload empty. body length=${body.length}`);
 }
