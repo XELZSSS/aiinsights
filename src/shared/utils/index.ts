@@ -1,7 +1,7 @@
 import type { ClassValue } from "clsx";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { BENCHMARK_LABELS as CONFIG_BENCHMARK_LABELS, PRICING_BLENDS } from "@/shared/config";
+import { BLENDED_PRICE_KEY, BENCHMARK_LABELS as CONFIG_BENCHMARK_LABELS } from "@/shared/config";
 import type { TFunction, TranslationKey } from "@/shared/i18n";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 
@@ -65,7 +65,7 @@ export function calcModelCost(
   if (Number.isFinite(pricing.input) && Number.isFinite(pricing.output)) {
     return (pt / 1_000_000) * pricing.input! + (ct / 1_000_000) * pricing.output!;
   }
-  const blended = pricing.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1];
+  const blended = pricing.blended?.[BLENDED_PRICE_KEY];
   if (Number.isFinite(blended)) {
     return ((pt + ct) / 1_000_000) * blended!;
   }

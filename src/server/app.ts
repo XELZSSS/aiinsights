@@ -15,11 +15,9 @@ export interface Env {
 }
 
 export interface AppContext {
-  env: Env;
   cache: CacheService;
   http: HttpClient;
   version: string;
-  now(): number;
   log(level: "info" | "warn" | "error", msg: string, meta?: Record<string, unknown>): void;
 }
 
@@ -35,11 +33,9 @@ export function buildContext(env: Env): AppContext {
     sharedCacheVersion = version;
   }
   return {
-    env,
     cache: sharedCache,
     http: sharedHttp,
     version,
-    now: () => Date.now(),
     log: (level, msg, meta) => {
       const line = meta ? `${msg} ${JSON.stringify(meta)}` : msg;
       if (level === "error") console.error(`[${level}] ${line}`);

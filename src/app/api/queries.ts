@@ -97,22 +97,13 @@ export const useSuspenseOpenRouterRankings = qOpenRouter.useSuspense;
 export const useOpenSourceModels = qOpenSourceModels.use;
 export const useOpenSourceSearchModels = qOpenSourceSearch.use;
 
-const newsQueries = new Map<string, ReturnType<typeof createApiQuery<NewsItem[]>>>();
-
-function getNewsQuery(category: string) {
-  let query = newsQueries.get(category);
-  if (!query) {
-    query = createApiQuery<NewsItem[]>(["api", "news", category], api.news(category), {
-      staleTime: THIRTY_MINUTES,
-      refetchInterval: THIRTY_MINUTES,
-    });
-    newsQueries.set(category, query);
-  }
-  return query;
-}
-
 export function useNewsByCategory(category: string) {
-  return getNewsQuery(category).use();
+  return useQuery<NewsItem[]>({
+    queryKey: ["api", "news", category],
+    queryFn: fetcher<NewsItem[]>(api.news(category)),
+    staleTime: THIRTY_MINUTES,
+    refetchInterval: THIRTY_MINUTES,
+  });
 }
 
 function buildHallucinationRankings(models: ArtificialAnalysisModel[]): HallucinationRankingEntry[] {

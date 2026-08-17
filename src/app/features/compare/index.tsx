@@ -20,7 +20,7 @@ import {
   approxEq,
   type CompareMetric,
 } from "@/shared/utils";
-import { PRICING_BLENDS } from "@/shared/config";
+import { BLENDED_PRICE_KEY } from "@/shared/config";
 import type { TranslationKey } from "@/shared/i18n";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import { buildPriceRows, getBestPrice, PriceTable, PriceChart, EfficiencyTable, CostEstimator } from "@/app/features/compare/pricing";
@@ -316,7 +316,7 @@ const PriceCompareContent = memo(function PriceCompareContent({
   const costEfficiency = useMemo(() => {
     return models.map((model) => {
       const intelligence = model.intelligence_index;
-      const blended = model.pricing?.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1];
+      const blended = model.pricing?.blended?.[BLENDED_PRICE_KEY];
       if (intelligence == null || blended == null || blended === 0) return null;
       return intelligence / blended;
     });

@@ -5,7 +5,7 @@ import { Card, CardContent, Button } from "@/app/components/ui";
 import { useTranslation } from "@/app/i18n";
 import type { TranslationKey, TFunction } from "@/shared/i18n";
 import type { ArtificialAnalysisModel } from "@/shared/types";
-import { PRICING_BLENDS } from "@/shared/config";
+import { BLENDED_PRICE_KEY } from "@/shared/config";
 import {
   cn,
   modelId,
@@ -242,7 +242,7 @@ export function ModelDetailContent({ model }: { model: ArtificialAnalysisModel }
           <InfoRow
             compact
             label={t("blendedPrice")}
-            value={formatPricePerMillion(pricing?.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1], t)}
+            value={formatPricePerMillion(pricing?.blended?.[BLENDED_PRICE_KEY], t)}
           />
         </InfoCard>
       </InfoGrid>

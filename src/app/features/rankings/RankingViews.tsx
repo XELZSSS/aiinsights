@@ -15,14 +15,6 @@ export const RANKING_TABS = [
 
 export type RankingTabId = (typeof RANKING_TABS)[number];
 
-export const RANKING_TAB_INDEX: Record<RankingTabId, number> = {
-  modelRankings: 0,
-  openRouterRankings: 1,
-  openSourceRankings: 2,
-  hallucinationRankings: 3,
-  providerCompare: 4,
-};
-
 interface RankingTableProps<T> {
   data: T[];
   columns: DataTableColumn<T>[];

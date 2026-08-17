@@ -18,10 +18,8 @@ export class ValidationError extends ApiError {
 }
 
 export type QuerySpec =
-  | { type: "string"; default?: string; maxLen?: number }
   | { type: "number"; default?: string; min?: number; max?: number }
-  | { type: "enum"; values: readonly string[]; default?: string }
-  | { type: "boolean"; default?: string };
+  | { type: "enum"; values: readonly string[]; default?: string };
 
 type QuerySchema = Record<string, QuerySpec>;
 
@@ -31,14 +29,6 @@ export function validateQuery(raw: Record<string, string>, schema: QuerySchema):
     const rawValue = raw[name] ?? spec.default;
     if (rawValue === undefined) continue;
     switch (spec.type) {
-      case "string": {
-        let value = rawValue;
-        if (spec.maxLen != null && value.length > spec.maxLen) {
-          throw new ValidationError(`Query param "${name}" exceeds max length ${spec.maxLen}`);
-        }
-        out[name] = value;
-        break;
-      }
       case "number": {
         const n = Number(rawValue);
         if (!Number.isFinite(n)) throw new ValidationError(`Query param "${name}" must be a number`);
@@ -50,13 +40,6 @@ export function validateQuery(raw: Record<string, string>, schema: QuerySchema):
       case "enum": {
         if (!spec.values.includes(rawValue)) {
           throw new ValidationError(`Query param "${name}" must be one of: ${spec.values.join(", ")}`);
-        }
-        out[name] = rawValue;
-        break;
-      }
-      case "boolean": {
-        if (rawValue !== "true" && rawValue !== "false") {
-          throw new ValidationError(`Query param "${name}" must be "true" or "false"`);
         }
         out[name] = rawValue;
         break;
@@ -180,11 +163,11 @@ class MemoryBackend implements CacheBackend {
       if (v.expires <= now) this.store.delete(k);
     }
     if (this.store.size > MAX_ENTRIES) {
-      const entries = [...this.store.entries()].sort((a, b) => a[1].expires - b[1].expires);
-      const toDelete = this.store.size - MAX_ENTRIES;
-      for (let i = 0; i < toDelete && i < entries.length; i++) {
-        const key = entries[i]?.[0];
-        if (key) this.store.delete(key);
+      let overflow = this.store.size - MAX_ENTRIES;
+      for (const k of this.store.keys()) {
+        if (overflow <= 0) break;
+        this.store.delete(k);
+        overflow--;
       }
     }
   }
@@ -207,14 +190,10 @@ class KvBackend implements CacheBackend {
   }
 }
 
-const NEG_TTL_MS = 5_000;
-const MAX_NEG_KEYS = 100;
-
 export class CacheService {
   private backend: CacheBackend;
   private version: string;
   private inflight = new Map<string, Promise<unknown>>();
-  private negCache = new Map<string, { ts: number; err: unknown }>();
 
   constructor(opts: { kv?: KVNamespace | null; version?: string }) {
     this.backend = opts.kv ? new KvBackend(opts.kv) : new MemoryBackend();
@@ -223,21 +202,6 @@ export class CacheService {
 
   private versionedKey(key: string): string {
     return `${this.version}:${key}`;
-  }
-
-  private negCachedErr(key: string): unknown | null {
-    const entry = this.negCache.get(key);
-    if (entry === undefined) return null;
-    if (Date.now() - entry.ts > NEG_TTL_MS) {
-      this.negCache.delete(key);
-      return null;
-    }
-    return entry.err;
-  }
-
-  private addNegKey(key: string, err: unknown) {
-    if (this.negCache.size >= MAX_NEG_KEYS) this.negCache.clear();
-    this.negCache.set(key, { ts: Date.now(), err });
   }
 
   async get<T>(key: string): Promise<T | undefined> {
@@ -253,9 +217,6 @@ export class CacheService {
     const cached = await this.backend.get<T>(vKey);
     if (cached !== undefined) return cached;
 
-    const negErr = this.negCachedErr(vKey);
-    if (negErr !== null) throw negErr;
-
     const existing = this.inflight.get(vKey) as Promise<T> | undefined;
     if (existing) return existing;
 
@@ -264,11 +225,10 @@ export class CacheService {
         const { data, ttl } = await fn();
         await this.backend.set(vKey, data, ttl ?? defaultTtl);
         return data;
-      } catch (err) {
-        this.addNegKey(vKey, err);
-        throw err;
+      } finally {
+        this.inflight.delete(vKey);
       }
-    })().finally(() => this.inflight.delete(vKey));
+    })();
 
     this.inflight.set(vKey, promise);
     return promise;
@@ -292,16 +252,6 @@ export function createSource<Params, Data>(opts: {
 
 export function settled<T>(result: PromiseSettledResult<T>, fallback: T): T {
   return result.status === "fulfilled" ? result.value : fallback;
-}
-
-export function deduplicateBy<T>(arr: T[], keyFn: (item: T) => string): T[] {
-  const seen = new Set<string>();
-  return arr.filter((item) => {
-    const key = keyFn(item);
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
 }
 
 export function formatSettleErrors(

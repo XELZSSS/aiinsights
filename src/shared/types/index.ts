@@ -3,14 +3,10 @@ export interface ArenaModel {
   score: number | null;
   votes: number | null;
   license: string | null;
-  inputPricePerMillion?: number | null;
-  outputPricePerMillion?: number | null;
-  contextLength?: number | null;
 }
 
 export interface ArenaPayload {
   category: string;
-  fetched_at: string;
   models: ArenaModel[];
 }
 

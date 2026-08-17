@@ -5,7 +5,7 @@ import { Card, CardContent, Input, Th, Td, Tr } from "@/app/components/ui";
 import { chartTooltipStyle, formatDollar, formatScore, cn, getModelColor, calcModelCost, approxEq } from "@/shared/utils";
 import { useTranslation } from "@/app/i18n";
 import { useIsMobile } from "@/app/hooks";
-import { PRICING_BLENDS } from "@/shared/config";
+import { BLENDED_PRICE_KEY } from "@/shared/config";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { TFunction } from "@/shared/i18n";
 
@@ -22,7 +22,7 @@ export function buildPriceRows(t: TFunction): PriceRow[] {
     { label: t("cacheHitPrice"), getValue: (m) => m.pricing?.cache_hit, format: (v) => formatDollar(v) },
     {
       label: t("blendedPrice"),
-      getValue: (m) => m.pricing?.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1],
+      getValue: (m) => m.pricing?.blended?.[BLENDED_PRICE_KEY],
       format: (v) => formatDollar(v),
     },
   ];
@@ -216,7 +216,7 @@ function EfficiencyTableDesktop({
                   {formatScore(t, model.intelligence_index)}
                 </Td>
                 <Td align="right" mono>
-                  {formatDollar(model.pricing?.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1], t)}
+                  {formatDollar(model.pricing?.blended?.[BLENDED_PRICE_KEY], t)}
                 </Td>
                 <Td align="right" mono>
                   {eff != null ? (
@@ -266,7 +266,7 @@ function EfficiencyTableMobile({
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-text-secondary">{t("blendedPrice")}</span>
                   <span className="text-xs font-mono">
-                    {formatDollar(model.pricing?.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1], t)}
+{formatDollar(model.pricing?.blended?.[BLENDED_PRICE_KEY], t)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">

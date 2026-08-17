@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import { startTime, endTime } from "hono/timing";
 import type { AppContext } from "@/server/app";
 import { buildContext } from "@/server/app";
+import type { Env } from "@/server/app";
 import { validateQuery, type QuerySpec, settled } from "@/server/core";
 import { getArenaLeaderboard } from "@/server/sources/misc";
 import { getIntelligenceIndex } from "@/server/sources/aa";
@@ -18,7 +19,7 @@ export interface RouteDef<P extends Record<string, string> = Record<string, stri
 }
 
 function ctx(c: Context): AppContext {
-  return buildContext(c.env as AppContext["env"]);
+  return buildContext(c.env as Env);
 }
 
 export function registerRoutes(app: Hono, routes: RouteDef[]): void {

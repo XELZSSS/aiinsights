@@ -3,12 +3,22 @@ import { rssConfig, NEWS_TTL_MS, PARTIAL_FAIL_TTL_MS } from "@/shared/config";
 import { ValidationError } from "@/server/core";
 import { decodeEntities, stripHtml } from "@/server/parser";
 import type { NewsItem } from "@/shared/types";
-import { createSource, deduplicateBy } from "@/server/core";
+import { createSource } from "@/server/core";
 import type { AppContext } from "@/server/app";
 
 const VALID_CATEGORIES = new Set(Object.keys(rssConfig));
 const MAX_ITEMS_PER_FEED = 50;
 const MAX_TOTAL = 50;
+
+function deduplicateBy<T>(arr: T[], keyFn: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  return arr.filter((item) => {
+    const key = keyFn(item);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
 

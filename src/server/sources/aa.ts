@@ -1,4 +1,4 @@
-import { upstreamConfig, DEFAULT_TTL_MS, PRICING_BLENDS, BENCHMARK_KEYS } from "@/shared/config";
+import { upstreamConfig, DEFAULT_TTL_MS, BLENDED_PRICE_KEY, BENCHMARK_KEYS } from "@/shared/config";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { num, str, strOr, bool, obj, findNextData, parseRscPayload } from "@/server/parser";
@@ -31,13 +31,7 @@ function compactPricing(
     input: num(m.price_1m_input_tokens),
     output: num(m.price_1m_output_tokens),
     cache_hit: num(m.cache_hit_price),
-    blended: {
-      [PRICING_BLENDS.INPUT_3_OUTPUT_1]: num(m.price_1m_blended_0_3_1) ?? undefined,
-      [PRICING_BLENDS.INPUT_7_OUTPUT_2_1]: num(m.price_1m_blended_7_2_1) ?? undefined,
-      [PRICING_BLENDS.INPUT_0_OUTPUT_1_1]: num(m.price_1m_blended_0_1_1) ?? undefined,
-      [PRICING_BLENDS.INPUT_0_OUTPUT_100_1]: num(m.price_1m_blended_0_100_1) ?? undefined,
-      [PRICING_BLENDS.INPUT_100_OUTPUT_1_1]: num(m.price_1m_blended_100_1_1) ?? undefined,
-    },
+    blended: { [BLENDED_PRICE_KEY]: num(m.price_1m_blended_7_2_1) ?? undefined },
     intelligence_index_cost: iic && typeof iic.total_cost === "number" ? { total_cost: iic.total_cost } : undefined,
   };
 }

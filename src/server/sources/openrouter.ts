@@ -85,7 +85,8 @@ function mergeRows(rows: ModelRow[]): ModelRow[] {
 function mapModels(
   rows: ModelRow[],
   pricingMap: Map<string, { prompt: number; completion: number }>,
-): OpenRouterRankEntry[] {  return mergeRows(rows)
+): OpenRouterRankEntry[] {
+  return mergeRows(rows)
     .sort(
       (a, b) =>
         numOr(b.total_prompt_tokens) +

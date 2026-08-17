@@ -12,13 +12,7 @@ export const upstreamConfig = {
 
 export const USER_AGENT = "AIInsights/2.0";
 
-export const PRICING_BLENDS = {
-  INPUT_3_OUTPUT_1: "0_3_1",
-  INPUT_7_OUTPUT_2_1: "7_2_1",
-  INPUT_0_OUTPUT_1_1: "0_1_1",
-  INPUT_0_OUTPUT_100_1: "0_100_1",
-  INPUT_100_OUTPUT_1_1: "100_1_1",
-} as const;
+export const BLENDED_PRICE_KEY = "7_2_1";
 
 export const DEFAULT_TTL_MS = FIVE_MINUTES;
 export const NEWS_TTL_MS = THIRTY_MINUTES;
@@ -74,10 +68,30 @@ export const STORAGE_KEYS = {
 const DEFAULT_BACK = "backToModelRankings" as const;
 
 export const MODEL_SOURCES = {
-  aa: { labelKey: "modelRankings" as const, backTo: "/models", backLabelKey: DEFAULT_BACK },
-  or: { labelKey: "openRouterRankings" as const, backTo: "/models", backLabelKey: DEFAULT_BACK },
-  os: { labelKey: "openSourceRankings" as const, backTo: "/models", backLabelKey: DEFAULT_BACK },
-  hall: { labelKey: "hallucinationRankings" as const, backTo: "/models", backLabelKey: DEFAULT_BACK },
+  aa: {
+    labelKey: "modelRankings" as const,
+    sourceLabelKey: "artificialSource" as const,
+    backTo: "/models",
+    backLabelKey: DEFAULT_BACK,
+  },
+  or: {
+    labelKey: "openRouterRankings" as const,
+    sourceLabelKey: "openRouterSource" as const,
+    backTo: "/models",
+    backLabelKey: DEFAULT_BACK,
+  },
+  os: {
+    labelKey: "openSourceRankings" as const,
+    sourceLabelKey: "openSourceDataSource" as const,
+    backTo: "/models",
+    backLabelKey: DEFAULT_BACK,
+  },
+  hall: {
+    labelKey: "hallucinationRankings" as const,
+    sourceLabelKey: "hallucinationSource" as const,
+    backTo: "/models",
+    backLabelKey: DEFAULT_BACK,
+  },
 } as const;
 
 export type ModelSource = keyof typeof MODEL_SOURCES;

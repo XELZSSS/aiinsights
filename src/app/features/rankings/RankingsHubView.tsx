@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 
 import { useTranslation } from "@/app/i18n";
 import type { TranslationKey } from "@/shared/i18n";
@@ -22,33 +22,30 @@ import {
   HallucinationRankingsView,
   type RankingTabId,
 } from "@/app/features/rankings/RankingViews";
+import { MODEL_SOURCES } from "@/shared/config";
 
 const OpenRouterRankingsView = lazy(() =>
   import("./OpenRouterRankingsView").then((m) => ({ default: m.OpenRouterRankingsView })),
 );
 
 const TAB_SOURCE_LABEL: Record<RankingTabId, TranslationKey> = {
-  modelRankings: "artificialSource",
-  openRouterRankings: "openRouterSource",
-  openSourceRankings: "openSourceDataSource",
-  hallucinationRankings: "hallucinationSource",
-  providerCompare: "artificialSource",
+  modelRankings: MODEL_SOURCES.aa.sourceLabelKey,
+  openRouterRankings: MODEL_SOURCES.or.sourceLabelKey,
+  openSourceRankings: MODEL_SOURCES.os.sourceLabelKey,
+  hallucinationRankings: MODEL_SOURCES.hall.sourceLabelKey,
+  providerCompare: MODEL_SOURCES.aa.sourceLabelKey,
 };
 
 interface RankingsHubProps {
   defaultTab?: number;
 }
 
-const TabPanel = memo(function TabPanel({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<Spinner />}>{children}</Suspense>;
-});
-
 function ModelRankingsTab() {
   const aaQ = useArtificialRankings();
   return aaQ.data ? (
-    <TabPanel>
+    <Suspense fallback={<Spinner />}>
       <ArtificialAnalysisView rankings={aaQ.data} />
-    </TabPanel>
+    </Suspense>
   ) : (
     <Spinner />
   );
@@ -57,9 +54,9 @@ function ModelRankingsTab() {
 function OpenRouterTab() {
   const orQ = useOpenRouterRankings();
   return orQ.data ? (
-    <TabPanel>
+    <Suspense fallback={<Spinner />}>
       <OpenRouterRankingsView data={orQ.data} />
-    </TabPanel>
+    </Suspense>
   ) : (
     <Spinner />
   );
@@ -68,9 +65,9 @@ function OpenRouterTab() {
 function OpenSourceTab() {
   const openSourceQ = useOpenSourceModels();
   return openSourceQ.data ? (
-    <TabPanel>
+    <Suspense fallback={<Spinner />}>
       <OpenSourceRankingsView rankings={openSourceQ.data} />
-    </TabPanel>
+    </Suspense>
   ) : (
     <Spinner />
   );
@@ -82,9 +79,9 @@ function HallucinationRankingsTab() {
   return aaQ.isPending ? (
     <Spinner />
   ) : (
-    <TabPanel>
+    <Suspense fallback={<Spinner />}>
       <HallucinationRankingsView rankings={hallucinationRankings} />
-    </TabPanel>
+    </Suspense>
   );
 }
 
@@ -138,9 +135,9 @@ function ProviderCompareContent({ data }: { data: ArtificialAnalysisModel[] }) {
 function ProviderCompareTab() {
   const aaQ = useArtificialRankings();
   return aaQ.data ? (
-    <TabPanel>
+    <Suspense fallback={<Spinner />}>
       <ProviderCompareContent data={aaQ.data} />
-    </TabPanel>
+    </Suspense>
   ) : (
     <Spinner />
   );

@@ -52,13 +52,6 @@ function createDetailView<T>(
 const AADetail = createDetailView(useSuspenseArtificialRankings, ModelDetailContent, "id", "slug");
 const OSDetail = createDetailView(useSuspenseOpenSourceReleases, OsDetail, "id");
 
-const SOURCE_LABELS: Record<ModelSource, string> = {
-  aa: "artificialSource",
-  or: "openRouterSource",
-  os: "openSourceDataSource",
-  hall: "hallucinationSource",
-};
-
 const SOURCE_COMPONENTS: Record<ModelSource, ComponentType<{ decodedId: string }>> = {
   aa: AADetail,
   or: OrDetail,
@@ -217,7 +210,7 @@ function ModelDetailContentInner() {
   if (!src || !decodedId) return <NotFound />;
 
   const config = MODEL_SOURCES[src];
-  const sourceLabel = t(SOURCE_LABELS[src] as Parameters<typeof t>[0]);
+  const sourceLabel = t(config.sourceLabelKey);
   const SourceComponent = SOURCE_COMPONENTS[src];
 
   return (

@@ -8,7 +8,7 @@ import type { ArtificialAnalysisModel, OpenRouterRankEntry } from "@/shared/type
 import type { TFunction, TranslationKey } from "@/shared/i18n";
 import { useTranslation } from "@/app/i18n";
 import { useCompareStore } from "@/app/stores";
-import { PRICING_BLENDS } from "@/shared/config";
+import { BLENDED_PRICE_KEY } from "@/shared/config";
 
 function useIsCompared(model: ArtificialAnalysisModel): boolean {
   return useCompareStore((s) => s.compareIds.includes(model.id || model.slug));
@@ -180,7 +180,7 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
       id: "blendedPrice",
       align: "right",
       hiddenMd: true,
-      cell: priceCell((m) => m.model.pricing?.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1], t),
+      cell: priceCell((m) => m.model.pricing?.blended?.[BLENDED_PRICE_KEY], t),
     },
     {
       id: "monthlyCost",
@@ -231,10 +231,8 @@ const videoColumn = <T extends { videoOutputSeconds?: number | null }>(): DataTa
   ),
 });
 
-export function buildOpenRouterColumns(t: (key: TranslationKey) => string): {
-  modelColumns: DataTableColumn<OpenRouterRankEntry>[];
-} {
-  const modelColumns: DataTableColumn<OpenRouterRankEntry>[] = [
+export function buildOpenRouterColumns(t: (key: TranslationKey) => string): DataTableColumn<OpenRouterRankEntry>[] {
+  return [
     {
       id: "model",
       width: "45%",
@@ -273,19 +271,17 @@ export function buildOpenRouterColumns(t: (key: TranslationKey) => string): {
       hiddenMd: true,
       cell: (item) => <RightAlignedText className="text-xs">{item.creator || t("unknown")}</RightAlignedText>,
     },
-    {
-      id: "trend",
-      align: "right",
-      hiddenMd: true,
-      cell: (item) => (
-        <span className={cn(trendClass(item.change), "border rounded text-xs py-0 px-1 font-mono inline-block")}>
-          {formatTrend(item.change, t)}
-        </span>
-      ),
-    },
-  ];
-
-  return { modelColumns };
+      {
+        id: "trend",
+        align: "right",
+        hiddenMd: true,
+        cell: (item) => (
+          <span className={cn(trendClass(item.change), "border rounded text-xs py-0 px-1 font-mono inline-block")}>
+            {formatTrend(item.change, t)}
+          </span>
+        ),
+      },
+    ];
 }
 
 export function buildBenchmarkColumns(

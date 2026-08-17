@@ -43,7 +43,7 @@ function ModelExpandedDetail({ item }: { item: OpenRouterRankEntry }) {
 export function OpenRouterRankingsView({ data }: { data?: OpenRouterRankingsPayload }) {
   const { t } = useTranslation();
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
-  const { modelColumns } = useMemo(() => buildOpenRouterColumns(t), [t]);
+  const modelColumns = useMemo(() => buildOpenRouterColumns(t), [t]);
 
   if (!data) {
     return (

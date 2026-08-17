@@ -12,11 +12,7 @@ interface RawEntry {
   score?: number;
   rating?: number;
   votes?: number;
-  modelOrganization?: string;
   license?: string;
-  inputPricePerMillion?: number;
-  outputPricePerMillion?: number;
-  contextLength?: number;
 }
 
 function mapEntry(e: RawEntry): ArenaModel | null {
@@ -26,9 +22,6 @@ function mapEntry(e: RawEntry): ArenaModel | null {
     score: e.score ?? e.rating ?? null,
     votes: e.votes ?? null,
     license: e.license ?? null,
-    inputPricePerMillion: e.inputPricePerMillion ?? null,
-    outputPricePerMillion: e.outputPricePerMillion ?? null,
-    contextLength: e.contextLength ?? null,
   };
 }
 
@@ -46,6 +39,6 @@ export const getArenaLeaderboard = createSource<{ category: string }, ArenaPaylo
         `Arena RSC parsing failed for category "${category}". html length=${html.length}, hasEntriesMarker=${html.includes('"entries"')}, head="${head}"`,
       );
     }
-    return { data: { category, fetched_at: new Date().toISOString(), models } };
+    return { data: { category, models } };
   },
 });

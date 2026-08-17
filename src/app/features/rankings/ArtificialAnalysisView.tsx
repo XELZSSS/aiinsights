@@ -18,7 +18,7 @@ import {
   ModelExpandedDetail,
 } from "@/app/features/rankings/columns";
 
-import { PRICING_BLENDS, RANKING_BENCHMARK_KEYS, BENCHMARK_LABELS } from "@/shared/config";
+import { BLENDED_PRICE_KEY, RANKING_BENCHMARK_KEYS, BENCHMARK_LABELS } from "@/shared/config";
 import { useSearchStore } from "@/app/stores";
 import { buildBenchmarkColumns } from "@/app/features/rankings/columns";
 
@@ -78,7 +78,7 @@ function useAARankingFilters(rankings: ArtificialAnalysisModel[]) {
           p?.input == null &&
           p?.output == null &&
           p?.cache_hit == null &&
-          p?.blended?.[PRICING_BLENDS.INPUT_7_OUTPUT_2_1] == null
+          p?.blended?.[BLENDED_PRICE_KEY] == null
         )
           return false;
       } else {
