@@ -1,4 +1,5 @@
 import type { TranslationKey } from "@/shared/i18n";
+import type { ArenaCategory, NewsCategory } from "@/shared/types";
 
 export const FIVE_MINUTES = 5 * 60_000;
 export const THIRTY_MINUTES = 30 * 60_000;
@@ -12,13 +13,11 @@ export const upstreamConfig = {
 
 export const USER_AGENT = "AIInsights/2.0";
 
-export const BLENDED_PRICE_KEY = "7_2_1";
-
 export const DEFAULT_TTL_MS = FIVE_MINUTES;
 export const NEWS_TTL_MS = THIRTY_MINUTES;
 export const PARTIAL_FAIL_TTL_MS = 60_000;
 
-export const ARENA_CATEGORIES = ["text", "text-to-image", "image-editing", "video", "audio"] as const;
+export const ARENA_CATEGORIES: readonly ArenaCategory[] = ["text", "text-to-image"] as const;
 
 const VENTUREBEAT_AI = "https://venturebeat.com/category/ai/feed/";
 const ARS_TECHNICA = "https://feeds.arstechnica.com/arstechnica/index";
@@ -31,20 +30,18 @@ const HF_BLOG = "https://huggingface.co/blog/feed.xml";
 const ANALYTICS_VIDHYA = "https://www.analyticsvidhya.com/blog/category/artificial-intelligence/feed/";
 const MIT_TECH_REVIEW = "https://www.technologyreview.com/topic/artificial-intelligence/feed/";
 
-export const rssConfig = {
+export const rssConfig: Record<NewsCategory, readonly string[]> = {
   industry: [VENTUREBEAT_AI, TECHCRUNCH_AI, ARS_TECHNICA, WIRED, MIT_TECH_REVIEW],
   opensource: [ANALYTICS_VIDHYA, HF_BLOG],
   hardware: [ZDNET],
   funding: [TECHCRUNCH_STARTUPS, CRUNCHBASE],
-} as const;
+};
 
 export const BENCHMARK_KEYS = [
   "aime25",
   "gpqa",
   "hle",
   "mmlu_pro",
-  "math_500",
-  "humaneval",
   "livecodebench",
   "gdpval",
   "scicode",
@@ -58,6 +55,8 @@ export const BENCHMARK_KEYS = [
   "apex_agents",
   "omniscience",
 ] as const;
+
+export type BenchmarkKey = (typeof BENCHMARK_KEYS)[number];
 
 export const STORAGE_KEYS = {
   lang: "lang",
@@ -96,14 +95,12 @@ export const MODEL_SOURCES = {
 
 export type ModelSource = keyof typeof MODEL_SOURCES;
 
-export const RANKING_BENCHMARK_KEYS = ["aime25", "gpqa", "mmlu_pro", "math_500", "humaneval", "livecodebench"] as const;
+export const RANKING_BENCHMARK_KEYS = ["aime25", "gpqa", "mmlu_pro", "livecodebench"] as const;
 
 export const BENCHMARK_LABELS: Record<(typeof RANKING_BENCHMARK_KEYS)[number], TranslationKey> = {
   aime25: "benchmarkAime25",
   gpqa: "benchmarkGpqa",
   mmlu_pro: "benchmarkMmluPro",
-  math_500: "benchmarkMath500",
-  humaneval: "benchmarkHumaneval",
   livecodebench: "benchmarkLivecodebench",
 };
 

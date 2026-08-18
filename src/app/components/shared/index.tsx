@@ -1,8 +1,20 @@
-import { Suspense, Component, Fragment, memo, useEffect, useId, useRef, useState, type ReactNode, type ErrorInfo, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import {
+  Suspense,
+  Component,
+  Fragment,
+  memo,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type ErrorInfo,
+  type KeyboardEvent as ReactKeyboardEvent,
+} from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Loader2, Search, X } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
-import { useSearchAllRankings } from "@/app/hooks";
+import { useSearchAllRankings } from "@/app/domain/search";
 import { useSearchStore } from "@/app/stores";
 import { Button } from "@/app/components/ui";
 import { PageContainer } from "@/app/components/layout";

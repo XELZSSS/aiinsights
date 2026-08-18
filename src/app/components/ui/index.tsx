@@ -133,13 +133,7 @@ export const Badge = memo(function Badge({ variant = "default", className, child
   );
 });
 
-export const TagBadge = memo(function TagBadge({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) {
+export const TagBadge = memo(function TagBadge({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <span
       className={cn(

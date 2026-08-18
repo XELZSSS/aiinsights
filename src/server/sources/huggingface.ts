@@ -1,8 +1,8 @@
 import { upstreamConfig, DEFAULT_TTL_MS } from "@/shared/config";
-import { getOpenLicense } from "@/server/parser";
 import type { OpenSourceModelEntry } from "@/shared/types";
-import { createSource } from "@/server/core";
 import type { AppContext } from "@/server/app";
+import { createSource } from "@/server/core/source";
+import { getOpenLicense } from "@/server/parser/licenses";
 
 interface HFModel {
   id?: string;
@@ -13,6 +13,12 @@ interface HFModel {
   createdAt?: string | null;
   lastModified?: string | null;
   tags?: string[];
+}
+
+interface ModelQuery {
+  sort: string;
+  direction: string;
+  limit: number;
 }
 
 function mapModel(m: HFModel): OpenSourceModelEntry {
@@ -32,12 +38,18 @@ function mapModel(m: HFModel): OpenSourceModelEntry {
 
 const HF_API = upstreamConfig.huggingface;
 
-export const getModels = createSource<{ sort: string; direction: string; limit: number }, OpenSourceModelEntry[]>({
-  cacheKey: (p) => `opensource-models:${p.sort}:${p.sort === "createdAt" ? p.direction : "-1"}`,
+function effectiveDirection(p: ModelQuery): string {
+  return p.sort === "createdAt" ? p.direction : "-1";
+}
+
+export const getModels = createSource<ModelQuery, OpenSourceModelEntry[]>({
+  cacheKey: (p) => `opensource-models:${p.sort}:${effectiveDirection(p)}:${p.limit}`,
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext, p) => {
-    const direction = p.sort === "createdAt" ? p.direction : "-1";
-    const items = await ctx.http.json<HFModel[]>(`${HF_API}?sort=${p.sort}&direction=${direction}&limit=500&full=true`);
+    const direction = effectiveDirection(p);
+    const items = await ctx.http.json<HFModel[]>(
+      `${HF_API}?sort=${p.sort}&direction=${direction}&limit=${p.limit}&full=true`,
+    );
     if (!Array.isArray(items))
       throw new Error(`HuggingFace API returned non-array response (got ${items === null ? "null" : typeof items})`);
     return { data: items.map(mapModel).filter((m) => m.downloads > 0) };

@@ -6,7 +6,7 @@
   "keep_vars": true,
 
   "vars": {
-    "CACHE_VERSION": "v5"
+    "CACHE_VERSION": "v6"
   },
 
   "assets": {

@@ -1,13 +1,5 @@
 import { memo, useMemo } from "react";
-import {
-  Line,
-  LineChart,
-  CartesianGrid,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Legend,
-} from "recharts";
+import { Line, LineChart, CartesianGrid, Tooltip, XAxis, YAxis, Legend } from "recharts";
 import { useTranslation } from "@/app/i18n";
 import { Card, CardContent } from "@/app/components/ui";
 import { PageSection } from "@/app/components/layout";
@@ -33,7 +25,6 @@ export const IndexLineChart = memo(function IndexLineChart({ models }: { models:
         name: m.short_name || m.name.split("/").pop() || m.name,
         intelligence: m.intelligence_index ?? null,
         coding: m.coding_index ?? null,
-        agentic: m.agentic_index ?? null,
       })),
     [top10],
   );
@@ -78,17 +69,6 @@ export const IndexLineChart = memo(function IndexLineChart({ models }: { models:
                 dataKey="coding"
                 name={t("coding")}
                 stroke={getModelColor(1)}
-                strokeWidth={2}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-                isAnimationActive={false}
-                connectNulls={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="agentic"
-                name={t("agentic")}
-                stroke={getModelColor(2)}
                 strokeWidth={2}
                 dot={{ r: 3 }}
                 activeDot={{ r: 5 }}

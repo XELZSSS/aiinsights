@@ -6,8 +6,7 @@ import { StatCard } from "@/app/components/composite";
 import { Card } from "@/app/components/ui";
 import type { OpenRouterRankingsPayload, OpenRouterRankEntry } from "@/shared/types";
 import { useTranslation } from "@/app/i18n";
-import { formatShortNumber, categoryLabel } from "@/shared/utils";
-import { getModelRecommendation } from "@/shared/utils";
+import { formatShortNumber, categoryLabel, getModelRecommendation } from "@/shared/utils";
 import { buildOpenRouterColumns } from "@/app/features/rankings/columns";
 
 const getModelRowId = (r: OpenRouterRankEntry) => r.id;

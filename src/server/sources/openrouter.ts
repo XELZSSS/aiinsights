@@ -1,8 +1,9 @@
 import { upstreamConfig, DEFAULT_TTL_MS, PARTIAL_FAIL_TTL_MS } from "@/shared/config";
-import { numOr } from "@/server/parser";
 import type { OpenRouterRankingsPayload, OpenRouterRankEntry } from "@/shared/types";
-import { createSource, formatSettleErrors } from "@/server/core";
 import type { AppContext } from "@/server/app";
+import { numOr } from "@/server/parser/primitives";
+import { createSource } from "@/server/core/source";
+import { formatSettleErrors } from "@/server/core/utils";
 
 const OPENROUTER = upstreamConfig.openrouter;
 
@@ -82,10 +83,12 @@ function mergeRows(rows: ModelRow[]): ModelRow[] {
   return Array.from(grouped.values());
 }
 
-function mapModels(
-  rows: ModelRow[],
-  pricingMap: Map<string, { prompt: number; completion: number }>,
-): OpenRouterRankEntry[] {
+interface PricingEntry {
+  prompt: number;
+  completion: number;
+}
+
+function mapModels(rows: ModelRow[], pricingMap: Map<string, PricingEntry>): OpenRouterRankEntry[] {
   return mergeRows(rows)
     .sort(
       (a, b) =>
@@ -124,15 +127,11 @@ interface PricingRow {
   pricing?: { prompt?: string | number; completion?: string | number };
 }
 
-type PricingRecord = Record<string, { prompt: number; completion: number }>;
+type PricingRecord = Record<string, PricingEntry>;
 
 const PRICING_TTL_MS = 30 * 60_000;
 
-function toPricingMap(record: PricingRecord): Map<string, { prompt: number; completion: number }> {
-  return new Map(Object.entries(record));
-}
-
-async function fetchModelPricing(ctx: AppContext): Promise<Map<string, { prompt: number; completion: number }>> {
+async function fetchModelPricing(ctx: AppContext): Promise<Map<string, PricingEntry>> {
   try {
     const record = await ctx.cache.withTtl("openrouter:pricing-map", PRICING_TTL_MS, async () => {
       const res = await ctx.http.json<{ data: PricingRow[] }>(`${OPENROUTER}/api/v1/models`);
@@ -147,9 +146,9 @@ async function fetchModelPricing(ctx: AppContext): Promise<Map<string, { prompt:
       }
       return { data: record };
     });
-    return toPricingMap(record);
+    return new Map(Object.entries(record));
   } catch {
-    return new Map<string, { prompt: number; completion: number }>();
+    return new Map<string, PricingEntry>();
   }
 }
 
@@ -162,10 +161,7 @@ export const getOpenRouterRankings = createSource<Record<string, never>, OpenRou
       fetchModelPricing(ctx),
     ]);
     const modelRows = modelResult.status === "fulfilled" ? (modelResult.value?.data ?? []) : [];
-    const pricingMap =
-      pricingResult.status === "fulfilled"
-        ? pricingResult.value
-        : new Map<string, { prompt: number; completion: number }>();
+    const pricingMap = pricingResult.status === "fulfilled" ? pricingResult.value : new Map<string, PricingEntry>();
     if (modelRows.length === 0) {
       const reasons = formatSettleErrors([modelResult], ["models"]);
       throw new Error(`OpenRouter: all upstream requests failed${reasons ? ` (${reasons})` : ""}`);

@@ -2,12 +2,8 @@ import { lazy, Suspense, useMemo, useState } from "react";
 
 import { useTranslation } from "@/app/i18n";
 import type { TranslationKey } from "@/shared/i18n";
-import {
-  useArtificialRankings,
-  useHallucinationRankings,
-  useOpenSourceModels,
-  useOpenRouterRankings,
-} from "@/app/api/queries";
+import { useArtificialRankings, useOpenSourceModels, useOpenRouterRankings } from "@/app/api/queries";
+import { useHallucinationRankings } from "@/app/domain/hallucination";
 import { SuspenseQuery, Spinner, SearchInput } from "@/app/components/shared";
 import { ArtificialAnalysisView } from "@/app/features/rankings/ArtificialAnalysisView";
 import { TabContainer, type TabItem } from "@/app/components/composite";

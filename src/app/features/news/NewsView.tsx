@@ -2,18 +2,16 @@ import { useMemo, useState } from "react";
 import { ExternalLink, Clock, Search } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
 import type { TranslationKey } from "@/shared/i18n";
-import { Card, Dot } from "@/app/components/ui";
-import { Pagination } from "@/app/components/ui";
+import { Card, Dot, Pagination } from "@/app/components/ui";
 import { useNewsByCategory } from "@/app/api/queries";
 import { Spinner } from "@/app/components/shared";
-import { safeHref, formatRelativeTime } from "@/shared/utils";
-import { COOL_COLORS } from "@/shared/utils";
+import { safeHref, formatRelativeTime, COOL_COLORS } from "@/shared/utils";
 import { TabContainer, type TabItem } from "@/app/components/composite";
-import type { NewsItem } from "@/shared/types";
+import type { NewsItem, NewsCategory } from "@/shared/types";
 import { useIsMobile } from "@/app/hooks";
 import { PageContainer, PageHeader } from "@/app/components/layout";
 
-const CATEGORIES: { id: string; labelKey: TranslationKey; color: string }[] = [
+const CATEGORIES: { id: NewsCategory; labelKey: TranslationKey; color: string }[] = [
   { id: "industry", labelKey: "catIndustry", color: COOL_COLORS[0]! },
   { id: "opensource", labelKey: "catOpenSource", color: COOL_COLORS[1]! },
   { id: "hardware", labelKey: "catHardware", color: COOL_COLORS[2]! },
@@ -101,7 +99,7 @@ function NewsList({
   );
 }
 
-function NewsCategoryContent({ categoryId, color }: { categoryId: string; color: string }) {
+function NewsCategoryContent({ categoryId, color }: { categoryId: NewsCategory; color: string }) {
   const result = useNewsByCategory(categoryId);
   return (
     <NewsList
@@ -116,7 +114,7 @@ function NewsCategoryContent({ categoryId, color }: { categoryId: string; color:
 
 export function NewsView() {
   const { t } = useTranslation();
-  const [activeCategory, setActiveCategory] = useState("industry");
+  const [activeCategory, setActiveCategory] = useState<NewsCategory>("industry");
 
   const activeColor = CATEGORIES.find((c) => c.id === activeCategory)?.color ?? COOL_COLORS[0]!;
 
@@ -132,7 +130,12 @@ export function NewsView() {
   return (
     <PageContainer>
       <PageHeader title={t("aiNews")} />
-      <TabContainer tabs={tabs} activeTab={activeCategory} tabSize="sm" onTabChange={setActiveCategory}>
+      <TabContainer
+        tabs={tabs}
+        activeTab={activeCategory}
+        tabSize="sm"
+        onTabChange={(id) => setActiveCategory(id as NewsCategory)}
+      >
         <NewsCategoryContent categoryId={activeCategory} color={activeColor} />
       </TabContainer>
     </PageContainer>

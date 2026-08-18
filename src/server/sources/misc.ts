@@ -1,32 +1,43 @@
 import { upstreamConfig, DEFAULT_TTL_MS } from "@/shared/config";
-import type { ArenaModel, ArenaPayload } from "@/shared/types";
+import type { ArenaModel, ArenaPayload, ArenaCategory } from "@/shared/types";
 import type { AppContext } from "@/server/app";
-import { createSource } from "@/server/core";
-import { parseRscScriptArray } from "@/server/parser";
+import { createSource } from "@/server/core/source";
+import { parseRscScriptArray } from "@/server/parser/rsc";
 
 const BASE = upstreamConfig.arena;
 
 interface RawEntry {
   rank: number;
   modelDisplayName?: string;
-  score?: number;
   rating?: number;
   votes?: number;
   license?: string;
+  modelOrganization?: string;
+  modelUrl?: string;
+  inputPricePerMillion?: number;
+  outputPricePerMillion?: number;
+  contextLength?: number;
+  pricePerImage?: number;
 }
 
 function mapEntry(e: RawEntry): ArenaModel | null {
   if (e.rank == null || !e.modelDisplayName) return null;
   return {
     model: e.modelDisplayName,
-    score: e.score ?? e.rating ?? null,
+    rating: e.rating ?? null,
     votes: e.votes ?? null,
     license: e.license ?? null,
+    modelOrganization: e.modelOrganization ?? null,
+    modelUrl: e.modelUrl ?? null,
+    inputPricePerMillion: e.inputPricePerMillion ?? null,
+    outputPricePerMillion: e.outputPricePerMillion ?? null,
+    contextLength: e.contextLength ?? null,
+    pricePerImage: e.pricePerImage ?? null,
   };
 }
 
-export const getArenaLeaderboard = createSource<{ category: string }, ArenaPayload>({
-  cacheKey: (p) => `arena-leaderboard:${p.category}`,
+export const getArenaLeaderboard = createSource<{ category: ArenaCategory }, ArenaPayload>({
+  cacheKey: (p) => `arena-leaderboard:${p.category}:v2`,
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext, params) => {
     const { category } = params;

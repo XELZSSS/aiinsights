@@ -20,11 +20,14 @@ import {
   approxEq,
   type CompareMetric,
 } from "@/shared/utils";
-import { BLENDED_PRICE_KEY } from "@/shared/config";
-import type { TranslationKey } from "@/shared/i18n";
-import type { ArtificialAnalysisModel } from "@/shared/types";
-import { buildPriceRows, getBestPrice, PriceTable, PriceChart, EfficiencyTable, CostEstimator } from "@/app/features/compare/pricing";
-import { PageContainer, PageHeader } from "@/app/components/layout";
+import type { TranslationKey } from "@/shared/i18n";import type { ArtificialAnalysisModel } from "@/shared/types";
+import {
+  buildPriceRows,
+  getBestPrice,
+  PriceTable,
+  PriceChart,
+  CostEstimator,
+} from "@/app/features/compare/pricing";import { PageContainer, PageHeader } from "@/app/components/layout";
 
 function useCompareModels(): ArtificialAnalysisModel[] | null {
   const compareIds = useCompareStore((s) => s.compareIds);
@@ -313,20 +316,6 @@ const PriceCompareContent = memo(function PriceCompareContent({
   const priceRows = useMemo(() => buildPriceRows(t), [t]);
   const bestPrices = useMemo(() => getBestPrice(priceRows, models), [priceRows, models]);
 
-  const costEfficiency = useMemo(() => {
-    return models.map((model) => {
-      const intelligence = model.intelligence_index;
-      const blended = model.pricing?.blended?.[BLENDED_PRICE_KEY];
-      if (intelligence == null || blended == null || blended === 0) return null;
-      return intelligence / blended;
-    });
-  }, [models]);
-
-  const bestEfficiency = useMemo(() => {
-    const valid = costEfficiency.filter((v): v is number => v !== null);
-    return valid.length > 0 ? Math.max(...valid) : null;
-  }, [costEfficiency]);
-
   return (
     <>
       <Card accent="top">
@@ -337,13 +326,6 @@ const PriceCompareContent = memo(function PriceCompareContent({
       </Card>
 
       <PriceChart priceRows={priceRows} models={models} chartRef={chartRef} chartWidth={chartWidth} />
-
-      <Card accent="top">
-        <CardContent padding="md">
-          <p className="text-sm font-semibold mb-3">{t("costEfficiency")}</p>
-          <EfficiencyTable models={models} costEfficiency={costEfficiency} bestEfficiency={bestEfficiency} />
-        </CardContent>
-      </Card>
 
       <CostEstimator models={models} />
     </>

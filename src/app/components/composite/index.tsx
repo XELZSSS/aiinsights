@@ -5,17 +5,17 @@ import { Card, CardContent, Button } from "@/app/components/ui";
 import { useTranslation } from "@/app/i18n";
 import type { TranslationKey, TFunction } from "@/shared/i18n";
 import type { ArtificialAnalysisModel } from "@/shared/types";
-import { BLENDED_PRICE_KEY } from "@/shared/config";
 import {
   cn,
   modelId,
   formatBoolean,
-  formatContext,
-  formatCost,
   formatPricePerMillion,
   formatScore,
+  formatTokens,
   benchmarkLabel,
   orNA,
+  normalizePercent,
+  getOutputSpeed,
 } from "@/shared/utils";
 
 export function BackButton({
@@ -89,11 +89,7 @@ export function CompareChipBar({
   );
 }
 
-export function SegmentedGroup({
-  className,
-  children,
-  ...rest
-}: React.HTMLAttributes<HTMLDivElement>) {
+export function SegmentedGroup({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn("flex gap-1 p-0.5 rounded-lg bg-bg-secondary", className)} {...rest}>
       {children}
@@ -218,7 +214,13 @@ function ModalitySection({
   );
 }
 
-export function ModelDetailContent({ model }: { model: ArtificialAnalysisModel }) {
+export function ModelDetailContent({
+  model,
+  showBenchmarks = true,
+}: {
+  model: ArtificialAnalysisModel;
+  showBenchmarks?: boolean;
+}) {
   const { t } = useTranslation();
   const pricing = model.pricing;
   return (
@@ -227,33 +229,31 @@ export function ModelDetailContent({ model }: { model: ArtificialAnalysisModel }
         <StatCard label={t("intelligenceIndex")} value={formatScore(t, model.intelligence_index)} />
         <StatCard label={t("coding")} value={formatScore(t, model.coding_index)} />
         <StatCard label={t("agentic")} value={formatScore(t, model.agentic_index)} />
-        <StatCard label={t("costToRun")} value={formatCost(t, pricing?.intelligence_index_cost?.total_cost)} />
+        <StatCard label={t("outputSpeed")} value={formatScore(t, getOutputSpeed(model))} />
       </StatGrid>
       <InfoGrid>
         <InfoCard title={t("modelInfo")}>
           <InfoRow compact label={t("creator")} value={orNA(model.model_creators?.name, t)} />
           <InfoRow compact label={t("releaseDate")} value={orNA(model.release_date, t)} />
-          <InfoRow compact label={t("contextWindow")} value={formatContext(t, model)} />
           <InfoRow compact label={t("openWeights")} value={formatBoolean(t, model.is_open_weights)} />
+          <InfoRow compact label={t("contextWindow")} value={formatTokens(model.context_window_tokens, t)} />
         </InfoCard>
         <InfoCard title={t("pricing")}>
           <InfoRow compact label={t("promptPrice")} value={formatPricePerMillion(pricing?.input, t)} />
           <InfoRow compact label={t("completionPrice")} value={formatPricePerMillion(pricing?.output, t)} />
-          <InfoRow
-            compact
-            label={t("blendedPrice")}
-            value={formatPricePerMillion(pricing?.blended?.[BLENDED_PRICE_KEY], t)}
-          />
+          <InfoRow compact label={t("cacheHitPrice")} value={formatPricePerMillion(pricing?.cache_hit, t)} />
+          <InfoRow compact label={t("blendedPrice")} value={formatPricePerMillion(model.blended_price, t)} />
         </InfoCard>
       </InfoGrid>
-      {model.benchmarks && Object.values(model.benchmarks).some((v) => v != null) && (
+      {showBenchmarks && model.benchmarks && Object.values(model.benchmarks).some((v) => v != null) && (
         <InfoCard title={t("benchmarks")}>
           <StatGrid columns={4}>
-            {Object.entries(model.benchmarks).map(([key, value]) =>
-              value == null ? null : (
-                <StatCard key={key} label={benchmarkLabel(key, t)} value={formatScore(t, value)} />
-              ),
-            )}
+            {Object.entries(model.benchmarks).map(([key, value]) => {
+              const normalized = normalizePercent(value);
+              return normalized == null ? null : (
+                <StatCard key={key} label={benchmarkLabel(key, t)} value={formatScore(t, normalized)} />
+              );
+            })}
           </StatGrid>
         </InfoCard>
       )}

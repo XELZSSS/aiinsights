@@ -90,8 +90,8 @@ export function OpenSourceRankingsView({ rankings }: { rankings: OpenSourceModel
   );
 }
 
-function fmtRate(v: number) {
-  return `${v.toFixed(1)}%`;
+function fmtRate(v: number | null) {
+  return v == null ? "n/a" : `${v.toFixed(1)}%`;
 }
 
 function fmtScore(v: number) {
@@ -153,11 +153,6 @@ export function HallucinationRankingsView({ rankings }: { rankings: Hallucinatio
   );
 
   return (
-    <RankingTable
-      data={rankings}
-      columns={columns}
-      getRowId={getHallRowId}
-      getSearchFields={getHallSearchFields}
-    />
+    <RankingTable data={rankings} columns={columns} getRowId={getHallRowId} getSearchFields={getHallSearchFields} />
   );
 }

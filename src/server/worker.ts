@@ -7,9 +7,6 @@ const app = createApp(routeDefs);
 const WARM_URLS = [
   "https://aiinsights.internal/api/arena-leaderboard?category=text",
   "https://aiinsights.internal/api/arena-leaderboard?category=text-to-image",
-  "https://aiinsights.internal/api/arena-leaderboard?category=image-editing",
-  "https://aiinsights.internal/api/arena-leaderboard?category=video",
-  "https://aiinsights.internal/api/arena-leaderboard?category=audio",
   "https://aiinsights.internal/api/artificial-analysis-index",
   "https://aiinsights.internal/api/open-source-models",
   "https://aiinsights.internal/api/open-source-releases",

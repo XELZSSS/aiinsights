@@ -1,7 +1,8 @@
 import { memo, useMemo, lazy, Suspense } from "react";
 import { Rocket, Image, BarChart3 } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
-import { useSuspenseArtificialRankings, useSuspenseHomeDashboard, useHallucinationRankings } from "@/app/api/queries";
+import { useSuspenseArtificialRankings, useSuspenseHomeDashboard } from "@/app/api/queries";
+import { useHallucinationRankings } from "@/app/domain/hallucination";
 import { SuspenseQuery } from "@/app/components/shared";
 import { StatCard, CardGrid } from "@/app/components/composite";
 import { Card, CardContent, Dot } from "@/app/components/ui";
@@ -49,13 +50,14 @@ function useHomeDashboardData(
     }));
 
     const hallucinationStats: HomeBarStat[] = hallucinationRankings
+      .filter((entry) => entry.accuracy != null)
       .slice()
-      .sort((a, b) => b.accuracy - a.accuracy)
+      .sort((a, b) => (b.accuracy ?? 0) - (a.accuracy ?? 0))
       .slice(0, 7)
       .map((entry) => ({
         label: entry.model,
-        value: entry.accuracy,
-        valueLabel: `${entry.accuracy.toFixed(1)}%`,
+        value: entry.accuracy ?? 0,
+        valueLabel: `${entry.accuracy?.toFixed(1)}%`,
       }));
 
     const latestRelease = artificialData.reduce(
@@ -143,6 +145,9 @@ const ArenaT2ICard = memo(function ArenaT2ICard({
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-bold truncate">{entry.model}</span>
+            {entry.modelOrganization && (
+              <span className="text-xs text-text-secondary truncate shrink-0">({entry.modelOrganization})</span>
+            )}
           </div>
           <span
             className="text-xs font-bold shrink-0 px-2 py-0.5 rounded-full"
@@ -155,7 +160,7 @@ const ArenaT2ICard = memo(function ArenaT2ICard({
           <span>
             ELO:{" "}
             <strong className="text-text-primary font-semibold" style={{ color }}>
-              {entry.score != null ? entry.score.toFixed(0) : t("notAvailable")}
+              {entry.rating != null ? entry.rating.toFixed(0) : t("notAvailable")}
             </strong>
           </span>
           <span>
@@ -195,8 +200,12 @@ const HomeContent = memo(function HomeContent() {
   const hallucinationRankings = useHallucinationRankings(artificialData);
   const { data: dashboardData } = useSuspenseHomeDashboard();
 
-  const { downloadStats, hallucinationStats, kpiStrip, providerStats, arenaT2IModels } =
-    useHomeDashboardData(artificialData, hallucinationRankings, dashboardData, t);
+  const { downloadStats, hallucinationStats, kpiStrip, providerStats, arenaT2IModels } = useHomeDashboardData(
+    artificialData,
+    hallucinationRankings,
+    dashboardData,
+    t,
+  );
 
   return (
     <PageContainer>

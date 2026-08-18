@@ -133,7 +133,7 @@ function DataTableInner<T>({
   data,
   columns,
   getRowId,
-  pageSize = 30,
+  pageSize = 10,
   expandedRowId,
   onToggleExpand,
   renderExpandedRow,

@@ -1,10 +1,10 @@
 import { XMLParser } from "fast-xml-parser";
 import { rssConfig, NEWS_TTL_MS, PARTIAL_FAIL_TTL_MS } from "@/shared/config";
-import { ValidationError } from "@/server/core";
-import { decodeEntities, stripHtml } from "@/server/parser";
-import type { NewsItem } from "@/shared/types";
-import { createSource } from "@/server/core";
+import type { NewsItem, NewsCategory } from "@/shared/types";
 import type { AppContext } from "@/server/app";
+import { ValidationError } from "@/server/core/errors";
+import { createSource } from "@/server/core/source";
+import { decodeEntities, stripHtml } from "@/server/parser/html";
 
 const VALID_CATEGORIES = new Set(Object.keys(rssConfig));
 const MAX_ITEMS_PER_FEED = 50;
@@ -56,7 +56,7 @@ function parseFeed(xml: string, sourceUrl: string): NewsItem[] {
     .filter((x: NewsItem | null): x is NewsItem => x !== null);
 }
 
-export const getNews = createSource<{ category: string }, NewsItem[]>({
+export const getNews = createSource<{ category: NewsCategory }, NewsItem[]>({
   cacheKey: (p) => `news-${p.category}`,
   defaultTtl: NEWS_TTL_MS,
   fetch: async (ctx: AppContext, params) => {
@@ -66,7 +66,7 @@ export const getNews = createSource<{ category: string }, NewsItem[]>({
         `Invalid news category "${category}". Valid: ${Array.from(VALID_CATEGORIES).join(", ")}`,
       );
     }
-    const urls = rssConfig[category as keyof typeof rssConfig];
+    const urls = rssConfig[category];
     const results = await Promise.allSettled(
       urls.map(async (url) =>
         parseFeed(

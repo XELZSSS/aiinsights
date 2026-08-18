@@ -16,11 +16,20 @@ import { SuspenseQuery, NotFound } from "@/app/components/shared";
 import { PageContainer, PageHeader } from "@/app/components/layout";
 import {
   useSuspenseArtificialRankings,
-  useHallucinationRankings,
   useSuspenseOpenRouterRankings,
   useSuspenseOpenSourceReleases,
 } from "@/app/api/queries";
-import { findModel, formatShortNumber, formatTrend, formatDollar, formatDate, categoryLabel, orNA, getModelRecommendation } from "@/shared/utils";
+import { useHallucinationRankings } from "@/app/domain/hallucination";
+import {
+  findModel,
+  formatShortNumber,
+  formatTrend,
+  formatDollar,
+  formatDate,
+  categoryLabel,
+  orNA,
+  getModelRecommendation,
+} from "@/shared/utils";
 import { MODEL_SOURCES, type ModelSource } from "@/shared/config";
 import type {
   HallucinationRankingEntry,
@@ -71,9 +80,18 @@ function HallDetailContent({
     <DetailLayout>
       <StatGrid columns={4}>
         <StatCard label={t("omniscienceIndex")} value={model.omniscienceIndex.toFixed(1)} />
-        <StatCard label={t("accuracy")} value={`${model.accuracy.toFixed(1)}%`} />
-        <StatCard label={t("hallucinationRate")} value={`${model.hallucinationRate.toFixed(1)}%`} />
-        <StatCard label={t("attemptRate")} value={`${model.attemptRate.toFixed(1)}%`} />
+        <StatCard
+          label={t("accuracy")}
+          value={model.accuracy == null ? t("notAvailable") : `${model.accuracy.toFixed(1)}%`}
+        />
+        <StatCard
+          label={t("hallucinationRate")}
+          value={model.hallucinationRate == null ? t("notAvailable") : `${model.hallucinationRate.toFixed(1)}%`}
+        />
+        <StatCard
+          label={t("attemptRate")}
+          value={model.attemptRate == null ? t("notAvailable") : `${model.attemptRate.toFixed(1)}%`}
+        />
       </StatGrid>
       <InfoCard title={t("modelInfo")}>
         <InfoRow compact label={t("modelNameOrId")} value={model.model} />

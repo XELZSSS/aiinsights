@@ -6,7 +6,9 @@ import { logger } from "hono/logger";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { registerRoutes } from "@/server/routes";
 import type { RouteDef } from "@/server/routes";
-import { ApiError, CacheService, HttpClient } from "@/server/core";
+import { ApiError } from "@/server/core/errors";
+import { CacheService } from "@/server/core/cache";
+import { HttpClient } from "@/server/core/http";
 
 export interface Env {
   METRICS?: KVNamespace;

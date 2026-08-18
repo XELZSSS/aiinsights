@@ -1,14 +1,13 @@
 import { Plus, Check } from "lucide-react";
 import type { DataTableColumn } from "@/app/components/data";
-import { Badge, TagBadge, Button } from "@/app/components/ui";
+import { TagBadge, Button } from "@/app/components/ui";
 import { RightAlignedText, ModelDetailContent, RankingNameCell } from "@/app/components/composite";
-import { formatContext, formatScore, formatDollar, formatShortNumber, formatTrend } from "@/shared/utils";
+import { formatScore, formatDollar, formatShortNumber, formatTokens, formatTrend } from "@/shared/utils";
 import { cn } from "@/shared/utils";
 import type { ArtificialAnalysisModel, OpenRouterRankEntry } from "@/shared/types";
 import type { TFunction, TranslationKey } from "@/shared/i18n";
 import { useTranslation } from "@/app/i18n";
 import { useCompareStore } from "@/app/stores";
-import { BLENDED_PRICE_KEY } from "@/shared/config";
 
 function useIsCompared(model: ArtificialAnalysisModel): boolean {
   return useCompareStore((s) => s.compareIds.includes(model.id || model.slug));
@@ -35,7 +34,7 @@ function CompareButton({ model }: { model: ArtificialAnalysisModel }) {
 export function ModelExpandedDetail({ model }: { model: ArtificialAnalysisModel }) {
   return (
     <div className="p-4">
-      <ModelDetailContent model={model} />
+      <ModelDetailContent model={model} showBenchmarks={false} />
     </div>
   );
 }
@@ -51,11 +50,6 @@ function RankingModelCell({ model }: { model: ArtificialAnalysisModel }) {
     <>
       <div className="flex items-center gap-2 min-w-0">
         <p className="text-sm font-semibold break-words min-w-0">{model.name}</p>
-        {model.intelligence_index_is_estimated && (
-          <Badge variant="outline" className="shrink-0">
-            {t("estimated")}
-          </Badge>
-        )}
         <CompareButton model={model} />
       </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-0 mt-1 md:hidden">
@@ -68,9 +62,6 @@ function RankingModelCell({ model }: { model: ArtificialAnalysisModel }) {
       </div>
       <div className="flex flex-wrap gap-1 mt-1 md:hidden">
         {model.model_creators?.name && <TagBadge>{model.model_creators.name}</TagBadge>}
-        <TagBadge>
-          {t("contextWindow")}: {formatContext(t, model)}
-        </TagBadge>
       </div>
     </>
   );
@@ -115,10 +106,10 @@ export function buildRankingColumns(t: TFunction): DataTableColumn<ArtificialAna
     scoreColumn("coding", (m) => m.coding_index, t),
     scoreColumn("agentic", (m) => m.agentic_index, t),
     {
-      id: "contextWindow",
+      id: "context",
       align: "right",
       hiddenMd: true,
-      cell: (model) => formatContext(t, model),
+      cell: (model) => formatTokens(model.context_window_tokens, t),
     },
   ];
 }
@@ -141,6 +132,11 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
                 {t("cacheHitPrice")}: {formatDollar(row.model.pricing.cache_hit, t)}
               </TagBadge>
             )}
+            {row.model.blended_price != null && (
+              <TagBadge>
+                {t("blendedPrice")}: {formatDollar(row.model.blended_price, t)}
+              </TagBadge>
+            )}
             <TagBadge>
               {t("monthlyCost")}: {formatDollar(row.monthlyCost, t)}
             </TagBadge>
@@ -155,16 +151,16 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
       cell: (row) => <RightAlignedText>{row.model.model_creators?.name || t("notAvailable")}</RightAlignedText>,
     },
     {
-      id: "context",
-      align: "right",
-      hiddenMd: true,
-      cell: (row) => formatContext(t, row.model),
-    },
-    {
       id: "cacheHitPrice",
       align: "right",
       hiddenMd: true,
       cell: priceCell((m) => m.model.pricing?.cache_hit, t),
+    },
+    {
+      id: "blendedPrice",
+      align: "right",
+      hiddenMd: true,
+      cell: priceCell((m) => m.model.blended_price, t),
     },
     {
       id: "promptPrice",
@@ -175,12 +171,6 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
       id: "completionPrice",
       align: "right",
       cell: priceCell((m) => m.model.pricing?.output, t),
-    },
-    {
-      id: "blendedPrice",
-      align: "right",
-      hiddenMd: true,
-      cell: priceCell((m) => m.model.pricing?.blended?.[BLENDED_PRICE_KEY], t),
     },
     {
       id: "monthlyCost",
@@ -271,37 +261,15 @@ export function buildOpenRouterColumns(t: (key: TranslationKey) => string): Data
       hiddenMd: true,
       cell: (item) => <RightAlignedText className="text-xs">{item.creator || t("unknown")}</RightAlignedText>,
     },
-      {
-        id: "trend",
-        align: "right",
-        hiddenMd: true,
-        cell: (item) => (
-          <span className={cn(trendClass(item.change), "border rounded text-xs py-0 px-1 font-mono inline-block")}>
-            {formatTrend(item.change, t)}
-          </span>
-        ),
-      },
-    ];
-}
-
-export function buildBenchmarkColumns(
-  t: (key: TranslationKey) => string,
-  selectedBenchmark: string,
-): DataTableColumn<ArtificialAnalysisModel>[] {
-  return [
     {
-      id: "name",
-      cell: (row) => row.name,
-    },
-    {
-      id: "score",
-      cell: (row) => formatScore(t, row.benchmarks?.[selectedBenchmark]),
+      id: "trend",
       align: "right",
-    },
-    {
-      id: "intelligence_index",
-      cell: (row) => formatScore(t, row.intelligence_index),
-      align: "right",
+      hiddenMd: true,
+      cell: (item) => (
+        <span className={cn(trendClass(item.change), "border rounded text-xs py-0 px-1 font-mono inline-block")}>
+          {formatTrend(item.change, t)}
+        </span>
+      ),
     },
   ];
 }
