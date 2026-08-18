@@ -1,5 +1,5 @@
 import { memo, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Button, Card, CardContent, Th, Td, Tr } from "@/app/components/ui";

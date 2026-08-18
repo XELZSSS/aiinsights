@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 import { useTranslation } from "@/app/i18n";
 import {
   BackButton,

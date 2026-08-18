@@ -1,5 +1,5 @@
 import { lazy } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router";
 import { useSearchResetOnNavigate } from "@/app/hooks";
 import { NotFound } from "@/app/components/shared";
 

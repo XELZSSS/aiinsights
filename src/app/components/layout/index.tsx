@@ -1,5 +1,5 @@
 import { memo, useCallback, useLayoutEffect, useMemo, useState, type ReactNode } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router";
 import { Home, Award, Megaphone, Newspaper, Settings, MoreHorizontal, Languages, Moon, Sun, X } from "lucide-react";
 import { Sheet, Button } from "@/app/components/ui";
 import { useTranslation } from "@/app/i18n";

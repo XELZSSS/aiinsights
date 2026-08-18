@@ -1,5 +1,5 @@
 import { memo, type ComponentType, type KeyboardEvent, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { ArrowLeft, X, Trash2, ArrowLeftRight } from "lucide-react";
 import { Card, CardContent, Button } from "@/app/components/ui";
 import { useTranslation } from "@/app/i18n";

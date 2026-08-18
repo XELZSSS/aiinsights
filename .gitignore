@@ -27,7 +27,6 @@ npm-debug.log*
 # Cloudflare
 .wrangler/
 .wrangler-*.js
-worker-configuration.d.ts
 
 # TypeScript
 *.tsbuildinfo
@@ -38,6 +37,3 @@ metrics.json
 
 # Claude Code
 .claude/
-
-# Tests
-*.test.ts

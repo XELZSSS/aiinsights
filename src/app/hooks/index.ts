@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { useSearchStore } from "@/app/stores";
 import { matchTerm } from "@/app/domain/search";
 

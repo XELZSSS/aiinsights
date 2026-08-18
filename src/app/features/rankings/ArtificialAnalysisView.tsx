@@ -1,5 +1,5 @@
 import { useDeferredValue, useMemo, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router";
 
 import { DataTable } from "@/app/components/data";
 import { useTranslation } from "@/app/i18n";
