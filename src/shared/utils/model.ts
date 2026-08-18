@@ -8,20 +8,48 @@ export function findModel<T>(data: T[], id: string, ...keys: (keyof T & string)[
   return data.find((item) => keys.some((key) => (item as Record<string, unknown>)[key] === id));
 }
 
+export interface CostEstimateOptions {
+  cacheHitRate?: number;
+  reasoningTokens?: number;
+}
+
 export function calcModelCost(
   model: ArtificialAnalysisModel,
   promptTokens: number,
   completionTokens: number,
+  opts?: CostEstimateOptions,
 ): number | null {
   if (!Number.isFinite(promptTokens) || !Number.isFinite(completionTokens)) return null;
   const pt = Math.max(0, promptTokens);
   const ct = Math.max(0, completionTokens);
   const pricing = model.pricing;
   if (!pricing) return null;
-  if (Number.isFinite(pricing.input) && Number.isFinite(pricing.output)) {
-    return (pt / 1_000_000) * pricing.input! + (ct / 1_000_000) * pricing.output!;
-  }
-  return null;
+  const input = pricing.input;
+  const output = pricing.output;
+  if (typeof input !== "number" || typeof output !== "number") return null;
+
+  const hitRate = Math.max(0, Math.min(1, opts?.cacheHitRate ?? 0));
+  const cached = typeof pricing.cache_hit === "number" ? pricing.cache_hit : input;
+  const inputRate = (1 - hitRate) * input + hitRate * cached;
+  const reasoning = Math.max(0, opts?.reasoningTokens ?? 0);
+  return (pt / 1_000_000) * inputRate + ((ct + reasoning) / 1_000_000) * output;
+}
+
+export interface MonthlyCostOptions {
+  dailyInput: number;
+  dailyOutput: number;
+  dailyReasoning?: number;
+  cacheHitRate: number;
+  daysPerMonth: number;
+}
+
+export function calcMonthlyCost(model: ArtificialAnalysisModel, opts: MonthlyCostOptions): number | null {
+  const daily = calcModelCost(model, opts.dailyInput, opts.dailyOutput, {
+    cacheHitRate: opts.cacheHitRate,
+    reasoningTokens: opts.dailyReasoning,
+  });
+  if (daily == null) return null;
+  return daily * Math.max(1, opts.daysPerMonth);
 }
 
 export function getOutputSpeed(model: ArtificialAnalysisModel): number | null {

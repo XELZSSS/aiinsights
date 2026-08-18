@@ -7,7 +7,7 @@ import {
   formatDollar,
   cn,
   getModelColor,
-  calcModelCost,
+  calcMonthlyCost,
   approxEq,
 } from "@/shared/utils";
 import { useTranslation } from "@/app/i18n";
@@ -240,15 +240,29 @@ export const PriceChart = memo(function PriceChart({
 export const CostEstimator = memo(function CostEstimator({ models }: { models: ArtificialAnalysisModel[] }) {
   const { t } = useTranslation();
 
-  const [promptTokens, setPromptTokens] = useState("10");
-  const [completionTokens, setCompletionTokens] = useState("5");
+  const [dailyInput, setDailyInput] = useState("2");
+  const [dailyOutput, setDailyOutput] = useState("1");
+  const [dailyReasoning, setDailyReasoning] = useState("2");
+  const [cacheHitRate, setCacheHitRate] = useState("50");
+  const [daysPerMonth, setDaysPerMonth] = useState("22");
 
-  const calcPrompt = Math.max(0, Number(promptTokens) || 0);
-  const calcCompletion = Math.max(0, Number(completionTokens) || 0);
+  const calcInput = Math.max(0, Number(dailyInput) || 0);
+  const calcOutput = Math.max(0, Number(dailyOutput) || 0);
+  const calcReasoning = Math.max(0, Number(dailyReasoning) || 0);
+  const calcCache = Math.max(0, Math.min(100, Number(cacheHitRate) || 0)) / 100;
+  const calcDays = Math.max(1, Number(daysPerMonth) || 0);
 
   const monthlyCosts = useMemo(() => {
-    return models.map((model) => calcModelCost(model, calcPrompt * 1_000_000, calcCompletion * 1_000_000));
-  }, [models, calcPrompt, calcCompletion]);
+    return models.map((model) =>
+      calcMonthlyCost(model, {
+        dailyInput: calcInput * 1_000_000,
+        dailyOutput: calcOutput * 1_000_000,
+        dailyReasoning: calcReasoning * 1_000_000,
+        cacheHitRate: calcCache,
+        daysPerMonth: calcDays,
+      }),
+    );
+  }, [models, calcInput, calcOutput, calcReasoning, calcCache, calcDays]);
 
   const bestMonthlyCost = useMemo(() => {
     const valid = monthlyCosts.filter((v): v is number => v !== null);
@@ -259,26 +273,55 @@ export const CostEstimator = memo(function CostEstimator({ models }: { models: A
     <Card accent="top">
       <CardContent padding="md">
         <p className="text-sm font-semibold mb-3">{t("estimatedMonthlyCost")}</p>
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-4">
           <div className="flex items-center gap-2">
-            <label className="text-xs text-text-secondary whitespace-nowrap">{t("monthlyPromptTokens")}</label>
+            <label className="text-xs text-text-secondary whitespace-nowrap">{t("dailyPromptTokens")}</label>
             <Input
               type="number"
-              value={promptTokens}
-              onChange={(e) => setPromptTokens(e.target.value)}
-              className="w-24 h-9 text-sm"
+              value={dailyInput}
+              onChange={(e) => setDailyInput(e.target.value)}
+              className="w-20 h-9 text-sm"
             />
             <span className="text-xs text-text-secondary">M</span>
           </div>
           <div className="flex items-center gap-2">
-            <label className="text-xs text-text-secondary whitespace-nowrap">{t("monthlyCompletionTokens")}</label>
+            <label className="text-xs text-text-secondary whitespace-nowrap">{t("dailyCompletionTokens")}</label>
             <Input
               type="number"
-              value={completionTokens}
-              onChange={(e) => setCompletionTokens(e.target.value)}
-              className="w-24 h-9 text-sm"
+              value={dailyOutput}
+              onChange={(e) => setDailyOutput(e.target.value)}
+              className="w-20 h-9 text-sm"
             />
             <span className="text-xs text-text-secondary">M</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-text-secondary whitespace-nowrap">{t("dailyReasoningTokens")}</label>
+            <Input
+              type="number"
+              value={dailyReasoning}
+              onChange={(e) => setDailyReasoning(e.target.value)}
+              className="w-20 h-9 text-sm"
+            />
+            <span className="text-xs text-text-secondary">M</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-text-secondary whitespace-nowrap">{t("cacheHitRate")}</label>
+            <Input
+              type="number"
+              value={cacheHitRate}
+              onChange={(e) => setCacheHitRate(e.target.value)}
+              className="w-20 h-9 text-sm"
+            />
+            <span className="text-xs text-text-secondary">%</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <label className="text-xs text-text-secondary whitespace-nowrap">{t("daysPerMonth")}</label>
+            <Input
+              type="number"
+              value={daysPerMonth}
+              onChange={(e) => setDaysPerMonth(e.target.value)}
+              className="w-20 h-9 text-sm"
+            />
           </div>
         </div>
         <div className="flex flex-col gap-2.5">
