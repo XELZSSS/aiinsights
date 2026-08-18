@@ -1,7 +1,6 @@
 export const en = {
   home: "Home",
   rankings: "Rankings",
-  scoreRelease: "Release Dates",
   statistics: "Statistics",
   openSourceDownloadsStats: "Open Source Rankings",
   hallucinationStats: "Highest Accuracy",
@@ -74,6 +73,7 @@ export const en = {
   releases: "Releases",
   releaseUpdate: "Updated",
   releaseOpenSource: "Open Source Release",
+  releaseModel: "Model Release",
   events: "{count} events",
   promptPrice: "Input",
   completionPrice: "Output",
@@ -209,7 +209,6 @@ export type EnDict = typeof en;
 export const zh = {
   home: "首页",
   rankings: "排行",
-  scoreRelease: "发布日期",
   statistics: "统计",
   openSourceDownloadsStats: "开源下载排行",
   hallucinationStats: "最高准确率",
@@ -275,6 +274,7 @@ export const zh = {
   releases: "发布",
   releaseUpdate: "更新",
   releaseOpenSource: "开源发布",
+  releaseModel: "模型发布",
   events: "{count} 个事件",
   promptPrice: "输入",
   completionPrice: "输出",

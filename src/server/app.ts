@@ -48,14 +48,14 @@ export function createApp(routeDefs: RouteDef[]): Hono {
 
   app.use("*", logger());
   app.use("*", timing());
-  app.use("/api/*", timeout(45_000));
+  app.use("/api/*", timeout(90_000));
 
   app.use(
     "/api/*",
     cors({
       origin: "*",
       allowMethods: ["GET", "HEAD", "POST", "OPTIONS"],
-      allowHeaders: ["content-type", "authorization"],
+      allowHeaders: ["content-type"],
       maxAge: 86400,
     }),
   );
@@ -63,8 +63,12 @@ export function createApp(routeDefs: RouteDef[]): Hono {
   app.use("/api/*", async (c, next) => {
     await next();
     if (c.req.method === "GET" && c.res.status === 200) {
-      c.header("Cache-Control", "public, max-age=60");
-      c.header("CDN-Cache-Control", "public, max-age=300, stale-while-revalidate=300, stale-if-error=86400");
+      const noStore = c.req.path === "/api/sources-status";
+      c.header("Cache-Control", noStore ? "no-store, max-age=0" : "public, max-age=60");
+      c.header(
+        "CDN-Cache-Control",
+        noStore ? "no-store" : "public, max-age=300, stale-while-revalidate=300, stale-if-error=86400",
+      );
     }
   });
 

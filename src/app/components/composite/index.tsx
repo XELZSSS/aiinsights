@@ -316,7 +316,9 @@ export const StatCard = memo(function StatCard({
               <Icon className="size-4" />
             </span>
           )}
-          <p className="text-[11px] sm:text-xs text-text-secondary font-medium uppercase tracking-wider truncate">{label}</p>
+          <p className="text-[11px] sm:text-xs text-text-secondary font-medium uppercase tracking-wider truncate">
+            {label}
+          </p>
         </div>
         <p
           className={cn(

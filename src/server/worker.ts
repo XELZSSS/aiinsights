@@ -20,9 +20,20 @@ const WARM_URLS = [
 
 async function warmUrls(env: Env): Promise<void> {
   const CONCURRENCY = 8;
+  let failures = 0;
+  const failed: string[] = [];
   for (let i = 0; i < WARM_URLS.length; i += CONCURRENCY) {
     const batch = WARM_URLS.slice(i, i + CONCURRENCY);
-    await Promise.allSettled(batch.map((url) => app.request(url, {}, env)));
+    const results = await Promise.allSettled(batch.map((url) => app.request(url, {}, env)));
+    results.forEach((r, j) => {
+      if (r.status === "rejected") {
+        failures++;
+        failed.push(batch[j] ?? "?");
+      }
+    });
+  }
+  if (failures > 0) {
+    console.warn(`[warm] ${failures}/${WARM_URLS.length} URLs failed: ${failed.join(", ")}`);
   }
 }
 

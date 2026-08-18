@@ -7,7 +7,6 @@ const MAX_ENTRIES = 500;
 
 class MemoryBackend implements CacheBackend {
   private store = new Map<string, { data: unknown; expires: number }>();
-  private writes = 0;
 
   async get<T>(key: string): Promise<T | undefined> {
     const entry = this.store.get(key);
@@ -16,15 +15,15 @@ class MemoryBackend implements CacheBackend {
       this.store.delete(key);
       return undefined;
     }
+    this.store.delete(key);
+    this.store.set(key, entry);
     return entry.data as T;
   }
 
   async set<T>(key: string, value: T, ttlMs: number): Promise<void> {
+    this.store.delete(key);
     this.store.set(key, { data: value, expires: Date.now() + ttlMs });
-    if (++this.writes >= 200) {
-      this.writes = 0;
-      this.evict();
-    }
+    if (this.store.size > MAX_ENTRIES) this.evict();
   }
 
   private evict() {
@@ -32,13 +31,11 @@ class MemoryBackend implements CacheBackend {
     for (const [k, v] of this.store) {
       if (v.expires <= now) this.store.delete(k);
     }
-    if (this.store.size > MAX_ENTRIES) {
-      let overflow = this.store.size - MAX_ENTRIES;
-      for (const k of this.store.keys()) {
-        if (overflow <= 0) break;
-        this.store.delete(k);
-        overflow--;
-      }
+    let overflow = this.store.size - MAX_ENTRIES;
+    for (const k of this.store.keys()) {
+      if (overflow <= 0) break;
+      this.store.delete(k);
+      overflow--;
     }
   }
 }

@@ -81,7 +81,8 @@ async function checkSources(ctx: AppContext): Promise<SourcesStatusData> {
   }
 
   const sources: SourceStatus[] = Array.from(grouped.values()).map((s) => {
-    if (s.ok) return { id: s.id, name: s.name, ok: true, status: s.status, latencyMs: s.latencyMs, error: null, checkedAt };
+    if (s.ok)
+      return { id: s.id, name: s.name, ok: true, status: s.status, latencyMs: s.latencyMs, error: null, checkedAt };
     return {
       id: s.id,
       name: s.name,

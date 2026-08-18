@@ -2,14 +2,7 @@ import { memo, useMemo, useState } from "react";
 import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent, Input, Th, Td, Tr } from "@/app/components/ui";
-import {
-  chartTooltipStyle,
-  formatDollar,
-  cn,
-  getModelColor,
-  calcMonthlyCost,
-  approxEq,
-} from "@/shared/utils";
+import { chartTooltipStyle, formatDollar, cn, getModelColor, calcMonthlyCost, approxEq } from "@/shared/utils";
 import { useTranslation } from "@/app/i18n";
 import { useIsMobile } from "@/app/hooks";
 import type { ArtificialAnalysisModel } from "@/shared/types";

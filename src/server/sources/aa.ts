@@ -179,17 +179,16 @@ export const getIntelligenceIndex = createSource<Record<string, never>, Artifici
     let omniscienceEnrich: Record<string, unknown>[] = [];
     try {
       const omniscienceBody = await fetchAaRsc(ctx, OMNISCIENCE_PATH);
-      const omniscienceModels = parseRscPayload<Record<string, unknown>>(
-        omniscienceBody,
-        "defaultData",
-        (tree) => {
-          const arr = findNextData<Record<string, unknown>>(tree, "defaultData");
-          return Array.isArray(arr) && arr.some((m) => m.omniscience_breakdown != null) ? arr : null;
-        },
-      );
+      const omniscienceModels = parseRscPayload<Record<string, unknown>>(omniscienceBody, "defaultData", (tree) => {
+        const arr = findNextData<Record<string, unknown>>(tree, "defaultData");
+        return Array.isArray(arr) && arr.some((m) => m.omniscience_breakdown != null) ? arr : null;
+      });
       omniscienceEnrich = (omniscienceModels ?? []).map(compactOmniscienceEnrich);
     } catch (err) {
-      ctx.log("warn", `[artificial] omniscience enrichment failed: ${err instanceof Error ? err.message : String(err)}`);
+      ctx.log(
+        "warn",
+        `[artificial] omniscience enrichment failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
     }
 
     const models = mergeBySlug(catalog, indexModels, modelsPageModels, omniscienceEnrich)

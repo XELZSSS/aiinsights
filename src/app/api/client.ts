@@ -1,6 +1,6 @@
 import { apiBase } from "@/shared/config";
 
-const FETCH_TIMEOUT_MS = 30_000;
+const FETCH_TIMEOUT_MS = 90_000;
 
 export interface QueryCtx {
   signal?: AbortSignal;

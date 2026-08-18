@@ -178,7 +178,10 @@ interface ThProps {
 
 export const Th = memo(function Th({ align = "left", className, style, children }: ThProps) {
   return (
-    <th className={cn("px-2.5 py-2.5 font-bold", align === "right" ? "text-right" : "text-left", className)} style={style}>
+    <th
+      className={cn("px-2.5 py-2.5 font-bold", align === "right" ? "text-right" : "text-left", className)}
+      style={style}
+    >
       {children}
     </th>
   );
@@ -194,7 +197,10 @@ interface TdProps {
 
 export const Td = memo(function Td({ align = "left", mono, className, style, children }: TdProps) {
   return (
-    <td className={cn("px-2.5 py-2.5", mono && "font-mono", align === "right" && "text-right", className)} style={style}>
+    <td
+      className={cn("px-2.5 py-2.5", mono && "font-mono", align === "right" && "text-right", className)}
+      style={style}
+    >
       {children}
     </td>
   );

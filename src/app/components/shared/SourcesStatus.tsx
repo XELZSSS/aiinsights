@@ -92,7 +92,13 @@ export const SourcesStatusList = memo(function SourcesStatusList() {
               {t("lastUpdated")} {formatRelativeTime(data.checkedAt, t)}
             </span>
           )}
-          <Button variant="outline" size="sm" onClick={() => refresh()} disabled={isRefreshing} aria-label={t("refresh")}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => refresh()}
+            disabled={isRefreshing}
+            aria-label={t("refresh")}
+          >
             <RefreshCw size={12} className={cn(isRefreshing && "animate-spin")} />
             <span className="ml-1">{t("refresh")}</span>
           </Button>

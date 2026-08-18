@@ -100,7 +100,12 @@ function ProviderCompareContent({ data }: { data: ArtificialAnalysisModel[] }) {
           </div>
         ),
       },
-      { id: "count", header: t("modelCount"), align: "right", cell: (p) => <span className="font-medium">{p.count}</span> },
+      {
+        id: "count",
+        header: t("modelCount"),
+        align: "right",
+        cell: (p) => <span className="font-medium">{p.count}</span>,
+      },
       {
         id: "avgIntelligence",
         header: t("avgIntelligence"),

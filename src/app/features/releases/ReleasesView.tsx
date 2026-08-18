@@ -174,8 +174,8 @@ function ReleasesContent() {
 
   const tabs: TabItem[] = useMemo(
     () => [
-      { id: "feed", label: t("releases") },
-      { id: "release-dates", label: t("scoreRelease") },
+      { id: "feed", label: t("releaseOpenSource") },
+      { id: "release-dates", label: t("releaseModel") },
     ],
     [t],
   );

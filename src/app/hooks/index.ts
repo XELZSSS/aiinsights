@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useSearchStore } from "@/app/stores";
+import { matchTerm } from "@/app/domain/search";
 
 export function useFilteredData<T>(data: T[], getSearchFields: (item: T) => string[]): T[] {
   const searchTerm = useSearchStore((s) => s.searchTerm);
@@ -10,7 +11,13 @@ export function useFilteredData<T>(data: T[], getSearchFields: (item: T) => stri
     const term = searchTerm.toLowerCase().trim();
     if (!term) return data;
     const fields = fieldsRef.current;
-    return data.filter((item) => fields(item).some((field) => field.toLowerCase().includes(term)));
+    return data.filter(
+      (item) =>
+        matchTerm(
+          fields(item).map((f) => f.toLowerCase().trim()),
+          term,
+        ).matched,
+    );
   }, [data, searchTerm]);
 }
 

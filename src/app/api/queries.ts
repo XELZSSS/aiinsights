@@ -1,10 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import {
-  useQuery,
-  useQueryClient,
-  useSuspenseQuery,
-  type UseQueryResult,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient, useSuspenseQuery, type UseQueryResult } from "@tanstack/react-query";
 import type {
   ArtificialAnalysisModel,
   NewsItem,
@@ -67,17 +62,15 @@ const qNews = (category: NewsCategory) =>
 const fetchSourcesStatus =
   (refresh: boolean) =>
   ({ signal }: QueryCtx): Promise<SourcesStatusPayload> =>
-    apiFetch<SourcesStatusPayload>(
-      refresh ? `${apiPaths.sourcesStatus}?refresh=1` : apiPaths.sourcesStatus,
-      signal,
-      { cache: "no-store" },
-    );
+    apiFetch<SourcesStatusPayload>(refresh ? `${apiPaths.sourcesStatus}?refresh=1` : apiPaths.sourcesStatus, signal, {
+      cache: "no-store",
+    });
 
-const qSourcesStatus = createApiQuery<SourcesStatusPayload>(
-  ["api", "sources-status"],
-  apiPaths.sourcesStatus,
-  { staleTime: 60_000, refetchInterval: 60_000, queryFn: fetchSourcesStatus(false) },
-);
+const qSourcesStatus = createApiQuery<SourcesStatusPayload>(["api", "sources-status"], apiPaths.sourcesStatus, {
+  staleTime: 60_000,
+  refetchInterval: 60_000,
+  queryFn: fetchSourcesStatus(false),
+});
 
 export const useArtificialRankings = qArtificial.use;
 export const useSuspenseArtificialRankings = qArtificial.useSuspense;

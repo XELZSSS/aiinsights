@@ -16,7 +16,7 @@ function buildIndex<T>(data: T[], fields: (item: T) => (string | undefined | nul
   };
 }
 
-function matchTerm(fields: string[], term: string): { matched: boolean; score: number } {
+export function matchTerm(fields: string[], term: string): { matched: boolean; score: number } {
   for (const f of fields) {
     if (!f) continue;
     if (f === term) return { matched: true, score: 4 };
@@ -72,14 +72,8 @@ export function useSearchAllRankings(searchTerm: string): SearchState {
     () => buildIndex(artificialData, (m) => [m.name, m.slug, m.short_name, m.model_creators?.name]),
     [artificialData],
   );
-  const openRouterIndex = useMemo(
-    () => buildIndex(openRouterData, (m) => [m.name, m.id, m.creator]),
-    [openRouterData],
-  );
-  const openSourceIndex = useMemo(
-    () => buildIndex(openSourceRankings, (m) => [m.id, m.author]),
-    [openSourceRankings],
-  );
+  const openRouterIndex = useMemo(() => buildIndex(openRouterData, (m) => [m.name, m.id, m.creator]), [openRouterData]);
+  const openSourceIndex = useMemo(() => buildIndex(openSourceRankings, (m) => [m.id, m.author]), [openSourceRankings]);
   const hallucinationIndex = useMemo(
     () => buildIndex(hallucinationRankings, (m) => [m.model, m.slug, m.id]),
     [hallucinationRankings],

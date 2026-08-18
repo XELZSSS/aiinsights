@@ -20,14 +20,10 @@ import {
   approxEq,
   type CompareMetric,
 } from "@/shared/utils";
-import type { TranslationKey } from "@/shared/i18n";import type { ArtificialAnalysisModel } from "@/shared/types";
-import {
-  buildPriceRows,
-  getBestPrice,
-  PriceTable,
-  PriceChart,
-  CostEstimator,
-} from "@/app/features/compare/pricing";import { PageContainer, PageHeader } from "@/app/components/layout";
+import type { TranslationKey } from "@/shared/i18n";
+import type { ArtificialAnalysisModel } from "@/shared/types";
+import { buildPriceRows, getBestPrice, PriceTable, PriceChart, CostEstimator } from "@/app/features/compare/pricing";
+import { PageContainer, PageHeader } from "@/app/components/layout";
 
 function useCompareModels(): ArtificialAnalysisModel[] | null {
   const compareIds = useCompareStore((s) => s.compareIds);
