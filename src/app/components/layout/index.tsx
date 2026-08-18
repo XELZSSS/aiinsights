@@ -61,12 +61,12 @@ function DesktopNav({ onSettingsOpen }: { onSettingsOpen: () => void }) {
           aria-label={t("home")}
           className="flex items-center gap-2 mr-8 shrink-0"
         >
-          <svg fill="#8B5CF6" viewBox="0 0 24 24" className="size-5" xmlns="http://www.w3.org/2000/svg">
+          <svg fill="currentColor" viewBox="0 0 24 24" className="size-5 text-accent" xmlns="http://www.w3.org/2000/svg">
             <path d="M4.59 7.41l4.94 3.54L4.59 24zm0-7.41v6.36l9.53 5.29 4.59-3.52zm0 24l14.82-8.47v-6.7Z" />
           </svg>
-          <span className="text-sm font-bold">AIInsights</span>
+          <span className="text-sm sm:text-base font-bold">AIInsights</span>
         </button>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {all.map((item) => {
             const active = isNavActive(pathname, item);
             return (
@@ -76,7 +76,7 @@ function DesktopNav({ onSettingsOpen }: { onSettingsOpen: () => void }) {
                 aria-label={item.label}
                 aria-current={active ? "page" : undefined}
                 onClick={() => navigate(item.path)}
-                className={`relative px-3 py-1.5 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                className={`relative px-3.5 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
                   active ? "text-accent bg-accent-light" : "text-text-secondary hover:text-text-primary hover:bg-hover"
                 }`}
               >
@@ -223,9 +223,9 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
 
   return (
     <Sheet open={open} onClose={onClose}>
-      <div className="p-3 flex flex-col gap-4">
+      <div className="p-4 sm:p-5 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">{t("settings")}</p>
+          <p className="text-sm sm:text-base font-semibold">{t("settings")}</p>
           <Button variant="ghost" size="icon" onClick={onClose} aria-label={t("close")}>
             <X className="size-4" />
           </Button>
@@ -291,12 +291,12 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 mb-5 sm:mb-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary break-words min-w-0">{title}</h1>
-        {description && <p className="text-sm text-text-secondary mt-0.5">{description}</p>}
+        <h1 className="text-xl sm:text-3xl font-bold tracking-tight text-text-primary break-words min-w-0">{title}</h1>
+        {description && <p className="text-sm sm:text-base text-text-secondary mt-1">{description}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
+      {actions && <div className="flex w-full sm:w-auto items-center gap-2 sm:shrink-0">{actions}</div>}
     </div>
   );
 }
@@ -315,10 +315,10 @@ export function PageSection({
   return (
     <div className={cn("mb-8", className)}>
       {title && (
-        <div className="flex items-center gap-2 mb-4">
-          <div className="w-1 h-4 rounded-full bg-accent shrink-0" />
-          <h2 className="text-base font-semibold text-text-primary">{title}</h2>
-          {description && <span className="text-xs text-text-secondary ml-1">{description}</span>}
+        <div className="flex items-center gap-2 mb-3 sm:mb-4">
+          <div className="w-1 h-4 sm:h-5 rounded-full bg-accent shrink-0" />
+          <h2 className="text-base sm:text-lg font-semibold text-text-primary">{title}</h2>
+          {description && <span className="text-xs sm:text-sm text-text-secondary ml-1">{description}</span>}
         </div>
       )}
       {children}

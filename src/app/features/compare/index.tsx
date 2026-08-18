@@ -256,9 +256,9 @@ function CompareContent({ models }: { models: ArtificialAnalysisModel[] }) {
   return (
     <Card>
       <CardContent padding="lg">
-        <div className="flex flex-col md:flex-row gap-6 md:items-stretch">
+        <div className="flex flex-col md:flex-row gap-4 sm:gap-6 md:items-stretch">
           <div className="min-w-0 w-full md:w-1/2 flex items-center justify-center">
-            <div className="w-full h-[320px] sm:h-[340px]">
+            <div className="w-full h-[340px] sm:h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData} outerRadius="78%" margin={{ top: 24, right: 24, bottom: 8, left: 24 }}>
                   <PolarGrid stroke="var(--border)" />

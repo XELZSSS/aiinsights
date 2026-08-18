@@ -207,7 +207,7 @@ export const PriceChart = memo(function PriceChart({
     <Card accent="top">
       <CardContent padding="md">
         <p className="text-sm font-semibold mb-3">{t("priceComparison")}</p>
-        <div ref={chartRef} className="w-full h-[220px]">
+        <div ref={chartRef} className="w-full h-[240px] sm:h-[280px]">
           {chartWidth > 0 && (
             <BarChart
               width={chartWidth}

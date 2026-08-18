@@ -92,27 +92,31 @@ function ProviderCompareContent({ data }: { data: ArtificialAnalysisModel[] }) {
     () => [
       {
         id: "name",
+        header: t("provider"),
         cell: (p) => (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <Dot color={p.color} />
-            <span className="font-medium text-sm">{p.name}</span>
+            <span className="font-medium text-sm truncate min-w-0">{p.name}</span>
           </div>
         ),
       },
-      { id: "count", align: "right", cell: (p) => <span className="font-medium">{p.count}</span> },
+      { id: "count", header: t("modelCount"), align: "right", cell: (p) => <span className="font-medium">{p.count}</span> },
       {
         id: "avgIntelligence",
+        header: t("avgIntelligence"),
         align: "right",
         cell: (p) => formatScore(t, p.avgIntelligence),
       },
       {
         id: "avgPrice",
+        header: t("avgPrice"),
         align: "right",
         hiddenMd: true,
         cell: (p) => formatPricePerMillion(p.avgPrice, t),
       },
       {
         id: "avgSpeed",
+        header: t("avgSpeed"),
         align: "right",
         hiddenMd: true,
         cell: (p) => (p.avgSpeed != null ? `${p.avgSpeed.toFixed(1)} ${t("tokensPerSecond")}` : t("notAvailable")),

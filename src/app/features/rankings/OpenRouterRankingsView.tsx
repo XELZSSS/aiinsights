@@ -14,7 +14,7 @@ const getModelRowId = (r: OpenRouterRankEntry) => r.id;
 function ModelExpandedDetail({ item }: { item: OpenRouterRankEntry }) {
   const { t } = useTranslation();
   return (
-    <div className="p-5 flex flex-col gap-4">
+    <div className="p-4 sm:p-5 flex flex-col gap-4">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <StatCard label={t("creatorOrVendor")} value={item.creator} />
         <StatCard label={t("inputTokens")} value={formatShortNumber(item.promptTokens || 0)} />

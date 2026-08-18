@@ -52,14 +52,14 @@ export function CompareChipBar({
   const { t } = useTranslation();
   const canCompare = models.length >= 2;
   return (
-    <div className="flex flex-wrap gap-3 items-center justify-between p-3 rounded-lg border border-border bg-bg-secondary/50">
+    <div className="flex flex-wrap gap-3 sm:gap-4 items-center justify-between p-3 sm:p-4 rounded-lg border border-border bg-bg-secondary/50">
       <div className="flex flex-wrap gap-2 items-center">
         {models.map((model) => (
           <span
             key={modelId(model)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg-card border border-border text-sm"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-bg-card border border-border text-sm"
           >
-            <span className="text-sm font-medium truncate max-w-[120px]">{model.short_name || model.name}</span>
+            <span className="text-sm font-medium truncate max-w-[140px]">{model.short_name || model.name}</span>
             <Button
               variant="ghost"
               size="icon"
@@ -133,7 +133,7 @@ export function StatGrid({ columns = 4, children }: { columns?: 2 | 3 | 4; child
   return (
     <div
       className={cn(
-        "grid gap-3",
+        "grid gap-3 sm:gap-4",
         columns === 2 && "grid-cols-2",
         columns === 3 && "grid-cols-3",
         columns === 4 && "grid-cols-2 md:grid-cols-4",
@@ -145,14 +145,14 @@ export function StatGrid({ columns = 4, children }: { columns?: 2 | 3 | 4; child
 }
 
 export function InfoGrid({ children }: { children: ReactNode }) {
-  return <div className="grid grid-cols-1 md:grid-cols-2 gap-4">{children}</div>;
+  return <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">{children}</div>;
 }
 
 export const InfoCard = memo(function InfoCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Card accent="top">
       <CardContent padding="md">
-        <p className="text-sm font-semibold mb-3 text-text-primary">{title}</p>
+        <p className="text-sm sm:text-base font-semibold mb-3 sm:mb-4 text-text-primary">{title}</p>
         <div className="flex flex-col gap-2 min-w-0">{children}</div>
       </CardContent>
     </Card>
@@ -168,9 +168,9 @@ export const InfoRow = memo(function InfoRow({
   value: ReactNode;
   compact?: boolean;
 }) {
-  const textSize = compact ? "text-xs" : "text-sm";
+  const textSize = compact ? "text-xs sm:text-sm" : "text-sm";
   return (
-    <div className={cn("flex flex-row justify-between min-w-0 py-1", compact ? "gap-2" : "gap-4")}>
+    <div className={cn("flex flex-row justify-between min-w-0 py-1.5", compact ? "gap-2" : "gap-4")}>
       <p className={cn(textSize, "text-text-secondary truncate")}>{label}</p>
       <p className={cn(textSize, "font-mono tabular-nums text-right truncate text-text-primary font-medium")}>
         {value}
@@ -275,7 +275,7 @@ interface RankingNameCellProps {
 export const RankingNameCell = memo(function RankingNameCell({ name, suffix }: RankingNameCellProps) {
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <p className="text-sm font-semibold break-words min-w-0">{name}</p>
+      <p className="text-sm font-semibold truncate flex-1 min-w-0">{name}</p>
       {suffix}
     </div>
   );
@@ -310,17 +310,17 @@ export const StatCard = memo(function StatCard({
   return (
     <Card className={className}>
       <CardContent padding="sm" className="text-center">
-        <div className="flex items-center justify-center gap-1.5 mb-1.5 min-w-0">
+        <div className="flex items-center justify-center gap-1.5 mb-2 min-w-0">
           {Icon && (
             <span className="text-text-secondary shrink-0">
-              <Icon className="size-3.5" />
+              <Icon className="size-4" />
             </span>
           )}
-          <p className="text-[11px] text-text-secondary font-medium uppercase tracking-wider truncate">{label}</p>
+          <p className="text-[11px] sm:text-xs text-text-secondary font-medium uppercase tracking-wider truncate">{label}</p>
         </div>
         <p
           className={cn(
-            "text-base font-bold tracking-tight break-words min-w-0",
+            "text-lg sm:text-xl font-bold tracking-tight break-words min-w-0",
             trend === "up" && "text-success",
             trend === "down" && "text-destructive",
             valueClassName,
@@ -365,7 +365,7 @@ export const TabButton = memo(function TabButton({
       onClick={onClick}
       className={cn(
         "rounded-md font-medium transition-colors duration-150 whitespace-nowrap shrink-0",
-        size === "sm" ? "px-2.5 py-1 text-xs" : "px-3 py-1.5 text-sm",
+        size === "sm" ? "px-3 py-1.5 text-xs" : "px-4 py-2 text-sm",
         active
           ? "bg-bg-card text-text-primary shadow-sm border border-border"
           : "text-text-secondary hover:text-text-primary border border-transparent",
@@ -411,7 +411,7 @@ export function TabContainer({ tabs, activeTab, className, tabSize = "md", onTab
   };
 
   return (
-    <div className={cn("flex flex-col gap-5", className)}>
+    <div className={cn("flex flex-col gap-4 sm:gap-5", className)}>
       <SegmentedGroup
         className="p-1 w-fit max-w-full overflow-x-auto no-scrollbar"
         role="tablist"

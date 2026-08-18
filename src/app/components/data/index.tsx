@@ -94,7 +94,7 @@ function TableBodyInner<T>({
                 <td
                   key={col.id}
                   className={cn(
-                    "px-3 py-3",
+                    "px-3 py-3.5 sm:py-3",
                     col.align === "right" && "text-right",
                     col.align === "center" && "text-center",
                     col.hiddenMd && "hidden md:table-cell",
@@ -129,6 +129,84 @@ function TableBodyInner<T>({
 
 const TableBody = memo(TableBodyInner) as typeof TableBodyInner;
 
+function MobileTableBodyInner<T>({
+  pagedData,
+  columns,
+  getRowId,
+  isExpandable,
+  expandedRowId,
+  onToggleExpand,
+  renderExpandedRow,
+}: TableBodyProps<T>) {
+  return (
+    <div className="flex flex-col gap-2.5">
+      {pagedData.map((row, rowIndex) => {
+        const rowId = getRowId?.(row) ?? String(rowIndex);
+        const isExpanded = expandedRowId === rowId;
+        const toggle = () => onToggleExpand?.(isExpanded ? null : rowId);
+        const visibleCols = columns.filter((col) => !col.hiddenMd);
+        const primaryCol = visibleCols[0];
+        const statCols = visibleCols.slice(1);
+        return (
+          <Fragment key={rowId}>
+            <div
+              aria-expanded={isExpandable ? isExpanded : undefined}
+              role={isExpandable ? "button" : undefined}
+              tabIndex={isExpandable ? 0 : undefined}
+              className={cn(
+                "rounded-lg border border-border bg-bg-card p-3.5 transition-colors",
+                isExpandable && "cursor-pointer",
+                "hover:bg-hover",
+                isExpanded && "bg-accent-light",
+              )}
+              onClick={isExpandable ? (e) => (isFromInteractive(e.target) ? undefined : toggle()) : undefined}
+              onKeyDown={
+                isExpandable
+                  ? (e) => {
+                      if (isFromInteractive(e.target)) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggle();
+                      }
+                    }
+                  : undefined
+              }
+            >
+              <div className="flex items-start gap-2 min-w-0">
+                {isExpandable && (
+                  <span className="shrink-0 text-text-secondary mt-0.5">
+                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  </span>
+                )}
+                <div className="min-w-0 flex-1">{primaryCol?.cell(row)}</div>
+              </div>
+              {statCols.length > 0 && (
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 mt-3 pt-3 border-t border-border">
+                  {statCols.map((col) => (
+                    <div key={col.id} className={cn("min-w-0", col.align === "right" && "text-right")}>
+                      {col.header && (
+                        <div className="text-[11px] sm:text-xs text-text-secondary truncate">{col.header}</div>
+                      )}
+                      <div className="text-sm mt-0.5 min-w-0">{col.cell(row)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {isExpanded && renderExpandedRow && (
+              <div className="rounded-lg border border-border bg-bg-secondary/50 overflow-hidden">
+                {renderExpandedRow(row)}
+              </div>
+            )}
+          </Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
+const MobileTableBody = memo(MobileTableBodyInner) as typeof MobileTableBodyInner;
+
 function DataTableInner<T>({
   data,
   columns,
@@ -143,7 +221,6 @@ function DataTableInner<T>({
   const { t } = useTranslation();
 
   const isExpandable = !!(renderExpandedRow && onToggleExpand);
-  const hasHeaders = columns.some((col) => col.header !== undefined);
 
   const dedupedData = useMemo(() => {
     if (!getRowId) return data;
@@ -163,30 +240,25 @@ function DataTableInner<T>({
     <div className="flex flex-col gap-2">
       {dedupedData.length === 0 ? (
         <div className="py-12 text-center text-sm text-text-secondary">{t("noResults")}</div>
+      ) : isMobile ? (
+        <>
+          <MobileTableBody
+            pagedData={pagedData}
+            columns={columns}
+            getRowId={getRowId}
+            isExpandable={isExpandable}
+            expandedRowId={expandedRowId}
+            onToggleExpand={onToggleExpand}
+            renderExpandedRow={renderExpandedRow}
+          />
+          {dedupedData.length > effectivePageSize && (
+            <Pagination page={page} totalPages={totalPages} onChange={goToPage} className="pt-1 self-center" />
+          )}
+        </>
       ) : (
         <>
           <div className="rounded-lg border border-border overflow-x-auto min-w-0">
             <table className="w-full text-sm table-auto">
-              {hasHeaders && (
-                <thead>
-                  <tr className="border-b border-border">
-                    {columns.map((col) => (
-                      <th
-                        key={col.id}
-                        className={cn(
-                          "px-3 py-2 text-xs font-semibold text-text-secondary bg-bg-secondary",
-                          col.align === "right" && "text-right",
-                          col.align === "center" && "text-center",
-                          col.hiddenMd && "hidden md:table-cell",
-                        )}
-                        style={{ width: col.width }}
-                      >
-                        {col.header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-              )}
               <TableBody
                 pagedData={pagedData}
                 columns={columns}

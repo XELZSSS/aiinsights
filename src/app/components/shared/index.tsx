@@ -104,11 +104,11 @@ export function SearchInput() {
   }
 
   return (
-    <div ref={containerRef} className="relative w-48 sm:w-56">
+    <div ref={containerRef} className="relative w-full sm:w-56">
       <label htmlFor={inputId} className="sr-only">
         {t("searchPlaceholder")}
       </label>
-      <div className="flex items-center gap-1.5 border border-border rounded-lg bg-bg-card px-2.5 py-1.5">
+      <div className="flex items-center gap-1.5 border border-border rounded-lg bg-bg-card px-3 py-2">
         <Search size={14} className="text-text-secondary" />
         <input
           id={inputId}
@@ -151,7 +151,7 @@ export function SearchInput() {
         <div
           id={listboxId}
           role="listbox"
-          className="absolute top-full left-0 right-0 mt-1.5 max-h-80 overflow-y-auto overscroll-contain no-scrollbar bg-bg-card border border-border rounded-lg shadow-lg z-50 sm:w-64"
+          className="absolute top-full left-0 right-0 mt-1.5 max-h-[28rem] overflow-y-auto overscroll-contain no-scrollbar bg-bg-card border border-border rounded-lg shadow-lg z-50 sm:w-72"
         >
           <div className="p-1">
             {results.map((result, index) => (
@@ -162,7 +162,7 @@ export function SearchInput() {
                 role="option"
                 aria-selected={activeIndex === index}
                 className={cn(
-                  "w-full text-left p-2.5 rounded-md transition-colors",
+                  "w-full text-left p-3 rounded-md transition-colors",
                   activeIndex === index ? "bg-hover" : "hover:bg-hover",
                 )}
                 onMouseEnter={() => setActiveIndex(index)}

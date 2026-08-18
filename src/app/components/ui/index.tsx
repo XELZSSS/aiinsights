@@ -20,9 +20,9 @@ const variantClass: Record<string, string> = {
 };
 
 const sizeClass: Record<string, string> = {
-  default: "h-9 px-4 text-sm rounded-md",
-  sm: "h-7 px-2.5 text-xs rounded-md",
-  icon: "size-8 rounded-md",
+  default: "h-10 px-5 text-sm rounded-md",
+  sm: "h-8 px-3 text-xs rounded-md",
+  icon: "size-9 rounded-md",
 };
 
 export const Button = memo(function Button({
@@ -51,13 +51,13 @@ export const Card = memo(function Card({ children, className, accent = "none", .
     >
       {accent === "top" && (
         <>
-          <div className="h-1 bg-gradient-to-r from-accent to-info shrink-0" />
+          <div className="h-1 bg-accent shrink-0" />
           {children}
         </>
       )}
       {accent === "left" && (
         <div className="flex min-w-0">
-          <div className="w-1 bg-gradient-to-b from-accent to-info shrink-0" />
+          <div className="w-1 bg-accent shrink-0" />
           <div className="flex-1 min-w-0">{children}</div>
         </div>
       )}
@@ -80,9 +80,9 @@ export const CardContent = memo(function CardContent({
     <div
       className={cn(
         "w-full min-w-0",
-        padding === "sm" && "p-3",
-        padding === "md" && "p-4",
-        padding === "lg" && "p-5",
+        padding === "sm" && "p-3.5 sm:p-4",
+        padding === "md" && "p-4 sm:p-5",
+        padding === "lg" && "p-5 sm:p-6",
         className,
       )}
       {...props}
@@ -104,7 +104,7 @@ export function Input({ className, type, ...props }: InputProps) {
     <input
       type={type}
       className={cn(
-        "h-8 px-2.5 text-sm rounded-md border border-border bg-bg-primary text-text-primary placeholder:text-text-tertiary outline-none transition-colors focus:border-text-tertiary",
+        "h-9 px-3 text-sm rounded-md border border-border bg-bg-primary text-text-primary placeholder:text-text-tertiary outline-none transition-colors focus:border-text-tertiary",
         type === "number" && noSpinners,
         className,
       )}
@@ -137,7 +137,7 @@ export const TagBadge = memo(function TagBadge({ children, className }: { childr
   return (
     <span
       className={cn(
-        "inline-flex items-center text-[11px] leading-[16px] px-1.5 py-0.5 rounded-[4px] border border-border bg-bg-secondary text-text-secondary",
+        "inline-flex items-center text-[11px] sm:text-xs leading-[16px] px-1.5 py-0.5 rounded-[4px] border border-border bg-bg-secondary text-text-secondary",
         className,
       )}
     >
@@ -178,7 +178,7 @@ interface ThProps {
 
 export const Th = memo(function Th({ align = "left", className, style, children }: ThProps) {
   return (
-    <th className={cn("px-2 py-2 font-bold", align === "right" ? "text-right" : "text-left", className)} style={style}>
+    <th className={cn("px-2.5 py-2.5 font-bold", align === "right" ? "text-right" : "text-left", className)} style={style}>
       {children}
     </th>
   );
@@ -194,7 +194,7 @@ interface TdProps {
 
 export const Td = memo(function Td({ align = "left", mono, className, style, children }: TdProps) {
   return (
-    <td className={cn("px-2 py-2", mono && "font-mono", align === "right" && "text-right", className)} style={style}>
+    <td className={cn("px-2.5 py-2.5", mono && "font-mono", align === "right" && "text-right", className)} style={style}>
       {children}
     </td>
   );

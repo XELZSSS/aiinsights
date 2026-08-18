@@ -34,7 +34,7 @@ export const IndexLineChart = memo(function IndexLineChart({ models }: { models:
         <p className="text-sm font-semibold mb-3">
           {t("intelligenceIndex")} — {t("top10")}
         </p>
-        <div ref={chartRef} className="w-full h-[200px]">
+        <div ref={chartRef} className="w-full h-[220px] sm:h-[260px]">
           {chartWidth > 0 && top10.length > 0 && (
             <LineChart
               width={chartWidth}
@@ -114,16 +114,16 @@ const RankedStatCard = memo(function RankedStatCard({
   return (
     <Card accent="top">
       <CardContent padding="md">
-        <p className="text-sm font-semibold mb-1">{title}</p>
+        <p className="text-sm sm:text-base font-semibold mb-1">{title}</p>
         <p className="text-xs text-text-secondary mb-3">{source}</p>
         {rows.length === 0 ? (
           <p className="text-sm text-text-secondary">{t("notAvailable")}</p>
         ) : (
           <div className="flex flex-col gap-2">
             {rows.map((row, i) => (
-              <div key={`${row.label}-${i}`} className="flex items-center gap-3 h-6">
+              <div key={`${row.label}-${i}`} className="flex items-center gap-3 h-7">
                 <span
-                  className="text-xs font-bold w-5 text-center shrink-0"
+                  className="text-xs sm:text-sm font-bold w-6 text-center shrink-0"
                   style={{ color: COOL_COLORS[i % COOL_COLORS.length] }}
                 >
                   {i + 1}

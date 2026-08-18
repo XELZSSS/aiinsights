@@ -33,7 +33,7 @@ function CompareButton({ model }: { model: ArtificialAnalysisModel }) {
 
 export function ModelExpandedDetail({ model }: { model: ArtificialAnalysisModel }) {
   return (
-    <div className="p-4">
+    <div className="p-4 sm:p-5">
       <ModelDetailContent model={model} showBenchmarks={false} />
     </div>
   );
@@ -49,7 +49,7 @@ function RankingModelCell({ model }: { model: ArtificialAnalysisModel }) {
   return (
     <>
       <div className="flex items-center gap-2 min-w-0">
-        <p className="text-sm font-semibold break-words min-w-0">{model.name}</p>
+        <p className="text-sm font-semibold truncate flex-1 min-w-0">{model.name}</p>
         <CompareButton model={model} />
       </div>
       <div className="grid grid-cols-2 gap-x-3 gap-y-0 mt-1 md:hidden">
@@ -78,11 +78,13 @@ function priceCell(get: (m: PricedModel) => number | null | undefined, t: TFunct
 
 function scoreColumn(
   id: string,
+  header: string,
   accessor: (m: ArtificialAnalysisModel) => number | null | undefined,
   t: TFunction,
 ): DataTableColumn<ArtificialAnalysisModel> {
   return {
     id,
+    header,
     align: "right",
     hiddenMd: true,
     cell: (model) => formatScore(t, accessor(model)),
@@ -93,20 +95,23 @@ export function buildRankingColumns(t: TFunction): DataTableColumn<ArtificialAna
   return [
     {
       id: "model",
+      header: t("model"),
       width: "40%",
       cell: (model) => <RankingModelCell model={model} />,
     },
     {
       id: "creator",
+      header: t("creator"),
       hiddenMd: true,
       align: "right",
       cell: (model) => <RightAlignedText>{model.model_creators?.name || t("notAvailable")}</RightAlignedText>,
     },
-    scoreColumn("intelligence", (m) => m.intelligence_index, t),
-    scoreColumn("coding", (m) => m.coding_index, t),
-    scoreColumn("agentic", (m) => m.agentic_index, t),
+    scoreColumn("intelligence", t("intelligenceIndex"), (m) => m.intelligence_index, t),
+    scoreColumn("coding", t("coding"), (m) => m.coding_index, t),
+    scoreColumn("agentic", t("agentic"), (m) => m.agentic_index, t),
     {
       id: "context",
+      header: t("contextWindow"),
       align: "right",
       hiddenMd: true,
       cell: (model) => formatTokens(model.context_window_tokens, t),
@@ -118,11 +123,12 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
   return [
     {
       id: "model",
+      header: t("model"),
       width: "35%",
       cell: (row) => (
         <>
           <div className="flex items-center gap-1 min-w-0">
-            <p className="text-sm break-words min-w-0">{row.model.name || row.model.slug}</p>
+            <p className="text-sm truncate flex-1 min-w-0">{row.model.name || row.model.slug}</p>
             <CompareButton model={row.model} />
           </div>
           <div className="flex flex-wrap gap-1 mt-1 md:hidden">
@@ -146,34 +152,40 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
     },
     {
       id: "provider",
+      header: t("provider"),
       align: "right",
       hiddenMd: true,
       cell: (row) => <RightAlignedText>{row.model.model_creators?.name || t("notAvailable")}</RightAlignedText>,
     },
     {
       id: "cacheHitPrice",
+      header: t("cacheHitPrice"),
       align: "right",
       hiddenMd: true,
       cell: priceCell((m) => m.model.pricing?.cache_hit, t),
     },
     {
       id: "blendedPrice",
+      header: t("blendedPrice"),
       align: "right",
       hiddenMd: true,
       cell: priceCell((m) => m.model.blended_price, t),
     },
     {
       id: "promptPrice",
+      header: t("promptPrice"),
       align: "right",
       cell: priceCell((m) => m.model.pricing?.input, t),
     },
     {
       id: "completionPrice",
+      header: t("completionPrice"),
       align: "right",
       cell: priceCell((m) => m.model.pricing?.output, t),
     },
     {
       id: "monthlyCost",
+      header: t("monthlyCost"),
       align: "right",
       hiddenMd: true,
       cell: (row) => formatDollar(row.monthlyCost, t),
@@ -188,23 +200,26 @@ function trendClass(change?: number | null) {
     : "bg-destructive/10 text-destructive border-destructive/20";
 }
 
-const tokenColumn = <T extends { totalTokens?: number | null }>(): DataTableColumn<T> => ({
+const tokenColumn = <T extends { totalTokens?: number | null }>(header: string): DataTableColumn<T> => ({
   id: "tokens",
+  header,
   align: "right",
   cell: (item) => (
     <span className="font-mono font-semibold text-text-primary">{formatShortNumber(item.totalTokens || 0)}</span>
   ),
 });
 
-const requestColumn = <T extends { requestCount?: number | null }>(): DataTableColumn<T> => ({
+const requestColumn = <T extends { requestCount?: number | null }>(header: string): DataTableColumn<T> => ({
   id: "requests",
+  header,
   align: "right",
   hiddenMd: true,
   cell: (item) => <span className="font-mono text-text-secondary">{formatShortNumber(item.requestCount || 0)}</span>,
 });
 
-const imageColumn = <T extends { imageOutputRequests?: number | null }>(): DataTableColumn<T> => ({
+const imageColumn = <T extends { imageOutputRequests?: number | null }>(header: string): DataTableColumn<T> => ({
   id: "images",
+  header,
   align: "right",
   hiddenMd: true,
   cell: (item) => (
@@ -212,8 +227,9 @@ const imageColumn = <T extends { imageOutputRequests?: number | null }>(): DataT
   ),
 });
 
-const videoColumn = <T extends { videoOutputSeconds?: number | null }>(): DataTableColumn<T> => ({
+const videoColumn = <T extends { videoOutputSeconds?: number | null }>(header: string): DataTableColumn<T> => ({
   id: "video",
+  header,
   align: "right",
   hiddenMd: true,
   cell: (item) => (
@@ -225,6 +241,7 @@ export function buildOpenRouterColumns(t: (key: TranslationKey) => string): Data
   return [
     {
       id: "model",
+      header: t("model"),
       width: "45%",
       cell: (item) => (
         <>
@@ -251,18 +268,20 @@ export function buildOpenRouterColumns(t: (key: TranslationKey) => string): Data
         </>
       ),
     },
-    tokenColumn<OpenRouterRankEntry>(),
-    requestColumn<OpenRouterRankEntry>(),
-    imageColumn<OpenRouterRankEntry>(),
-    videoColumn<OpenRouterRankEntry>(),
+    tokenColumn<OpenRouterRankEntry>(t("totalTokens")),
+    requestColumn<OpenRouterRankEntry>(t("requests")),
+    imageColumn<OpenRouterRankEntry>(t("images")),
+    videoColumn<OpenRouterRankEntry>(t("videoSeconds")),
     {
       id: "creator",
+      header: t("creator"),
       align: "right",
       hiddenMd: true,
       cell: (item) => <RightAlignedText className="text-xs">{item.creator || t("unknown")}</RightAlignedText>,
     },
     {
       id: "trend",
+      header: t("trend"),
       align: "right",
       hiddenMd: true,
       cell: (item) => (

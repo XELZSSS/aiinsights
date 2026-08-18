@@ -1,14 +1,14 @@
 export const COOL_COLORS = [
-  "#818cf8",
-  "#22d3ee",
-  "#fbbf24",
-  "#34d399",
-  "#f472b6",
-  "#a78bfa",
-  "#fb923c",
-  "#2dd4bf",
-  "#facc15",
-  "#a3e635",
+  "#6e56cf",
+  "#00a2c7",
+  "#30a46c",
+  "#ffb224",
+  "#e5484d",
+  "#e93d82",
+  "#8e4ec6",
+  "#ff5c00",
+  "#0091ff",
+  "#7c8794",
 ];
 
 export function getModelColor(index: number): string {

@@ -47,9 +47,10 @@ export function OpenSourceRankingsView({ rankings }: { rankings: OpenSourceModel
     () => [
       {
         id: "model",
+        header: t("model"),
         cell: (item) => (
           <div className="min-w-0">
-            <p className="text-sm font-medium break-words">{item.id.split("/").pop() || item.id}</p>
+            <p className="text-sm font-medium truncate">{item.id.split("/").pop() || item.id}</p>
             <div className="flex md:hidden mt-1 items-center gap-1.5">
               <span className="text-xs text-text-secondary">
                 {t("likes")}: {formatShortNumber(item.likes)}
@@ -61,17 +62,20 @@ export function OpenSourceRankingsView({ rankings }: { rankings: OpenSourceModel
       },
       {
         id: "downloads",
+        header: t("downloads"),
         align: "right",
         cell: (item) => <span className="text-sm font-semibold">{formatShortNumber(item.downloads)}</span>,
       },
       {
         id: "likes",
+        header: t("likes"),
         align: "right",
         hiddenMd: true,
         cell: (item) => <span className="text-sm">{formatShortNumber(item.likes)}</span>,
       },
       {
         id: "license",
+        header: t("license"),
         align: "right",
         hiddenMd: true,
         cell: (item) => <span className="text-sm">{item.license || t("notAvailable")}</span>,
@@ -108,9 +112,10 @@ export function HallucinationRankingsView({ rankings }: { rankings: Hallucinatio
     () => [
       {
         id: "model",
+        header: t("model"),
         cell: (item) => (
           <div className="min-w-0">
-            <p className="text-sm font-medium break-words">{item.model}</p>
+            <p className="text-sm font-medium truncate">{item.model}</p>
             <div className="flex md:hidden mt-1 items-center gap-1.5">
               <span className="text-xs text-text-secondary">
                 {t("accuracy")}: {fmtRate(item.accuracy)}
@@ -127,23 +132,27 @@ export function HallucinationRankingsView({ rankings }: { rankings: Hallucinatio
       },
       {
         id: "hallucinationRate",
+        header: t("hallucinationRate"),
         align: "right",
         cell: (item) => <span className="text-sm font-semibold">{fmtRate(item.hallucinationRate)}</span>,
       },
       {
         id: "accuracy",
+        header: t("accuracy"),
         align: "right",
         hiddenMd: true,
         cell: (item) => <span className="text-sm">{fmtRate(item.accuracy)}</span>,
       },
       {
         id: "attemptRate",
+        header: t("attemptRate"),
         align: "right",
         hiddenMd: true,
         cell: (item) => <span className="text-sm">{fmtRate(item.attemptRate)}</span>,
       },
       {
         id: "omniscienceIndex",
+        header: t("omniscienceIndex"),
         align: "right",
         hiddenMd: true,
         cell: (item) => <span className="text-sm">{fmtScore(item.omniscienceIndex)}</span>,

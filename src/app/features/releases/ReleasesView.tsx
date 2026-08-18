@@ -100,7 +100,7 @@ function FeedTab({ allEntries }: { allEntries: FeedEntry[] }) {
         id: "model",
         cell: (row) => (
           <div className="min-w-0">
-            <p className="text-sm font-medium break-words">{row.name}</p>
+            <p className="text-sm font-medium truncate">{row.name}</p>
             <div className="flex md:hidden mt-1 items-center gap-1.5">
               <span className={cn("text-xs font-semibold", getTypeMeta(row.type).color)}>
                 {getTypeMeta(row.type).label}
@@ -140,7 +140,7 @@ function ReleaseDatesTab({ releaseRows }: { releaseRows: DatedModel[] }) {
     () => [
       {
         id: "model",
-        cell: (row) => <span className="text-sm font-semibold break-words min-w-0">{row.model.name}</span>,
+        cell: (row) => <span className="text-sm font-semibold truncate min-w-0">{row.model.name}</span>,
       },
       {
         id: "creator",

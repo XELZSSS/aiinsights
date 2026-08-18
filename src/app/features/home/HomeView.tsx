@@ -97,7 +97,7 @@ const StatisticsSection = lazy(() => import("./charts").then((m) => ({ default: 
 
 const KpiStrip = memo(function KpiStrip({ kpis }: { kpis: HomeKpi[] }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
       {kpis.map((kpi) => (
         <StatCard key={kpi.label} icon={kpi.Icon} label={kpi.label} value={kpi.value} />
       ))}
@@ -210,7 +210,7 @@ const HomeContent = memo(function HomeContent() {
   return (
     <PageContainer>
       <div className="flex items-center gap-2 flex-wrap mb-4">
-        <div className="ml-auto">
+        <div className="w-full sm:w-auto sm:ml-auto">
           <SearchInput />
         </div>
       </div>
@@ -227,7 +227,7 @@ const HomeContent = memo(function HomeContent() {
                 <Card accent="top">
                   <CardContent padding="md">
                     <p className="text-sm font-semibold mb-3">{t("intelligenceIndex")} — Top 10</p>
-                    <div className="h-[200px] animate-pulse bg-bg-secondary rounded-lg" />
+                    <div className="h-[220px] sm:h-[260px] animate-pulse bg-bg-secondary rounded-lg" />
                   </CardContent>
                 </Card>
               }

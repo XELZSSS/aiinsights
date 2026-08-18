@@ -67,7 +67,7 @@ function NewsList({
           className="group block"
           aria-label={`${item.title} - ${item.source}`}
         >
-          <Card className="p-4 hover:border-accent/30 transition-colors">
+          <Card className="p-4 sm:p-5 hover:border-accent/30 transition-colors">
             <div className="flex items-start justify-between gap-4">
               <h3 className="text-sm font-semibold text-text-primary leading-relaxed group-hover:text-accent transition-colors min-w-0 break-words">
                 {item.title}
