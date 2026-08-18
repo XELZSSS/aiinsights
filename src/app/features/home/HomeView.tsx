@@ -32,6 +32,11 @@ export interface HomeBarStat {
   valueLabel: string;
 }
 
+function formatRatingInterval(entry: ArenaModel): string {
+  if (entry.ratingUpper == null || entry.ratingLower == null) return "";
+  return ` (${entry.ratingLower.toFixed(0)}–${entry.ratingUpper.toFixed(0)})`;
+}
+
 function useHomeDashboardData(
   artificialData: ArtificialAnalysisModel[],
   hallucinationRankings: HallucinationRankingEntry[],
@@ -160,7 +165,9 @@ const ArenaT2ICard = memo(function ArenaT2ICard({
           <span>
             ELO:{" "}
             <strong className="text-text-primary font-semibold" style={{ color }}>
-              {entry.rating != null ? entry.rating.toFixed(0) : t("notAvailable")}
+              {entry.rating != null
+                ? `${entry.rating.toFixed(0)}${formatRatingInterval(entry)}`
+                : t("notAvailable")}
             </strong>
           </span>
           <span>

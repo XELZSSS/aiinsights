@@ -10,6 +10,8 @@ interface RawEntry {
   rank: number;
   modelDisplayName?: string;
   rating?: number;
+  ratingUpper?: number;
+  ratingLower?: number;
   votes?: number;
   license?: string;
   modelOrganization?: string;
@@ -18,13 +20,16 @@ interface RawEntry {
   outputPricePerMillion?: number;
   contextLength?: number;
   pricePerImage?: number;
+  isDay1?: boolean;
 }
 
 function mapEntry(e: RawEntry): ArenaModel | null {
-  if (e.rank == null || !e.modelDisplayName) return null;
+  if (e.rank == null || e.rank <= 0 || e.isDay1 === true || !e.modelDisplayName) return null;
   return {
     model: e.modelDisplayName,
     rating: e.rating ?? null,
+    ratingUpper: e.ratingUpper ?? null,
+    ratingLower: e.ratingLower ?? null,
     votes: e.votes ?? null,
     license: e.license ?? null,
     modelOrganization: e.modelOrganization ?? null,

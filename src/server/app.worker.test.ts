@@ -40,6 +40,12 @@ function mockUpstream(): ReturnType<typeof vi.fn> {
   return fetchMock;
 }
 
+function arenaHtml(entries: unknown[]): string {
+  const json = JSON.stringify({ arena: {}, leaderboard: { entries } });
+  const escaped = json.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return `<!doctype html><script>self.__next_f.push([1,"${escaped}"])</script>`;
+}
+
 describe("Worker API integration (workerd runtime)", () => {
   beforeEach(async () => {
     await reset();
@@ -85,6 +91,39 @@ describe("Worker API integration (workerd runtime)", () => {
   it("returns 400 for an invalid enum query param", async () => {
     const res = await worker.fetch(new Request(`${OR}/api/arena-leaderboard?category=invalid`), env);
     expect(res.status).toBe(400);
+  });
+
+  it("filters Day-1 promo entries and maps rating confidence intervals", async () => {
+    const arenaFetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      if (url.pathname === "/leaderboard/text-to-image") {
+        return new Response(
+          arenaHtml([
+            { rank: 1, modelDisplayName: "model-a", rating: 1506.5, ratingUpper: 1512, ratingLower: 1501, votes: 100 },
+            { rank: 0, modelDisplayName: "deepseek-v4-pro-max-20260813", isDay1: true, rating: 0, votes: 0 },
+            { rank: 2, modelDisplayName: "model-b", rating: 1400, ratingUpper: 1410, ratingLower: 1390, votes: 50 },
+          ]),
+          { status: 200, headers: { "content-type": "text/html" } },
+        );
+      }
+      return jsonResponse({}, 404);
+    });
+    vi.stubGlobal("fetch", arenaFetch);
+
+    const res = await worker.fetch(new Request(`${OR}/api/arena-leaderboard?category=text-to-image`), env);
+    expect(res.status).toBe(200);
+
+    const body = (await res.json()) as {
+      data: { category: string; models: { model: string; rating: number | null; ratingUpper: number | null; ratingLower: number | null }[] };
+    };
+    expect(body.data.models).toHaveLength(2);
+    expect(body.data.models.some((m) => m.model.includes("deepseek-v4-pro-max"))).toBe(false);
+
+    const first = body.data.models[0]!;
+    expect(first.model).toBe("model-a");
+    expect(first.rating).toBe(1506.5);
+    expect(first.ratingUpper).toBe(1512);
+    expect(first.ratingLower).toBe(1501);
   });
 
   it("returns 404 JSON for unknown API routes", async () => {

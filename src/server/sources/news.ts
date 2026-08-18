@@ -28,7 +28,7 @@ function parseFeed(xml: string, sourceUrl: string): NewsItem[] {
   if (!channel) return [];
   const rawTitle = channel.title;
   const sourceName =
-    (typeof rawTitle === "string" ? rawTitle : rawTitle?.["#text"]) ||
+    decodeEntities(typeof rawTitle === "string" ? rawTitle : ((rawTitle?.["#text"] as string | undefined) ?? "")) ||
     (() => {
       try {
         return new URL(sourceUrl).hostname;
