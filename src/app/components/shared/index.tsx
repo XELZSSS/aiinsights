@@ -65,7 +65,7 @@ export function SearchInput() {
     setInputValue(searchTerm);
   }, [searchTerm]);
 
-  const results = useSearchAllRankings(searchTerm);
+  const { results, isPending, isError } = useSearchAllRankings(searchTerm);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -147,41 +147,52 @@ export function SearchInput() {
         )}
       </div>
 
-      {isOpen && inputValue.length >= 2 && results.length > 0 && (
+      {isOpen && inputValue.length >= 2 && (
         <div
           id={listboxId}
           role="listbox"
           className="absolute top-full left-0 right-0 mt-1.5 max-h-[28rem] overflow-y-auto overscroll-contain no-scrollbar bg-bg-card border border-border rounded-lg shadow-lg z-50 sm:w-72"
         >
           <div className="p-1">
-            {results.map((result, index) => (
-              <button
-                key={`${result.source}-${result.id}`}
-                id={`${listboxId}-option-${index}`}
-                type="button"
-                role="option"
-                aria-selected={activeIndex === index}
-                className={cn(
-                  "w-full text-left p-3 rounded-md transition-colors",
-                  activeIndex === index ? "bg-hover" : "hover:bg-hover",
-                )}
-                onMouseEnter={() => setActiveIndex(index)}
-                onClick={() => handleResultClick(result)}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-text-primary truncate">{result.name}</span>
-                  {result.score != null && (
-                    <span className="text-xs text-text-secondary ml-2 shrink-0 font-mono">
-                      {result.score.toFixed(1)}
-                    </span>
+            {isPending && results.length === 0 ? (
+              <div className="flex items-center justify-center gap-2 p-3 text-sm text-text-secondary">
+                <Loader2 className="size-4 animate-spin" />
+                {t("searching")}
+              </div>
+            ) : isError && results.length === 0 ? (
+              <div className="p-3 text-sm text-text-secondary">{t("searchFailed")}</div>
+            ) : results.length === 0 ? (
+              <div className="p-3 text-sm text-text-secondary">{t("noResults")}</div>
+            ) : (
+              results.map((result, index) => (
+                <button
+                  key={`${result.source}-${result.id}`}
+                  id={`${listboxId}-option-${index}`}
+                  type="button"
+                  role="option"
+                  aria-selected={activeIndex === index}
+                  className={cn(
+                    "w-full text-left p-3 rounded-md transition-colors",
+                    activeIndex === index ? "bg-hover" : "hover:bg-hover",
                   )}
-                </div>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-text-secondary">{t(result.source as Parameters<typeof t>[0])}</span>
-                  {result.provider && <span className="text-xs text-text-secondary">{result.provider}</span>}
-                </div>
-              </button>
-            ))}
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onClick={() => handleResultClick(result)}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-text-primary truncate">{result.name}</span>
+                    {result.score != null && (
+                      <span className="text-xs text-text-secondary ml-2 shrink-0 font-mono">
+                        {result.score.toFixed(1)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-text-secondary">{t(result.source as Parameters<typeof t>[0])}</span>
+                    {result.provider && <span className="text-xs text-text-secondary">{result.provider}</span>}
+                  </div>
+                </button>
+              ))
+            )}
           </div>
         </div>
       )}

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   ArtificialAnalysisModel,
@@ -47,13 +48,6 @@ const qOpenSourceModels = createApiQuery<OpenSourceModelEntry[]>(
   apiPaths.openSourceModels(),
   { staleTime: FIVE_MINUTES },
 );
-const qOpenSourceSearch = createApiQuery<OpenSourceModelEntry[]>(
-  ["api", "open-source-models", "search"],
-  apiPaths.openSourceModels("trendingScore", "-1", 20),
-  {
-    staleTime: FIVE_MINUTES,
-  },
-);
 const qNews = (category: NewsCategory) =>
   createApiQuery<NewsItem[]>(["api", "news", category], apiPaths.news(category), {
     staleTime: THIRTY_MINUTES,
@@ -62,10 +56,36 @@ const qNews = (category: NewsCategory) =>
 
 export const useArtificialRankings = qArtificial.use;
 export const useSuspenseArtificialRankings = qArtificial.useSuspense;
-export const useSuspenseOpenSourceReleases = qOpenSourceReleases.useSuspense;
 export const useSuspenseHomeDashboard = qHomeDashboard.useSuspense;
 export const useOpenRouterRankings = qOpenRouter.use;
 export const useSuspenseOpenRouterRankings = qOpenRouter.useSuspense;
 export const useOpenSourceModels = qOpenSourceModels.use;
-export const useOpenSourceSearchModels = qOpenSourceSearch.use;
+export const useOpenSourceReleases = qOpenSourceReleases.use;
+export const useSuspenseOpenSourceReleases = qOpenSourceReleases.useSuspense;
 export const useNewsByCategory = (category: NewsCategory) => qNews(category).use();
+
+export interface OpenSourceModelsQuery {
+  data: OpenSourceModelEntry[];
+  isPending: boolean;
+  isError: boolean;
+}
+
+export function useAllOpenSourceModels(enabled = true): OpenSourceModelsQuery {
+  const trending = qOpenSourceModels.use(enabled);
+  const releases = qOpenSourceReleases.use(enabled);
+
+  const data = useMemo(() => {
+    const seen = new Set<string>();
+    return [...(trending.data ?? []), ...(releases.data ?? [])].filter((m) => {
+      if (!m.id || seen.has(m.id)) return false;
+      seen.add(m.id);
+      return true;
+    });
+  }, [trending.data, releases.data]);
+
+  return {
+    data,
+    isPending: enabled && (trending.isPending || releases.isPending),
+    isError: enabled && (trending.isError || releases.isError),
+  };
+}

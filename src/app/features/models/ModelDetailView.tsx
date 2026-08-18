@@ -12,12 +12,12 @@ import {
   InfoGrid,
 } from "@/app/components/composite";
 import { Badge } from "@/app/components/ui";
-import { SuspenseQuery, NotFound } from "@/app/components/shared";
+import { SuspenseQuery, NotFound, Spinner } from "@/app/components/shared";
 import { PageContainer, PageHeader } from "@/app/components/layout";
 import {
   useSuspenseArtificialRankings,
   useSuspenseOpenRouterRankings,
-  useSuspenseOpenSourceReleases,
+  useAllOpenSourceModels,
 } from "@/app/api/queries";
 import { useHallucinationRankings } from "@/app/domain/hallucination";
 import {
@@ -46,20 +46,21 @@ function useModelSourceParams(): { src: ModelSource | null; decodedId: string } 
 }
 
 function createDetailView<T>(
-  useQuery: () => { data: T[] },
+  useQuery: () => { data: T[]; isPending?: boolean },
   Content: ComponentType<{ model: T }>,
   ...keys: (keyof T & string)[]
 ): ComponentType<{ decodedId: string }> {
   return function DetailView({ decodedId }: { decodedId: string }) {
-    const { data } = useQuery();
+    const { data, isPending } = useQuery();
     const model = findModel(data, decodedId, ...keys);
+    if (!model && isPending) return <Spinner />;
     if (!model) return <NotFound />;
     return <Content model={model} />;
   };
 }
 
 const AADetail = createDetailView(useSuspenseArtificialRankings, ModelDetailContent, "id", "slug");
-const OSDetail = createDetailView(useSuspenseOpenSourceReleases, OsDetail, "id");
+const OSDetail = createDetailView(useAllOpenSourceModels, OsDetail, "id");
 
 const SOURCE_COMPONENTS: Record<ModelSource, ComponentType<{ decodedId: string }>> = {
   aa: AADetail,

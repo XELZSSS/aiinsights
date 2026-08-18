@@ -1,10 +1,10 @@
 import { useDeferredValue, useMemo } from "react";
-import { useArtificialRankings, useOpenRouterRankings, useOpenSourceSearchModels } from "@/app/api/queries";
+import { useArtificialRankings, useOpenRouterRankings, useAllOpenSourceModels } from "@/app/api/queries";
 import { useHallucinationRankings } from "@/app/domain/hallucination";
 import type { SearchResult } from "@/shared/types";
 
 interface SearchIndex<T> {
-  haystacks: string[][];
+  fields: string[][];
   items: T[];
 }
 
@@ -12,100 +12,146 @@ function buildIndex<T>(data: T[], fields: (item: T) => (string | undefined | nul
   if (data.length === 0) return null;
   return {
     items: data,
-    haystacks: data.map((item) => fields(item).map((f) => (f ? f.toLowerCase() : ""))),
+    fields: data.map((item) => fields(item).map((f) => (f ? f.toLowerCase().trim() : ""))),
   };
 }
 
-function searchIndex<T>(index: SearchIndex<T>, term: string, mapResult: (item: T) => SearchResult): SearchResult[] {
-  const results: SearchResult[] = [];
-  for (let i = 0; i < index.items.length; i++) {
-    if (index.haystacks[i]!.some((f) => f.includes(term))) results.push(mapResult(index.items[i]!));
+function matchTerm(fields: string[], term: string): { matched: boolean; score: number } {
+  for (const f of fields) {
+    if (!f) continue;
+    if (f === term) return { matched: true, score: 4 };
   }
-  return results;
+  let best = 0;
+  for (const f of fields) {
+    if (!f) continue;
+    if (f.startsWith(term)) best = Math.max(best, 3);
+    else if (f.includes(term)) best = Math.max(best, 2);
+  }
+  return { matched: best > 0, score: best };
 }
 
-export function useSearchAllRankings(searchTerm: string): SearchResult[] {
+interface Collected {
+  result: SearchResult;
+  match: number;
+  itemScore: number;
+}
+
+function collect<T>(
+  index: SearchIndex<T> | null,
+  term: string,
+  mapResult: (item: T) => SearchResult,
+  out: Collected[],
+): void {
+  if (!index) return;
+  for (let i = 0; i < index.items.length; i++) {
+    const { matched, score } = matchTerm(index.fields[i]!, term);
+    if (!matched) continue;
+    const result = mapResult(index.items[i]!);
+    out.push({ result, match: score, itemScore: result.score ?? -Infinity });
+  }
+}
+
+export interface SearchState {
+  results: SearchResult[];
+  isPending: boolean;
+  isError: boolean;
+}
+
+export function useSearchAllRankings(searchTerm: string): SearchState {
   const enabled = searchTerm.length >= 2;
   const artificialQ = useArtificialRankings(enabled);
-  const openSourceQ = useOpenSourceSearchModels(enabled);
+  const openSourceQ = useAllOpenSourceModels(enabled);
   const orQ = useOpenRouterRankings(enabled);
 
   const artificialData = artificialQ.data ?? [];
-  const openSourceRankings = openSourceQ.data ?? [];
+  const openSourceRankings = openSourceQ.data;
   const openRouterData = orQ.data?.tokenUsageRankings ?? [];
   const hallucinationRankings = useHallucinationRankings(artificialData, enabled);
 
   const artificialIndex = useMemo(
-    () => buildIndex(artificialData, (m) => [m.name, m.slug, m.model_creators?.name]),
+    () => buildIndex(artificialData, (m) => [m.name, m.slug, m.short_name, m.model_creators?.name]),
     [artificialData],
   );
-  const openRouterIndex = useMemo(() => buildIndex(openRouterData, (m) => [m.name, m.id]), [openRouterData]);
-  const openSourceIndex = useMemo(() => buildIndex(openSourceRankings, (m) => [m.id]), [openSourceRankings]);
+  const openRouterIndex = useMemo(
+    () => buildIndex(openRouterData, (m) => [m.name, m.id, m.creator]),
+    [openRouterData],
+  );
+  const openSourceIndex = useMemo(
+    () => buildIndex(openSourceRankings, (m) => [m.id, m.author]),
+    [openSourceRankings],
+  );
   const hallucinationIndex = useMemo(
-    () => buildIndex(hallucinationRankings, (m) => [m.model]),
+    () => buildIndex(hallucinationRankings, (m) => [m.model, m.slug, m.id]),
     [hallucinationRankings],
   );
 
   const deferredTerm = useDeferredValue(searchTerm);
 
-  return useMemo(() => {
+  const results = useMemo(() => {
     if (!enabled) return [];
     const term = deferredTerm.toLowerCase();
-    const results: SearchResult[] = [];
-    if (artificialIndex) {
-      results.push(
-        ...searchIndex(artificialIndex, term, (m) => ({
-          id: m.id,
-          name: m.name,
-          source: "modelRankings",
-          score: m.intelligence_index,
-          provider: m.model_creators?.name || null,
-          link: `/model/aa/${m.slug || m.id}`,
-        })),
-      );
-    }
-    if (openRouterIndex) {
-      results.push(
-        ...searchIndex(openRouterIndex, term, (m) => ({
-          id: m.id,
-          name: m.name,
-          source: "openRouterRankings",
-          score: null,
-          provider: m.creator || null,
-          link: `/model/or/${m.id}`,
-        })),
-      );
-    }
-    if (openSourceIndex) {
-      results.push(
-        ...searchIndex(openSourceIndex, term, (m) => ({
-          id: m.id,
-          name: m.id,
-          source: "openSourceRankings",
-          score: null,
-          provider: m.author || null,
-          link: `/model/os/${m.id}`,
-        })),
-      );
-    }
-    if (hallucinationIndex) {
-      results.push(
-        ...searchIndex(hallucinationIndex, term, (m) => ({
-          id: m.id,
-          name: m.model,
-          source: "hallucinationRankings",
-          score: m.omniscienceIndex,
-          provider: null,
-          link: `/model/hall/${m.slug || m.id}`,
-        })),
-      );
-    }
-    return results
-      .sort((a, b) => {
-        const aExact = a.name.toLowerCase() === term ? 1 : 0;
-        const bExact = b.name.toLowerCase() === term ? 1 : 0;
-        return aExact !== bExact ? bExact - aExact : (b.score ?? 0) - (a.score ?? 0);
-      })
+    const collected: Collected[] = [];
+    collect(
+      artificialIndex,
+      term,
+      (m) => ({
+        id: m.id,
+        name: m.name,
+        source: "modelRankings",
+        score: m.intelligence_index,
+        provider: m.model_creators?.name || null,
+        link: `/model/aa/${m.slug || m.id}`,
+      }),
+      collected,
+    );
+    collect(
+      openRouterIndex,
+      term,
+      (m) => ({
+        id: m.id,
+        name: m.name,
+        source: "openRouterRankings",
+        score: null,
+        provider: m.creator || null,
+        link: `/model/or/${m.id}`,
+      }),
+      collected,
+    );
+    collect(
+      openSourceIndex,
+      term,
+      (m) => ({
+        id: m.id,
+        name: m.id,
+        source: "openSourceRankings",
+        score: null,
+        provider: m.author || null,
+        link: `/model/os/${m.id}`,
+      }),
+      collected,
+    );
+    collect(
+      hallucinationIndex,
+      term,
+      (m) => ({
+        id: m.id,
+        name: m.model,
+        source: "hallucinationRankings",
+        score: m.omniscienceIndex,
+        provider: null,
+        link: `/model/hall/${m.slug || m.id}`,
+      }),
+      collected,
+    );
+    return collected
+      .sort((a, b) => b.match - a.match || b.itemScore - a.itemScore)
+      .map((c) => c.result)
       .slice(0, 20);
   }, [enabled, deferredTerm, artificialIndex, openRouterIndex, openSourceIndex, hallucinationIndex]);
+
+  return {
+    results,
+    isPending: enabled && (artificialQ.isPending || openSourceQ.isPending || orQ.isPending),
+    isError: enabled && (artificialQ.isError || openSourceQ.isError || orQ.isError),
+  };
 }
