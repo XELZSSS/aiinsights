@@ -95,7 +95,7 @@ export const MODEL_SOURCES = {
 
 export type ModelSource = keyof typeof MODEL_SOURCES;
 
-export const RANKING_BENCHMARK_KEYS = ["aime25", "gpqa", "mmlu_pro", "livecodebench"] as const;
+const RANKING_BENCHMARK_KEYS = ["aime25", "gpqa", "mmlu_pro", "livecodebench"] as const;
 
 export const BENCHMARK_LABELS: Record<(typeof RANKING_BENCHMARK_KEYS)[number], TranslationKey> = {
   aime25: "benchmarkAime25",

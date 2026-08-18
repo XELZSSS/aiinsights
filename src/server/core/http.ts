@@ -9,7 +9,7 @@ interface FetchOptions extends RequestInit {
   timeoutMs?: number;
 }
 
-export interface ProbeResult {
+interface ProbeResult {
   ok: boolean;
   status: number | null;
   latencyMs: number | null;

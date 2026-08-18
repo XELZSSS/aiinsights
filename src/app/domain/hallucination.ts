@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import type { ArtificialAnalysisModel, HallucinationRankingEntry } from "@/shared/types";
 import { normalizePercent } from "@/shared/utils";
 
-export function buildHallucinationRankings(models: ArtificialAnalysisModel[]): HallucinationRankingEntry[] {
+function buildHallucinationRankings(models: ArtificialAnalysisModel[]): HallucinationRankingEntry[] {
   return models
     .flatMap((model) => {
       const total = model.omniscience_breakdown?.total;

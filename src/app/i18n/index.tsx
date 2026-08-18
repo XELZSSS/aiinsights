@@ -46,5 +46,3 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   return <I18nContext.Provider value={contextValue}>{children}</I18nContext.Provider>;
 }
-
-export type { Lang, TranslationKey, TFunction } from "@/shared/i18n";

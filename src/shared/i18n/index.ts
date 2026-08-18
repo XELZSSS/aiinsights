@@ -204,7 +204,7 @@ export const en = {
   uptimeMins: "{mins}m",
 } as const;
 
-export type EnDict = typeof en;
+type EnDict = typeof en;
 
 export const zh = {
   home: "首页",

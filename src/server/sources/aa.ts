@@ -58,7 +58,7 @@ function compact(m: Record<string, unknown>): ArtificialAnalysisModel {
   const creator = obj(m.creator);
   const agentic = num(m.analystAgent);
   const omniscience = num(m.omniscience);
-  const omniscienceTotal = obj(obj(m.omniscience_breakdown)?.total);
+  const omniscienceBreakdown = obj(m.omniscienceBreakdown);
   const cost = obj(m.intelligenceIndexCost);
   const timescale = obj(m.timescaleData);
 
@@ -101,13 +101,13 @@ function compact(m: Record<string, unknown>): ArtificialAnalysisModel {
     output_modality_speech: bool(m.outputModalitySpeech),
     output_modality_video: bool(m.outputModalityVideo),
     omniscience_breakdown:
-      omniscienceTotal != null || omniscience != null
+      omniscienceBreakdown != null || omniscience != null
         ? {
             total: {
-              accuracy: num(omniscienceTotal?.accuracy),
-              attempt_rate: num(omniscienceTotal?.attempt_rate),
-              hallucination_rate: num(omniscienceTotal?.hallucination_rate),
-              omniscience: num(omniscienceTotal?.omniscience) ?? omniscience,
+              accuracy: num(omniscienceBreakdown?.accuracy),
+              attempt_rate: num(omniscienceBreakdown?.attemptRate),
+              hallucination_rate: num(omniscienceBreakdown?.hallucinationRate),
+              omniscience,
             },
           }
         : undefined,
@@ -115,19 +115,16 @@ function compact(m: Record<string, unknown>): ArtificialAnalysisModel {
 }
 
 function compactOmniscienceEnrich(m: Record<string, unknown>): Record<string, unknown> {
-  const total = obj(obj(m.omniscience_breakdown)?.total);
+  const breakdown = obj(m.omniscienceBreakdown);
   return {
     slug: str(m.slug),
     omniscience: num(m.omniscience),
-    omniscience_breakdown:
-      total != null
+    omniscienceBreakdown:
+      breakdown != null
         ? {
-            total: {
-              accuracy: num(total.accuracy),
-              attempt_rate: num(total.attempt_rate),
-              hallucination_rate: num(total.hallucination_rate),
-              omniscience: num(total.omniscience),
-            },
+            accuracy: num(breakdown.accuracy),
+            attemptRate: num(breakdown.attemptRate),
+            hallucinationRate: num(breakdown.hallucinationRate),
           }
         : undefined,
   };
@@ -179,9 +176,9 @@ export const getIntelligenceIndex = createSource<Record<string, never>, Artifici
     let omniscienceEnrich: Record<string, unknown>[] = [];
     try {
       const omniscienceBody = await fetchAaRsc(ctx, OMNISCIENCE_PATH);
-      const omniscienceModels = parseRscPayload<Record<string, unknown>>(omniscienceBody, "defaultData", (tree) => {
-        const arr = findNextData<Record<string, unknown>>(tree, "defaultData");
-        return Array.isArray(arr) && arr.some((m) => m.omniscience_breakdown != null) ? arr : null;
+      const omniscienceModels = parseRscPayload<Record<string, unknown>>(omniscienceBody, "initialModels", (tree) => {
+        const arr = findNextData<Record<string, unknown>>(tree, "initialModels");
+        return Array.isArray(arr) && arr.some((m) => m.omniscienceBreakdown != null) ? arr : null;
       });
       omniscienceEnrich = (omniscienceModels ?? []).map(compactOmniscienceEnrich);
     } catch (err) {

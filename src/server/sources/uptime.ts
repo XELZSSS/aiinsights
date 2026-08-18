@@ -2,7 +2,7 @@ import type { AppContext } from "@/server/app";
 
 const FIRST_LAUNCH_KEY = "uptime:first-launch";
 
-export interface UptimePayload {
+interface UptimePayload {
   firstLaunchAt: string;
   uptimeMs: number;
 }
