@@ -6,13 +6,14 @@ export interface QueryCtx {
   signal?: AbortSignal;
 }
 
-export async function apiFetch<T>(path: string, signal?: AbortSignal): Promise<T> {
+export async function apiFetch<T>(path: string, signal?: AbortSignal, opts?: { cache?: RequestCache }): Promise<T> {
   const url = apiBase && path.startsWith("/") ? apiBase + path : path;
   const timeout = AbortSignal.timeout(FETCH_TIMEOUT_MS);
   const merged = signal ? AbortSignal.any([signal, timeout]) : timeout;
   const res = await fetch(url, {
     headers: { accept: "application/json" },
     signal: merged,
+    cache: opts?.cache,
   });
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as { error?: { message?: string } } | null;
@@ -27,6 +28,7 @@ export const apiPaths = {
     `/api/open-source-models?sort=${sort}&direction=${direction}&limit=${limit}`,
   openSourceReleases: "/api/open-source-releases",
   openRouterRankings: "/api/openrouter-rankings",
+  sourcesStatus: "/api/sources-status",
   news: (category: string) => `/api/news?category=${encodeURIComponent(category)}`,
   homeDashboard: "/api/home-dashboard",
 } as const;

@@ -11,6 +11,8 @@ import { getIntelligenceIndex } from "@/server/sources/aa";
 import { getModels, getReleases } from "@/server/sources/huggingface";
 import { getNews } from "@/server/sources/news";
 import { getOpenRouterRankings } from "@/server/sources/openrouter";
+import { getSourcesStatus, refreshSourcesStatus } from "@/server/sources/status";
+import { getUptime } from "@/server/sources/uptime";
 import { ARENA_CATEGORIES } from "@/shared/config";
 import type { ArenaCategory, NewsCategory } from "@/shared/types";
 
@@ -82,6 +84,17 @@ export const routeDefs: RouteDef[] = [
   {
     path: "/api/openrouter-rankings",
     handler: (ctx) => getOpenRouterRankings(ctx, {}),
+  },
+  {
+    path: "/api/sources-status",
+    query: { refresh: { type: "enum", values: ["1", "0"], default: "0" } },
+    handler: async (ctx, params) => {
+      const [status, uptime] = await Promise.all([
+        params.refresh === "1" ? refreshSourcesStatus(ctx) : getSourcesStatus(ctx, {}),
+        getUptime(ctx),
+      ]);
+      return { ...status, ...uptime };
+    },
   },
   {
     path: "/api/home-dashboard",

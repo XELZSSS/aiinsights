@@ -9,6 +9,13 @@ interface FetchOptions extends RequestInit {
   timeoutMs?: number;
 }
 
+export interface ProbeResult {
+  ok: boolean;
+  status: number | null;
+  latencyMs: number | null;
+  error: string | null;
+}
+
 class RetryableHttpError extends Error {
   constructor(status: number, url: string) {
     super(`HTTP ${status} for ${url}`);
@@ -76,5 +83,22 @@ export class HttpClient {
 
   async text(url: string, init?: FetchOptions): Promise<string> {
     return (await this.doFetch(url, init ?? {}, "text/html,application/xhtml+xml,*/*")).text();
+  }
+
+  async probe(url: string, timeoutMs = 8_000): Promise<ProbeResult> {
+    const started = Date.now();
+    try {
+      const res = await fetch(url, {
+        headers: { "user-agent": this.userAgent },
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      const latencyMs = Date.now() - started;
+      res.body?.cancel().catch(() => {});
+      return { ok: res.ok, status: res.status, latencyMs, error: res.ok ? null : `HTTP ${res.status}` };
+    } catch (e) {
+      const latencyMs = Date.now() - started;
+      const timedOut = e instanceof DOMException && e.name === "TimeoutError";
+      return { ok: false, status: null, latencyMs, error: timedOut ? "timeout" : "network error" };
+    }
   }
 }

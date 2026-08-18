@@ -111,14 +111,14 @@ const ProviderSpeedCard = memo(function ProviderSpeedCard({ providerStats }: { p
     <Card accent="top" className="h-full">
       <CardContent padding="md" className="flex flex-col h-full">
         <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider mb-3">{t("providerSpeed")}</p>
-        <div className="flex flex-col gap-2.5 flex-1 justify-center">
+        <div className="flex flex-col gap-3 flex-1 justify-between">
           {providerStats.slice(0, 6).map((p) => (
-            <div key={p.name} className="flex items-center justify-between">
+            <div key={p.name} className="flex items-center justify-between min-w-0">
               <div className="flex items-center gap-2 min-w-0">
                 <Dot color={p.color} />
-                <span className="text-sm font-medium truncate">{p.name}</span>
+                <span className="text-sm sm:text-base font-medium truncate">{p.name}</span>
               </div>
-              <span className="text-sm font-semibold font-mono ml-3 shrink-0">
+              <span className="text-sm sm:text-base font-semibold font-mono ml-3 shrink-0">
                 {p.avgSpeed.toFixed(1)} {t("tokensPerSecond")}
               </span>
             </div>
@@ -227,7 +227,7 @@ const HomeContent = memo(function HomeContent() {
                 <Card accent="top">
                   <CardContent padding="md">
                     <p className="text-sm font-semibold mb-3">{t("intelligenceIndex")} — Top 10</p>
-                    <div className="h-[220px] sm:h-[260px] animate-pulse bg-bg-secondary rounded-lg" />
+                    <div className="h-[210px] sm:h-[260px] animate-pulse bg-bg-secondary rounded-lg" />
                   </CardContent>
                 </Card>
               }

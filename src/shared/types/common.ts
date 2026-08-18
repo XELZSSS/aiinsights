@@ -18,3 +18,20 @@ export interface SearchResult {
   provider: string | null;
   link: string;
 }
+
+export interface SourceStatus {
+  id: "arena" | "artificialAnalysis" | "huggingface" | "openrouter" | "news";
+  name: string;
+  ok: boolean;
+  status: number | null;
+  latencyMs: number | null;
+  error: string | null;
+  checkedAt: string;
+}
+
+export interface SourcesStatusPayload {
+  sources: SourceStatus[];
+  checkedAt: string;
+  firstLaunchAt: string;
+  uptimeMs: number;
+}

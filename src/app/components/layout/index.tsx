@@ -4,6 +4,7 @@ import { Home, Award, Megaphone, Newspaper, Settings, MoreHorizontal, Languages,
 import { Sheet, Button } from "@/app/components/ui";
 import { useTranslation } from "@/app/i18n";
 import { useThemeStore } from "@/app/stores";
+import { SourcesStatusList } from "@/app/components/shared";
 import { REPO_URL } from "@/shared/config";
 import { cn } from "@/shared/utils";
 
@@ -81,9 +82,6 @@ function DesktopNav({ onSettingsOpen }: { onSettingsOpen: () => void }) {
                 }`}
               >
                 {item.label}
-                {active && (
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-0.5 bg-accent rounded-full" />
-                )}
               </button>
             );
           })}
@@ -272,6 +270,11 @@ function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }
             </Button>
           }
         />
+        <div className="my-1 border-t border-border" />
+        <div>
+          <p className="text-sm font-semibold mb-2">{t("sourceStatus")}</p>
+          <SourcesStatusList />
+        </div>
       </div>
     </Sheet>
   );

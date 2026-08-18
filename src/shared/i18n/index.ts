@@ -101,7 +101,7 @@ export const en = {
   timeMinutesAgo: "{value}m ago",
   timeHoursAgo: "{value}h ago",
   timeDaysAgo: "{value}d ago",
-  aiNews: "Brief",
+  aiNews: "News",
   catIndustry: "Industry",
   catOpenSource: "Open Source",
   catHardware: "Compute & HW",
@@ -181,6 +181,24 @@ export const en = {
   benchmarkApexAgents: "APEX Agents",
   benchmarkTerminalbenchV2_1: "TerminalBench v2.1",
   benchmarkTauBanking: "TAU Banking",
+
+  sourceStatus: "Data Source Status",
+  statusSummary: "{ok}/{total} online",
+  statusOnline: "Online",
+  statusOffline: "Offline",
+  statusChecking: "Checking...",
+  statusLoadFailed: "Failed to check data source status",
+  refresh: "Refresh",
+  sourceNameArena: "arena.ai",
+  sourceNameArtificial: "Artificial Analysis",
+  sourceNameHuggingFace: "Hugging Face",
+  sourceNameOpenRouter: "OpenRouter",
+  sourceNameNews: "News RSS",
+
+  serviceUptime: "Service uptime",
+  uptimeDays: "{days}d {hours}h",
+  uptimeHours: "{hours}h {mins}m",
+  uptimeMins: "{mins}m",
 } as const;
 
 export type EnDict = typeof en;
@@ -281,7 +299,7 @@ export const zh = {
   timeMinutesAgo: "{value}分钟前",
   timeHoursAgo: "{value}小时前",
   timeDaysAgo: "{value}天前",
-  aiNews: "AI 快讯",
+  aiNews: "资讯",
   catIndustry: "行业动态",
   catOpenSource: "开源与社区",
   catHardware: "算力与硬件",
@@ -361,6 +379,24 @@ export const zh = {
   benchmarkApexAgents: "APEX Agents",
   benchmarkTerminalbenchV2_1: "TerminalBench v2.1",
   benchmarkTauBanking: "TAU Banking",
+
+  sourceStatus: "数据源状态",
+  statusSummary: "{ok}/{total} 正常",
+  statusOnline: "正常",
+  statusOffline: "异常",
+  statusChecking: "检测中...",
+  statusLoadFailed: "数据源状态获取失败",
+  refresh: "刷新",
+  sourceNameArena: "arena.ai",
+  sourceNameArtificial: "Artificial Analysis",
+  sourceNameHuggingFace: "Hugging Face",
+  sourceNameOpenRouter: "OpenRouter",
+  sourceNameNews: "新闻 RSS",
+
+  serviceUptime: "服务运行时间",
+  uptimeDays: "{days} 天 {hours} 小时",
+  uptimeHours: "{hours} 小时 {mins} 分",
+  uptimeMins: "{mins} 分钟",
 } as const satisfies Record<keyof EnDict, string>;
 
 export type Lang = "en" | "zh";

@@ -11,6 +11,7 @@ import type { HomeBarStat } from "@/app/features/home/HomeView";
 export const IndexLineChart = memo(function IndexLineChart({ models }: { models: ArtificialAnalysisModel[] }) {
   const { t } = useTranslation();
   const [chartRef, chartWidth] = useElementWidth<HTMLDivElement>();
+  const chartHeight = chartWidth >= 560 ? 260 : 210;
   const top10 = useMemo(
     () =>
       [...models]
@@ -34,11 +35,11 @@ export const IndexLineChart = memo(function IndexLineChart({ models }: { models:
         <p className="text-sm font-semibold mb-3">
           {t("intelligenceIndex")} — {t("top10")}
         </p>
-        <div ref={chartRef} className="w-full h-[220px] sm:h-[260px]">
+        <div ref={chartRef} className="w-full" style={{ height: chartHeight }}>
           {chartWidth > 0 && top10.length > 0 && (
             <LineChart
               width={chartWidth}
-              height={200}
+              height={chartHeight}
               data={chartData}
               margin={{ top: 4, right: 12, bottom: 4, left: 0 }}
             >

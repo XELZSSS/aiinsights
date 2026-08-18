@@ -1,5 +1,10 @@
-import { useMemo } from "react";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useCallback, useMemo, useState } from "react";
+import {
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+  type UseQueryResult,
+} from "@tanstack/react-query";
 import type {
   ArtificialAnalysisModel,
   NewsItem,
@@ -7,19 +12,25 @@ import type {
   OpenSourceModelEntry,
   OpenRouterRankingsPayload,
   HomeDashboardData,
+  SourcesStatusPayload,
 } from "@/shared/types";
 import { FIVE_MINUTES, THIRTY_MINUTES } from "@/shared/config";
-import { apiPaths, fetcher } from "@/app/api/client";
+import { apiPaths, fetcher, apiFetch, type QueryCtx } from "@/app/api/client";
 
 function createApiQuery<T>(
   key: string[],
   path: string,
-  opts?: { staleTime?: number; refetchInterval?: number | false },
+  opts?: {
+    staleTime?: number;
+    refetchInterval?: number | false;
+    queryFn?: (ctx: QueryCtx) => Promise<T>;
+  },
 ) {
-  const qf = fetcher<T>(path);
+  const { queryFn, ...queryOpts } = opts ?? {};
+  const qf = queryFn ?? fetcher<T>(path);
   return {
-    use: (enabled = true) => useQuery<T>({ queryKey: key, queryFn: qf, ...opts, enabled }),
-    useSuspense: () => useSuspenseQuery<T>({ queryKey: key, queryFn: qf, ...opts }),
+    use: (enabled = true) => useQuery<T>({ queryKey: key, queryFn: qf, ...queryOpts, enabled }),
+    useSuspense: () => useSuspenseQuery<T>({ queryKey: key, queryFn: qf, ...queryOpts }),
   };
 }
 
@@ -53,6 +64,20 @@ const qNews = (category: NewsCategory) =>
     staleTime: THIRTY_MINUTES,
     refetchInterval: THIRTY_MINUTES,
   });
+const fetchSourcesStatus =
+  (refresh: boolean) =>
+  ({ signal }: QueryCtx): Promise<SourcesStatusPayload> =>
+    apiFetch<SourcesStatusPayload>(
+      refresh ? `${apiPaths.sourcesStatus}?refresh=1` : apiPaths.sourcesStatus,
+      signal,
+      { cache: "no-store" },
+    );
+
+const qSourcesStatus = createApiQuery<SourcesStatusPayload>(
+  ["api", "sources-status"],
+  apiPaths.sourcesStatus,
+  { staleTime: 60_000, refetchInterval: 60_000, queryFn: fetchSourcesStatus(false) },
+);
 
 export const useArtificialRankings = qArtificial.use;
 export const useSuspenseArtificialRankings = qArtificial.useSuspense;
@@ -63,6 +88,33 @@ export const useOpenSourceModels = qOpenSourceModels.use;
 export const useOpenSourceReleases = qOpenSourceReleases.use;
 export const useSuspenseOpenSourceReleases = qOpenSourceReleases.useSuspense;
 export const useNewsByCategory = (category: NewsCategory) => qNews(category).use();
+
+export type SourcesStatusQuery = UseQueryResult<SourcesStatusPayload> & {
+  isRefreshing: boolean;
+  refresh: () => Promise<void>;
+};
+
+export function useSourcesStatus(): SourcesStatusQuery {
+  const queryClient = useQueryClient();
+  const query = qSourcesStatus.use();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const refresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      const fresh = await apiFetch<SourcesStatusPayload>(`${apiPaths.sourcesStatus}?refresh=1`, undefined, {
+        cache: "no-store",
+      });
+      queryClient.setQueryData(["api", "sources-status"], fresh);
+    } catch {
+      await query.refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [queryClient, query.refetch]);
+
+  return { ...query, isRefreshing, refresh };
+}
 
 export interface OpenSourceModelsQuery {
   data: OpenSourceModelEntry[];
