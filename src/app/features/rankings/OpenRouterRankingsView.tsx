@@ -31,6 +31,7 @@ export function OpenRouterRankingsView({ data }: { data?: OpenRouterRankingsPayl
           data={data.tokenUsageRankings ?? []}
           columns={modelColumns}
           getRowId={getModelRowId}
+          pageSize={8}
           expandedRowId={expandedRowId}
           onToggleExpand={setExpandedRowId}
           renderExpandedRow={(item) => <OpenRouterModelDetail model={item} />}

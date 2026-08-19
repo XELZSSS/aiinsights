@@ -83,7 +83,7 @@ function TableBodyInner<T>({
                 <td
                   key={col.id}
                   className={cn(
-                    "px-3 py-3.5 sm:py-3",
+                    "px-3 py-3 sm:py-2.5",
                     col.align === "right" && "text-right",
                     col.align === "center" && "text-center",
                     col.hiddenMd && "hidden md:table-cell",

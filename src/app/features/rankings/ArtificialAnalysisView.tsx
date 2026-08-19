@@ -54,8 +54,8 @@ function FilterToolbar({
 }) {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col gap-4 min-w-0">
-      <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-end min-w-0">
+    <div className="flex flex-col gap-3 min-w-0">
+      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-end min-w-0">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap gap-1.5 items-center">
             <SegmentedGroup>
@@ -205,7 +205,7 @@ export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnaly
   );
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <FilterToolbar
         viewMode={viewMode}
         onViewModeChange={(mode) => {
@@ -245,6 +245,7 @@ export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnaly
           data={pricingRows}
           columns={pricingColumns}
           getRowId={(row) => modelId(row.model)}
+          pageSize={8}
           expandedRowId={expandedRowId}
           onToggleExpand={setExpandedRowId}
           renderExpandedRow={(row) => <ModelExpandedDetail model={row.model} />}
@@ -254,6 +255,7 @@ export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnaly
           data={filtered}
           columns={rankingColumns}
           getRowId={modelId}
+          pageSize={8}
           expandedRowId={expandedRowId}
           onToggleExpand={setExpandedRowId}
           renderExpandedRow={(model) => <ModelExpandedDetail model={model} />}

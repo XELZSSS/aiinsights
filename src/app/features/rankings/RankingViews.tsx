@@ -31,7 +31,7 @@ function RankingTable<T>({ data, columns, getRowId, getSearchFields }: RankingTa
       {filtered.length === 0 ? (
         <p className="text-sm text-text-secondary py-8 text-center">{t("noResults")}</p>
       ) : (
-        <DataTable data={filtered} columns={columns} getRowId={getRowId} />
+        <DataTable data={filtered} columns={columns} getRowId={getRowId} pageSize={8} />
       )}
     </div>
   );

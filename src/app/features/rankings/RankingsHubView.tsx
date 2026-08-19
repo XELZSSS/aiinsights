@@ -116,7 +116,7 @@ function ProviderCompareContent({ data }: { data: ArtificialAnalysisModel[] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <DataTable columns={columns} data={providerStats} getRowId={getProviderRowId} />
+      <DataTable columns={columns} data={providerStats} getRowId={getProviderRowId} pageSize={8} />
     </div>
   );
 }
@@ -150,8 +150,9 @@ function RankingsContent({ defaultTab }: { defaultTab: number }) {
   const tabs: TabItem[] = useMemo(() => RANKING_TABS.map((id) => ({ id, label: t(id as TranslationKey) })), [t]);
 
   return (
-    <PageContainer>
+    <PageContainer className="pt-3 sm:pt-4">
       <PageHeader
+        compact
         title={t(activeTabId as TranslationKey)}
         description={t(TAB_SOURCE_LABEL[activeTabId])}
         actions={<SearchInput />}
@@ -160,6 +161,7 @@ function RankingsContent({ defaultTab }: { defaultTab: number }) {
         tabs={tabs}
         activeTab={activeTabId}
         tabSize="md"
+        className="gap-3 sm:gap-4"
         onTabChange={(tabId) => setActiveTabId(tabId as RankingTabId)}
       >
         <ActiveTabContent activeTabId={activeTabId} />
