@@ -3,7 +3,7 @@ import { Badge } from "@/app/components/ui";
 import type { OpenRouterRankEntry } from "@/shared/types";
 import {
   categoryLabel,
-  formatDollar,
+  formatPricePerMillion,
   formatShortNumber,
   formatTrend,
   getModelRecommendation,
@@ -14,8 +14,13 @@ import { DetailLayout, StatGrid, InfoGrid } from "./layout";
 import { InfoCard, InfoRow } from "./info-card";
 import { StatCard } from "./stat-card";
 
+function toPerMillion(price: number | null | undefined): number | undefined {
+  return typeof price === "number" && Number.isFinite(price) ? price * 1_000_000 : undefined;
+}
+
 export function OpenRouterModelDetail({ model }: { model: OpenRouterRankEntry }) {
   const { t } = useTranslation();
+  const showVariantBadge = !!model.variant && model.variant !== "standard" && model.variant !== "free";
   return (
     <DetailLayout>
       <StatGrid columns={4}>
@@ -40,21 +45,23 @@ export function OpenRouterModelDetail({ model }: { model: OpenRouterRankEntry })
           <InfoRow compact label={t("totalTokens")} value={formatShortNumber(model.totalTokens ?? 0)} />
         </InfoCard>
         <InfoCard title={t("pricing")}>
-          <InfoRow compact label={t("promptPrice")} value={formatDollar(openRouterPromptPrice(model), t)} />
-          <InfoRow compact label={t("completionPrice")} value={formatDollar(openRouterCompletionPrice(model), t)} />
+          <InfoRow compact label={t("promptPrice")} value={formatPricePerMillion(toPerMillion(openRouterPromptPrice(model)), t)} />
+          <InfoRow compact label={t("completionPrice")} value={formatPricePerMillion(toPerMillion(openRouterCompletionPrice(model)), t)} />
         </InfoCard>
       </InfoGrid>
       <InfoCard title={t("techSelectionAdvice")}>
         <p className="text-xs text-text-secondary leading-relaxed">{getModelRecommendation(model.id, t)}</p>
       </InfoCard>
-      <div className="flex flex-wrap gap-1.5">
-        <Badge variant="outline">{model.variant || model.category}</Badge>
-        {model.isFree && (
-          <Badge variant="outline" className="text-success">
-            {t("free")}
-          </Badge>
-        )}
-      </div>
+      {(showVariantBadge || model.isFree) && (
+        <div className="flex flex-wrap gap-1.5">
+          {showVariantBadge && <Badge variant="outline">{model.variant}</Badge>}
+          {model.isFree && (
+            <Badge variant="outline" className="text-success">
+              {t("free")}
+            </Badge>
+          )}
+        </div>
+      )}
     </DetailLayout>
   );
 }

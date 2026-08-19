@@ -186,12 +186,12 @@ function trendClass(change?: number | null) {
     : "bg-destructive-soft text-destructive border-destructive/20";
 }
 
-const tokenColumn = <T extends { totalTokens?: number | null }>(header: string): DataTableColumn<T> => ({
-  id: "tokens",
+const tokenColumn = <T,>(id: string, header: string, accessor: (item: T) => number | null | undefined): DataTableColumn<T> => ({
+  id,
   header,
   align: "right",
   cell: (item) => (
-    <span className="font-mono font-semibold text-text-primary">{formatShortNumber(item.totalTokens || 0)}</span>
+    <span className="font-mono font-semibold text-text-primary">{formatShortNumber(accessor(item) || 0)}</span>
   ),
 });
 
@@ -203,26 +203,6 @@ const requestColumn = <T extends { requestCount?: number | null }>(header: strin
   cell: (item) => <span className="font-mono text-text-secondary">{formatShortNumber(item.requestCount || 0)}</span>,
 });
 
-const imageColumn = <T extends { imageOutputRequests?: number | null }>(header: string): DataTableColumn<T> => ({
-  id: "images",
-  header,
-  align: "right",
-  hiddenMd: true,
-  cell: (item) => (
-    <span className="font-mono text-text-secondary">{formatShortNumber(item.imageOutputRequests || 0)}</span>
-  ),
-});
-
-const videoColumn = <T extends { videoOutputSeconds?: number | null }>(header: string): DataTableColumn<T> => ({
-  id: "video",
-  header,
-  align: "right",
-  hiddenMd: true,
-  cell: (item) => (
-    <span className="font-mono text-text-secondary">{formatShortNumber(item.videoOutputSeconds || 0)}</span>
-  ),
-});
-
 export function buildOpenRouterColumns(t: (key: TranslationKey) => string): DataTableColumn<OpenRouterRankEntry>[] {
   return [
     {
@@ -231,10 +211,10 @@ export function buildOpenRouterColumns(t: (key: TranslationKey) => string): Data
       width: "45%",
       cell: (item) => <RankingNameCell name={item.name} />,
     },
-    tokenColumn<OpenRouterRankEntry>(t("totalTokens")),
+    tokenColumn<OpenRouterRankEntry>("totalTokens", t("totalTokens"), (item) => item.totalTokens),
+    tokenColumn<OpenRouterRankEntry>("inputTokens", t("inputTokens"), (item) => item.promptTokens),
+    tokenColumn<OpenRouterRankEntry>("outputTokens", t("outputTokens"), (item) => item.completionTokens),
     requestColumn<OpenRouterRankEntry>(t("requests")),
-    imageColumn<OpenRouterRankEntry>(t("images")),
-    videoColumn<OpenRouterRankEntry>(t("videoSeconds")),
     {
       id: "creator",
       header: t("creator"),

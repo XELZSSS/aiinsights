@@ -34,7 +34,11 @@ export function OpenRouterRankingsView({ data }: { data?: OpenRouterRankingsPayl
           pageSize={8}
           expandedRowId={expandedRowId}
           onToggleExpand={setExpandedRowId}
-          renderExpandedRow={(item) => <OpenRouterModelDetail model={item} />}
+          renderExpandedRow={(item) => (
+            <div className="p-4 sm:p-5">
+              <OpenRouterModelDetail model={item} />
+            </div>
+          )}
         />
       </div>
     </div>

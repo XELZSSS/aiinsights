@@ -77,6 +77,59 @@ describe("Worker API integration (workerd runtime)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
+  it("attaches pricing via canonical_slug for dated ranking slugs", async () => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      if (url.pathname === "/api/v1/models") {
+        return jsonResponse({
+          data: [
+            {
+              id: "google/gemini-3.7-flash",
+              canonical_slug: "google/gemini-3.7-flash-20260813",
+              pricing: { prompt: "0.0000014", completion: "0.0000044" },
+            },
+          ],
+        });
+      }
+      if (url.pathname === "/api/frontend/v1/rankings/models") {
+        return jsonResponse({
+          data: [
+            {
+              date: "2026-08-01",
+              model_permaslug: "google/gemini-3.7-flash-20260813",
+              variant: "standard",
+              variant_permaslug: "google/gemini-3.7-flash-20260813",
+              total_prompt_tokens: 100,
+              total_completion_tokens: 50,
+              count: 10,
+              change: null,
+            },
+          ],
+        });
+      }
+      return jsonResponse({}, 404);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await worker.fetch(new Request(`${OR}/api/openrouter-rankings`), env);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      data: {
+        tokenUsageRankings: {
+          promptTokens: number;
+          completionTokens: number;
+          pricing?: { prompt: number; completion: number };
+        }[];
+      };
+    };
+    const entry = body.data.tokenUsageRankings[0]!;
+    expect(entry.promptTokens).toBe(100);
+    expect(entry.completionTokens).toBe(50);
+    expect(entry.pricing).toBeDefined();
+    expect(entry.pricing?.prompt).toBeCloseTo(0.0000014);
+    expect(entry.pricing?.completion).toBeCloseTo(0.0000044);
+  });
+
   it("serves repeated requests from the KV cache without refetching upstream", async () => {
     const fetchMock = mockUpstream();
 

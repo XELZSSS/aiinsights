@@ -124,6 +124,7 @@ function mapModels(rows: ModelRow[], pricingMap: Map<string, PricingEntry>): Ope
 
 interface PricingRow {
   id: string;
+  canonical_slug?: string;
   pricing?: { prompt?: string | number; completion?: string | number };
 }
 
@@ -141,7 +142,9 @@ async function fetchModelPricing(ctx: AppContext): Promise<Map<string, PricingEn
         const prompt = Number(m.pricing.prompt);
         const completion = Number(m.pricing.completion);
         if (Number.isFinite(prompt) && Number.isFinite(completion)) {
-          record[m.id] = { prompt, completion };
+          const pricingEntry: PricingEntry = { prompt, completion };
+          record[m.id] = pricingEntry;
+          if (m.canonical_slug) record[m.canonical_slug] = pricingEntry;
         }
       }
       return { data: record };
