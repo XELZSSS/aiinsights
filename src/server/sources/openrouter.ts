@@ -97,7 +97,7 @@ function mapModels(rows: ModelRow[], pricingMap: Map<string, PricingEntry>): Ope
         (numOr(a.total_prompt_tokens) + numOr(a.total_completion_tokens)),
     )
     .map((row, i) => {
-      const id = row.model_permaslug;
+      const id = typeof row.model_permaslug === "string" ? row.model_permaslug : "";
       const name = titleFromSlug(id);
       const pricing = pricingMap.get(row.variant_permaslug || id) ?? pricingMap.get(id);
       const isFree = pricing ? pricing.prompt === 0 && pricing.completion === 0 : undefined;
@@ -160,7 +160,10 @@ export const getOpenRouterRankings = createSource<Record<string, never>, OpenRou
       ctx.http.json<{ data: ModelRow[] }>(`${OPENROUTER}/api/frontend/v1/rankings/models`),
       fetchModelPricing(ctx),
     ]);
-    const modelRows = modelResult.status === "fulfilled" ? (modelResult.value?.data ?? []) : [];
+    const modelRows =
+      modelResult.status === "fulfilled" && Array.isArray(modelResult.value?.data)
+        ? modelResult.value.data
+        : [];
     const pricingMap = pricingResult.status === "fulfilled" ? pricingResult.value : new Map<string, PricingEntry>();
     if (modelRows.length === 0) {
       const reasons = formatSettleErrors([modelResult], ["models"]);

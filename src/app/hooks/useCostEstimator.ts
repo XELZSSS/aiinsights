@@ -1,6 +1,27 @@
 import { useDeferredValue, useState } from "react";
 
-export function useCostEstimator() {
+export interface CostInputState {
+  dailyInput: string;
+  setDailyInput: (v: string) => void;
+  dailyOutput: string;
+  setDailyOutput: (v: string) => void;
+  dailyReasoning: string;
+  setDailyReasoning: (v: string) => void;
+  cacheHitRate: string;
+  setCacheHitRate: (v: string) => void;
+  daysPerMonth: string;
+  setDaysPerMonth: (v: string) => void;
+}
+
+export interface CostEstimatorState extends CostInputState {
+  calcInput: number;
+  calcOutput: number;
+  calcReasoning: number;
+  calcCache: number;
+  calcDays: number;
+}
+
+export function useCostEstimator(): CostEstimatorState {
   const [dailyInput, setDailyInput] = useState("2");
   const [dailyOutput, setDailyOutput] = useState("1");
   const [dailyReasoning, setDailyReasoning] = useState("2");

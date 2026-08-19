@@ -37,7 +37,14 @@ import type {
 function useModelSourceParams(): { src: ModelSource | null; decodedId: string } {
   const { source, "*": splat } = useParams<{ source: string; "*": string }>();
   const src = (source && source in MODEL_SOURCES ? source : null) as ModelSource | null;
-  const decodedId = splat ? decodeURIComponent(splat) : "";
+  let decodedId = "";
+  if (splat) {
+    try {
+      decodedId = decodeURIComponent(splat);
+    } catch {
+      decodedId = splat;
+    }
+  }
   return { src, decodedId };
 }
 

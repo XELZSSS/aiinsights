@@ -7,3 +7,4 @@ export { OpenRouterModelDetail } from "./openrouter-detail";
 export { RankingNameCell, RightAlignedText } from "./cells";
 export { StatCard } from "./stat-card";
 export { TabButton, TabContainer, type TabItem } from "./tab-container";
+export { CostEstimatorInputs, type CostEstimatorInputsProps } from "./cost-estimator-inputs";

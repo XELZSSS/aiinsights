@@ -5,10 +5,10 @@ import type { AppContext } from "@/server/app";
 import { buildContext } from "@/server/app";
 import type { Env } from "@/server/app";
 import { validateQuery, type QuerySpec } from "@/server/core/validate";
-import { settled } from "@/server/core/utils";
 import { getArenaLeaderboard } from "@/server/sources/arena";
 import { getIntelligenceIndex } from "@/server/sources/artificial-analysis";
 import { getModels, getReleases } from "@/server/sources/huggingface";
+import { getHomeDashboard } from "@/server/sources/home";
 import { getNews } from "@/server/sources/news";
 import { getOpenRouterRankings } from "@/server/sources/openrouter";
 import { getSourcesStatusFull } from "@/server/sources/status";
@@ -126,17 +126,6 @@ export const routeDefs: RouteDef[] = [
   },
   {
     path: "/api/home-dashboard",
-    handler: async (ctx) => {
-      const [orRankings, arena, opensource] = await Promise.allSettled([
-        getOpenRouterRankings(ctx, {}),
-        getArenaLeaderboard(ctx, { category: "text-to-image" }),
-        getModels(ctx, { sort: "trendingScore", direction: "-1", limit: 500 }),
-      ]);
-      return {
-        orRankings: settled(orRankings, null),
-        arena: settled(arena, null),
-        opensource: settled(opensource, null),
-      };
-    },
+    handler: (ctx) => getHomeDashboard(ctx),
   },
 ];

@@ -1,17 +1,9 @@
 import { memo, useMemo } from "react";
 import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
-import { Card, CardContent, Input } from "@/app/components/ui";
-import {
-  chartTooltipStyle,
-  formatDollar,
-  cn,
-  getModelColor,
-  approxEq,
-  modelInputPrice,
-  modelOutputPrice,
-  modelCacheHitPrice,
-} from "@/shared/utils";
+import { Card, CardContent } from "@/app/components/ui";
+import { CostEstimatorInputs } from "@/app/components/composite";
+import { chartTooltipStyle, formatDollar, cn, getModelColor, approxEq, modelInputPrice, modelOutputPrice, modelCacheHitPrice } from "@/shared/utils";
 import { CompareTable, type CompareRow } from "@/app/components/data/compare-table";
 import { useTranslation } from "@/app/i18n";
 import { useMonthlyCosts } from "@/app/hooks";
@@ -136,19 +128,7 @@ export const PriceChart = memo(function PriceChart({
 export const CostEstimator = memo(function CostEstimator({ models }: { models: ArtificialAnalysisModel[] }) {
   const { t } = useTranslation();
 
-  const {
-    dailyInput,
-    setDailyInput,
-    dailyOutput,
-    setDailyOutput,
-    dailyReasoning,
-    setDailyReasoning,
-    cacheHitRate,
-    setCacheHitRate,
-    daysPerMonth,
-    setDaysPerMonth,
-    monthlyCosts,
-  } = useMonthlyCosts(models);
+  const { monthlyCosts, ...inputs } = useMonthlyCosts(models);
 
   const bestMonthlyCost = useMemo(() => {
     const valid = monthlyCosts.filter((v): v is number => v !== null);
@@ -160,55 +140,7 @@ export const CostEstimator = memo(function CostEstimator({ models }: { models: A
       <CardContent padding="md">
         <p className="text-sm font-semibold mb-3">{t("estimatedMonthlyCost")}</p>
         <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-4">
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-text-secondary whitespace-nowrap">{t("dailyPromptTokens")}</label>
-            <Input
-              type="number"
-              value={dailyInput}
-              onChange={(e) => setDailyInput(e.target.value)}
-              className="w-20 h-9 text-sm"
-            />
-            <span className="text-xs text-text-secondary">M</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-text-secondary whitespace-nowrap">{t("dailyCompletionTokens")}</label>
-            <Input
-              type="number"
-              value={dailyOutput}
-              onChange={(e) => setDailyOutput(e.target.value)}
-              className="w-20 h-9 text-sm"
-            />
-            <span className="text-xs text-text-secondary">M</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-text-secondary whitespace-nowrap">{t("dailyReasoningTokens")}</label>
-            <Input
-              type="number"
-              value={dailyReasoning}
-              onChange={(e) => setDailyReasoning(e.target.value)}
-              className="w-20 h-9 text-sm"
-            />
-            <span className="text-xs text-text-secondary">M</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-text-secondary whitespace-nowrap">{t("cacheHitRate")}</label>
-            <Input
-              type="number"
-              value={cacheHitRate}
-              onChange={(e) => setCacheHitRate(e.target.value)}
-              className="w-20 h-9 text-sm"
-            />
-            <span className="text-xs text-text-secondary">%</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-xs text-text-secondary whitespace-nowrap">{t("daysPerMonth")}</label>
-            <Input
-              type="number"
-              value={daysPerMonth}
-              onChange={(e) => setDaysPerMonth(e.target.value)}
-              className="w-20 h-9 text-sm"
-            />
-          </div>
+          <CostEstimatorInputs state={inputs} layout="label-input-unit" />
         </div>
         <div className="flex flex-col gap-2.5">
           {models.map((model, index) => {

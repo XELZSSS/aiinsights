@@ -61,6 +61,8 @@ export const getReleases = createSource<Record<string, never>, OpenSourceModelEn
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext) => {
     const items = await ctx.http.json<HFModel[]>(`${HF_API}?sort=createdAt&direction=-1&limit=500&full=true`);
+    if (!Array.isArray(items))
+      throw new Error(`HuggingFace API returned non-array response (got ${items === null ? "null" : typeof items})`);
     const releases = items
       .filter(
         (m) =>
