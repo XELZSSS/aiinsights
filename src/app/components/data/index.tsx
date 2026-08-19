@@ -59,7 +59,7 @@ function TableBodyInner<T>({
             <tr
               aria-expanded={isExpandable ? isExpanded : undefined}
               className={cn(
-                "border-b border-border transition-colors",
+                "border-b border-border last:border-b-0 transition-colors",
                 rowIndex % 2 === 0 ? "bg-bg-card" : "bg-bg-primary",
                 "hover:bg-hover",
                 isExpanded && "bg-accent-light",
@@ -103,7 +103,7 @@ function TableBodyInner<T>({
               ))}
             </tr>
             {isExpanded && renderExpandedRow && (
-              <tr className="border-b border-border bg-bg-secondary/50">
+              <tr className="border-b border-border last:border-b-0 bg-bg-secondary/50">
                 <td colSpan={columns.length} className="p-0">
                   {renderExpandedRow(row)}
                 </td>
