@@ -124,7 +124,7 @@ export const BENCHMARK_LABELS: Record<BenchmarkKey, TranslationKey> = {
 
 export const REPO_URL = "https://github.com/XELZSSS/aiinsights";
 
-export const CACHE_VERSION = "v1";
+export const CACHE_VERSION = "v2";
 
 export const cacheKeys = {
   arenaLeaderboard: (category: ArenaCategory) => `arena-leaderboard:${category}`,
