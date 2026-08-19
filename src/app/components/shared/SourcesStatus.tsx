@@ -3,9 +3,9 @@ import { RefreshCw } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
 import { useSourcesStatus } from "@/app/api/queries";
 import { Button, Dot } from "@/app/components/ui";
-import { cn, formatRelativeTime } from "@/shared/utils";
+import { cn, formatRelativeTime, formatUptime } from "@/shared/utils";
 import type { SourceStatus } from "@/shared/types";
-import type { TFunction, TranslationKey } from "@/shared/i18n";
+import type { TranslationKey } from "@/shared/i18n";
 
 const SOURCE_LABEL_KEYS: Record<SourceStatus["id"], TranslationKey> = {
   arena: "sourceNameArena",
@@ -36,7 +36,7 @@ const SourceRow = memo(function SourceRow({ source }: { source: SourceStatus }) 
             {source.error}
           </span>
         ) : source.latencyMs != null ? (
-          <span className="text-xs font-mono text-text-secondary">{source.latencyMs}ms</span>
+          <span className="text-xs font-mono text-text-secondary">{(source.latencyMs / 1000).toFixed(2)}s</span>
         ) : null}
         <span className={cn("text-xs shrink-0", source.ok ? "text-success" : "text-destructive")}>
           {t(source.ok ? "statusOnline" : "statusOffline")}
@@ -45,15 +45,6 @@ const SourceRow = memo(function SourceRow({ source }: { source: SourceStatus }) 
     </div>
   );
 });
-
-function formatUptime(t: TFunction, ms: number): string {
-  const days = Math.floor(ms / 86_400_000);
-  const hours = Math.floor((ms % 86_400_000) / 3_600_000);
-  const mins = Math.floor((ms % 3_600_000) / 60_000);
-  if (days > 0) return t("uptimeDays", { days, hours });
-  if (hours > 0) return t("uptimeHours", { hours, mins });
-  return t("uptimeMins", { mins });
-}
 
 export const SourcesStatusList = memo(function SourcesStatusList() {
   const { t } = useTranslation();

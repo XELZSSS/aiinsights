@@ -8,7 +8,7 @@ import { Spinner } from "@/app/components/shared";
 import { safeHref, formatRelativeTime, COOL_COLORS } from "@/shared/utils";
 import { TabContainer, type TabItem } from "@/app/components/composite";
 import type { NewsItem, NewsCategory } from "@/shared/types";
-import { useIsMobile } from "@/app/hooks";
+import { useIsMobile, usePagination } from "@/app/hooks";
 import { PageContainer, PageHeader } from "@/app/components/layout";
 
 const CATEGORIES: { id: NewsCategory; labelKey: TranslationKey; color: string }[] = [
@@ -30,12 +30,9 @@ function NewsList({
   isError: boolean;
 }) {
   const { t } = useTranslation();
-  const [currentPage, setCurrentPage] = useState(1);
   const isMobile = useIsMobile();
   const itemsPerPage = isMobile ? 10 : 20;
-  const totalPages = Math.max(1, Math.ceil(news.length / itemsPerPage));
-  const safePage = Math.min(currentPage, totalPages);
-  const currentNews = news.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
+  const { page, totalPages, pagedData: currentNews, goToPage } = usePagination(news, itemsPerPage);
 
   if (isLoading) return <Spinner />;
 
@@ -92,7 +89,7 @@ function NewsList({
       ))}
       {totalPages > 1 && (
         <div className="mt-2 flex justify-center">
-          <Pagination page={safePage} totalPages={totalPages} onChange={setCurrentPage} />
+          <Pagination page={page} totalPages={totalPages} onChange={goToPage} />
         </div>
       )}
     </div>

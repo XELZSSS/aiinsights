@@ -2,7 +2,7 @@ import { upstreamConfig, DEFAULT_TTL_MS } from "@/shared/config";
 import type { ArenaModel, ArenaPayload, ArenaCategory } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { createSource } from "@/server/core/source";
-import { parseRscScriptArray } from "@/server/parser/rsc";
+import { parseRscScriptArray } from "@/server/parsers/rsc";
 
 const BASE = upstreamConfig.arena;
 

@@ -95,13 +95,23 @@ export const MODEL_SOURCES = {
 
 export type ModelSource = keyof typeof MODEL_SOURCES;
 
-const RANKING_BENCHMARK_KEYS = ["aime25", "gpqa", "mmlu_pro", "livecodebench"] as const;
-
-export const BENCHMARK_LABELS: Record<(typeof RANKING_BENCHMARK_KEYS)[number], TranslationKey> = {
+export const BENCHMARK_LABELS: Record<BenchmarkKey, TranslationKey> = {
   aime25: "benchmarkAime25",
   gpqa: "benchmarkGpqa",
+  hle: "benchmarkHle",
   mmlu_pro: "benchmarkMmluPro",
   livecodebench: "benchmarkLivecodebench",
+  gdpval: "benchmarkGdpval",
+  scicode: "benchmarkScicode",
+  ifbench: "benchmarkIfbench",
+  lcr: "benchmarkLcr",
+  tau2: "benchmarkTau2",
+  tau_banking: "benchmarkTauBanking",
+  terminalbench_v2_1: "benchmarkTerminalbenchV2_1",
+  terminalbench_hard: "benchmarkTerminalbenchHard",
+  critpt: "benchmarkCritpt",
+  apex_agents: "benchmarkApexAgents",
+  omniscience: "benchmarkOmniscience",
 };
 
 export const apiBase = import.meta.env?.VITE_API_BASE?.replace(/\/+$/, "") ?? "";

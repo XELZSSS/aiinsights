@@ -1,4 +1,4 @@
-import { BENCHMARK_LABELS as CONFIG_BENCHMARK_LABELS } from "@/shared/config";
+import { BENCHMARK_LABELS } from "@/shared/config";
 import type { TFunction, TranslationKey } from "@/shared/i18n";
 
 export function safeHref(url: string | null | undefined): string | undefined {
@@ -94,25 +94,18 @@ export function orNA(value: string | null | undefined, t: TFunction): string {
   return value || t("notAvailable");
 }
 
-const BENCHMARK_LABELS: Record<string, TranslationKey> = {
-  ...CONFIG_BENCHMARK_LABELS,
-  hle: "benchmarkHle",
-  gdpval: "benchmarkGdpval",
-  scicode: "benchmarkScicode",
-  ifbench: "benchmarkIfbench",
-  lcr: "benchmarkLcr",
-  tau2: "benchmarkTau2",
-  tau_banking: "benchmarkTauBanking",
-  terminalbench_v2_1: "benchmarkTerminalbenchV2_1",
-  terminalbench_hard: "benchmarkTerminalbenchHard",
-  critpt: "benchmarkCritpt",
-  apex_agents: "benchmarkApexAgents",
-  omniscience: "benchmarkOmniscience",
-};
-
 export function benchmarkLabel(key: string, t: TFunction): string {
-  const labelKey = BENCHMARK_LABELS[key];
+  const labelKey = BENCHMARK_LABELS[key as keyof typeof BENCHMARK_LABELS];
   return labelKey ? t(labelKey) : key;
+}
+
+export function formatUptime(t: TFunction, ms: number): string {
+  const days = Math.floor(ms / 86_400_000);
+  const hours = Math.floor((ms % 86_400_000) / 3_600_000);
+  const mins = Math.floor((ms % 3_600_000) / 60_000);
+  if (days > 0) return t("uptimeDays", { days, hours });
+  if (hours > 0) return t("uptimeHours", { hours, mins });
+  return t("uptimeMins", { mins });
 }
 
 const RECOMMENDATION_KEYS = {

@@ -1,7 +1,7 @@
-import { memo, Fragment, useCallback, useMemo, useState, type ReactNode } from "react";
+import { memo, Fragment, useMemo, type ReactNode } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
-import { useIsMobile } from "@/app/hooks";
+import { useIsMobile, usePagination } from "@/app/hooks";
 import { cn } from "@/shared/utils";
 import { Pagination } from "@/app/components/ui";
 
@@ -12,6 +12,7 @@ export interface DataTableColumn<T> {
   align?: "left" | "center" | "right";
   width?: number | string;
   hiddenMd?: boolean;
+  mobilePrimary?: boolean;
 }
 
 interface DataTableProps<T> {
@@ -22,18 +23,6 @@ interface DataTableProps<T> {
   expandedRowId?: string | null;
   onToggleExpand?: (rowId: string | null) => void;
   renderExpandedRow?: (row: T) => ReactNode;
-}
-
-function useTablePagination<T>(data: T[], pageSize: number) {
-  const [page, setPage] = useState(1);
-
-  const totalPages = Math.max(1, Math.ceil(data.length / pageSize));
-  const safePage = Math.min(page, totalPages);
-  const pagedData = data.length > pageSize ? data.slice((safePage - 1) * pageSize, safePage * pageSize) : data;
-
-  const goToPage = useCallback((p: number) => setPage(Math.max(1, Math.min(p, totalPages))), [totalPages]);
-
-  return { page: safePage, totalPages, pagedData, goToPage } as const;
 }
 
 interface TableBodyProps<T> {
@@ -146,7 +135,9 @@ function MobileTableBodyInner<T>({
         const toggle = () => onToggleExpand?.(isExpanded ? null : rowId);
         const visibleCols = columns.filter((col) => !col.hiddenMd);
         const primaryCol = visibleCols[0];
-        const statCols = visibleCols.slice(1);
+        const restCols = visibleCols.slice(1);
+        const mainStatCol = restCols.find((col) => col.mobilePrimary) ?? restCols[0];
+        const secondaryCols = restCols.filter((col) => col !== mainStatCol);
         return (
           <Fragment key={rowId}>
             <div
@@ -179,15 +170,28 @@ function MobileTableBodyInner<T>({
                   </span>
                 )}
                 <div className="min-w-0 flex-1">{primaryCol?.cell(row)}</div>
+                {mainStatCol && (
+                  <div className="shrink-0 text-right min-w-0 max-w-[45%]">
+                    {mainStatCol.header && (
+                      <span className="text-[11px] sm:text-xs text-text-secondary mr-1 truncate">
+                        {mainStatCol.header}
+                      </span>
+                    )}
+                    <span className="text-sm font-semibold">{mainStatCol.cell(row)}</span>
+                  </div>
+                )}
               </div>
-              {statCols.length > 0 && (
-                <div className="grid grid-cols-2 gap-x-3 gap-y-2.5 mt-3 pt-3 border-t border-border">
-                  {statCols.map((col) => (
-                    <div key={col.id} className={cn("min-w-0", col.align === "right" && "text-right")}>
+              {secondaryCols.length > 0 && (
+                <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2.5">
+                  {secondaryCols.map((col) => (
+                    <div
+                      key={col.id}
+                      className={cn("flex items-baseline gap-1 min-w-0", col.align === "right" && "ml-auto")}
+                    >
                       {col.header && (
-                        <div className="text-[11px] sm:text-xs text-text-secondary truncate">{col.header}</div>
+                        <span className="text-[11px] sm:text-xs text-text-secondary shrink-0">{col.header}</span>
                       )}
-                      <div className="text-sm mt-0.5 min-w-0">{col.cell(row)}</div>
+                      <span className="text-xs sm:text-sm min-w-0">{col.cell(row)}</span>
                     </div>
                   ))}
                 </div>
@@ -234,7 +238,7 @@ function DataTableInner<T>({
     });
   }, [data, getRowId]);
 
-  const { page, totalPages, pagedData, goToPage } = useTablePagination(dedupedData, effectivePageSize);
+  const { page, totalPages, pagedData, goToPage } = usePagination(dedupedData, effectivePageSize);
 
   return (
     <div className="flex flex-col gap-2">

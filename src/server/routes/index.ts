@@ -6,8 +6,8 @@ import { buildContext } from "@/server/app";
 import type { Env } from "@/server/app";
 import { validateQuery, type QuerySpec } from "@/server/core/validate";
 import { settled } from "@/server/core/utils";
-import { getArenaLeaderboard } from "@/server/sources/misc";
-import { getIntelligenceIndex } from "@/server/sources/aa";
+import { getArenaLeaderboard } from "@/server/sources/arena";
+import { getIntelligenceIndex } from "@/server/sources/artificial-analysis";
 import { getModels, getReleases } from "@/server/sources/huggingface";
 import { getNews } from "@/server/sources/news";
 import { getOpenRouterRankings } from "@/server/sources/openrouter";
@@ -98,7 +98,7 @@ export const routeDefs: RouteDef[] = [
   },
   {
     path: "/api/home-dashboard",
-    handler: async (ctx: AppContext) => {
+    handler: async (ctx) => {
       const [orRankings, arena, opensource] = await Promise.allSettled([
         getOpenRouterRankings(ctx, {}),
         getArenaLeaderboard(ctx, { category: "text-to-image" }),

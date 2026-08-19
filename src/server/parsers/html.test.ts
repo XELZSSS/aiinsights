@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeEntities, stripHtml } from "@/server/parser/html";
+import { decodeEntities, stripHtml } from "@/server/parsers/html";
 
 describe("decodeEntities", () => {
   it("decodes named entities", () => {

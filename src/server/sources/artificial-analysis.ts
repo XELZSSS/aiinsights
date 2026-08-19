@@ -1,8 +1,8 @@
 import { upstreamConfig, DEFAULT_TTL_MS, BENCHMARK_KEYS } from "@/shared/config";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { AppContext } from "@/server/app";
-import { num, str, strOr, bool, obj } from "@/server/parser/primitives";
-import { findNextData, parseRscPayload } from "@/server/parser/rsc";
+import { num, str, strOr, bool, obj } from "@/server/parsers/primitives";
+import { findNextData, parseRscPayload } from "@/server/parsers/rsc";
 import { createSource } from "@/server/core/source";
 
 const RSC_HEADERS = { RSC: "1", "Next-Router-State-Tree": "%5B%5D" } as const;
@@ -10,6 +10,7 @@ const RSC_HEADERS = { RSC: "1", "Next-Router-State-Tree": "%5B%5D" } as const;
 const INDEX_PATH = "/evaluations/artificial-analysis-intelligence-index";
 const MODELS_PATH = "/models";
 const OMNISCIENCE_PATH = "/evaluations/omniscience";
+const LEADERBOARD_PATH = "/leaderboards/models";
 
 const BENCHMARK_FIELDS: Record<(typeof BENCHMARK_KEYS)[number], string> = {
   aime25: "aime25",
@@ -69,6 +70,7 @@ function compact(m: Record<string, unknown>): ArtificialAnalysisModel {
     short_name: strOr(m.shortName),
     model_creators: creator ? { name: str(creator.name), color: str(creator.color) } : undefined,
     intelligence_index: num(m.intelligenceIndex),
+    is_reasoning: bool(m.isReasoning),
     coding_index: compactCodingIndex(m),
     agentic_index: agentic != null ? agentic * 100 : null,
     release_date: strOr(m.releaseDate),
@@ -92,6 +94,7 @@ function compact(m: Record<string, unknown>): ArtificialAnalysisModel {
     speed: {
       median_output_speed: num(timescale?.medianOutputSpeed) ?? num(m.medianCanonicalAnswerOutputSpeed),
     },
+    reasoning_time_seconds: num(m.medianReasoningTimeSeconds),
     input_modality_text: bool(m.inputModalityText),
     input_modality_image: bool(m.inputModalityImage),
     input_modality_speech: bool(m.inputModalitySpeech),
@@ -130,6 +133,36 @@ function compactOmniscienceEnrich(m: Record<string, unknown>): Record<string, un
   };
 }
 
+function compactLeaderboardEnrich(m: Record<string, unknown>): Record<string, unknown> {
+  return {
+    slug: str(m.slug),
+    medianReasoningTimeSeconds: num(m.medianReasoningTimeSeconds),
+  };
+}
+
+function findLeaderboardModels(tree: unknown): Record<string, unknown>[] | null {
+  const stack: unknown[] = [tree];
+  let best: Record<string, unknown>[] | null = null;
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || typeof current !== "object") continue;
+    if (Array.isArray(current)) {
+      if (
+        current.some(
+          (m) => m && typeof m === "object" && "medianReasoningTimeSeconds" in (m as Record<string, unknown>),
+        )
+      ) {
+        const arr = current as Record<string, unknown>[];
+        if (!best || arr.length > best.length) best = arr;
+      }
+      for (const v of current) stack.push(v);
+    } else {
+      for (const v of Object.values(current)) stack.push(v);
+    }
+  }
+  return best;
+}
+
 function mergeBySlug(
   catalog: Record<string, unknown>[],
   ...enrich: Record<string, unknown>[][]
@@ -151,7 +184,7 @@ function mergeBySlug(
 }
 
 export const getIntelligenceIndex = createSource<Record<string, never>, ArtificialAnalysisModel[]>({
-  cacheKey: () => "aa-models-v2",
+  cacheKey: () => "aa-models-v3",
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext) => {
     const indexBody = await fetchAaRsc(ctx, INDEX_PATH);
@@ -188,7 +221,23 @@ export const getIntelligenceIndex = createSource<Record<string, never>, Artifici
       );
     }
 
-    const models = mergeBySlug(catalog, indexModels, modelsPageModels, omniscienceEnrich)
+    let leaderboardEnrich: Record<string, unknown>[] = [];
+    try {
+      const leaderboardBody = await fetchAaRsc(ctx, LEADERBOARD_PATH);
+      const leaderboardModels = parseRscPayload<Record<string, unknown>>(
+        leaderboardBody,
+        "models",
+        findLeaderboardModels,
+      );
+      leaderboardEnrich = (leaderboardModels ?? []).map(compactLeaderboardEnrich);
+    } catch (err) {
+      ctx.log(
+        "warn",
+        `[artificial] leaderboard enrichment failed: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+
+    const models = mergeBySlug(catalog, indexModels, modelsPageModels, omniscienceEnrich, leaderboardEnrich)
       .map(compact)
       .sort((a, b) => (b.intelligence_index ?? -Infinity) - (a.intelligence_index ?? -Infinity));
     const invalid = models.filter((m) => !m.slug || !m.name);

@@ -48,17 +48,7 @@ export function OpenSourceRankingsView({ rankings }: { rankings: OpenSourceModel
       {
         id: "model",
         header: t("model"),
-        cell: (item) => (
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{item.id.split("/").pop() || item.id}</p>
-            <div className="flex md:hidden mt-1 items-center gap-1.5">
-              <span className="text-xs text-text-secondary">
-                {t("likes")}: {formatShortNumber(item.likes)}
-              </span>
-              {item.license && <span className="text-xs text-text-tertiary">{item.license}</span>}
-            </div>
-          </div>
-        ),
+        cell: (item) => <p className="text-sm font-medium truncate">{item.id.split("/").pop() || item.id}</p>,
       },
       {
         id: "downloads",
@@ -113,22 +103,7 @@ export function HallucinationRankingsView({ rankings }: { rankings: Hallucinatio
       {
         id: "model",
         header: t("model"),
-        cell: (item) => (
-          <div className="min-w-0">
-            <p className="text-sm font-medium truncate">{item.model}</p>
-            <div className="flex md:hidden mt-1 items-center gap-1.5">
-              <span className="text-xs text-text-secondary">
-                {t("accuracy")}: {fmtRate(item.accuracy)}
-              </span>
-              <span className="text-xs text-text-secondary">
-                {t("attemptRate")}: {fmtRate(item.attemptRate)}
-              </span>
-              <span className="text-xs text-text-tertiary">
-                {t("omniscienceIndex")}: {fmtScore(item.omniscienceIndex)}
-              </span>
-            </div>
-          </div>
-        ),
+        cell: (item) => <p className="text-sm font-medium truncate">{item.model}</p>,
       },
       {
         id: "hallucinationRate",

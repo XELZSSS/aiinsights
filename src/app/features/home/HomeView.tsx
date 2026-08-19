@@ -1,5 +1,5 @@
 import { memo, useMemo, lazy, Suspense } from "react";
-import { Rocket, Image, BarChart3 } from "lucide-react";
+import { Rocket, Image, BarChart3, Lightbulb } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
 import { useSuspenseArtificialRankings, useSuspenseHomeDashboard } from "@/app/api/queries";
 import { useHallucinationRankings } from "@/app/domain/hallucination";
@@ -74,6 +74,15 @@ function useHomeDashboardData(
       null as ArtificialAnalysisModel | null,
     );
 
+    const bestReasoningModel = artificialData.reduce(
+      (best, m) => {
+        if (m.is_reasoning !== true) return best;
+        if (!best) return m;
+        return (m.intelligence_index ?? -Infinity) > (best.intelligence_index ?? -Infinity) ? m : best;
+      },
+      null as ArtificialAnalysisModel | null,
+    );
+
     const kpiStrip: HomeKpi[] = [
       { label: t("openRouterRankings"), value: latestOpenRouterModel?.name || t("notAvailable"), Icon: BarChart3 },
       { label: t("bestT2IModel"), value: arenaT2IModels[0]?.model || t("notAvailable"), Icon: Image },
@@ -81,6 +90,11 @@ function useHomeDashboardData(
         label: t("latestRelease"),
         value: latestRelease?.short_name || latestRelease?.name || t("notAvailable"),
         Icon: Rocket,
+      },
+      {
+        label: t("bestReasoningModel"),
+        value: bestReasoningModel?.short_name || bestReasoningModel?.name || t("notAvailable"),
+        Icon: Lightbulb,
       },
     ];
 
@@ -102,7 +116,7 @@ const StatisticsSection = lazy(() => import("./charts").then((m) => ({ default: 
 
 const KpiStrip = memo(function KpiStrip({ kpis }: { kpis: HomeKpi[] }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
       {kpis.map((kpi) => (
         <StatCard key={kpi.label} icon={kpi.Icon} label={kpi.label} value={kpi.value} />
       ))}
@@ -156,7 +170,7 @@ const ArenaT2ICard = memo(function ArenaT2ICard({
           </div>
           <span
             className="text-xs font-bold shrink-0 px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: color + "18", color }}
+            style={{ backgroundColor: `color-mix(in srgb, ${color} 12%, transparent)`, color }}
           >
             #{rank}
           </span>
@@ -165,9 +179,7 @@ const ArenaT2ICard = memo(function ArenaT2ICard({
           <span>
             ELO:{" "}
             <strong className="text-text-primary font-semibold" style={{ color }}>
-              {entry.rating != null
-                ? `${entry.rating.toFixed(0)}${formatRatingInterval(entry)}`
-                : t("notAvailable")}
+              {entry.rating != null ? `${entry.rating.toFixed(0)}${formatRatingInterval(entry)}` : t("notAvailable")}
             </strong>
           </span>
           <span>

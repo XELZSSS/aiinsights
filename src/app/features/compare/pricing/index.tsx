@@ -1,10 +1,10 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
-import { Card, CardContent, Input, Th, Td, Tr } from "@/app/components/ui";
+import { Card, CardContent, Input, Th, Td, Tr, Dot } from "@/app/components/ui";
 import { chartTooltipStyle, formatDollar, cn, getModelColor, calcMonthlyCost, approxEq } from "@/shared/utils";
 import { useTranslation } from "@/app/i18n";
-import { useIsMobile } from "@/app/hooks";
+import { useIsMobile, useCostEstimator } from "@/app/hooks";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { TFunction } from "@/shared/i18n";
 
@@ -76,7 +76,7 @@ function PriceTableDesktop({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border">
-            <Th className="text-text-secondary">{t("metric")}</Th>
+            <Th className="text-text-secondary sticky left-0 z-10 bg-bg-card">{t("metric")}</Th>
             {models.map((model, index) => (
               <Th key={model.id ?? index} align="right" style={{ color: getModelColor(index) }}>
                 {model.short_name || model.name}
@@ -89,7 +89,7 @@ function PriceTableDesktop({
             const best = bestPrices.get(row.label);
             return (
               <Tr key={row.label}>
-                <Td className="text-text-secondary">{row.label}</Td>
+                <Td className="text-text-secondary sticky left-0 bg-bg-card z-10">{row.label}</Td>
                 {models.map((model, index) => {
                   const v = row.getValue(model);
                   return (
@@ -122,35 +122,35 @@ function PriceTableMobile({
 }) {
   return (
     <div className="flex flex-col gap-2 md:hidden">
-      {priceRows.map((row) => {
-        const best = bestPrices.get(row.label);
-        return (
-          <Card key={row.label}>
-            <CardContent className="p-3">
-              <p className="text-xs font-bold text-text-secondary mb-2">{row.label}</p>
-              <div className="flex flex-col gap-1">
-                {models.map((model, index) => {
-                  const v = row.getValue(model);
-                  return (
-                    <div key={model.id ?? index} className="flex items-center justify-between gap-2">
-                      <span className="text-xs truncate" style={{ color: getModelColor(index) }}>
-                        {model.short_name || model.name}
-                      </span>
-                      <span className="text-xs">
-                        <PriceValue
-                          value={v}
-                          format={row.format}
-                          isBest={typeof v === "number" && best != null && approxEq(v, best)}
-                        />
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
+      {models.map((model, index) => (
+        <Card key={model.id ?? index}>
+          <CardContent className="p-3 flex flex-col gap-2">
+            <p
+              className="flex items-center gap-1.5 text-sm font-medium truncate"
+              style={{ color: getModelColor(index) }}
+            >
+              <Dot size="sm" color={getModelColor(index)} />
+              {model.short_name || model.name}
+            </p>
+            <div className="flex flex-col gap-1">
+              {priceRows.map((row) => {
+                const v = row.getValue(model);
+                const best = bestPrices.get(row.label);
+                return (
+                  <div key={row.label} className="flex items-center justify-between gap-2">
+                    <span className="text-xs text-text-secondary">{row.label}</span>
+                    <PriceValue
+                      value={v}
+                      format={row.format}
+                      isBest={typeof v === "number" && best != null && approxEq(v, best)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
@@ -233,17 +233,23 @@ export const PriceChart = memo(function PriceChart({
 export const CostEstimator = memo(function CostEstimator({ models }: { models: ArtificialAnalysisModel[] }) {
   const { t } = useTranslation();
 
-  const [dailyInput, setDailyInput] = useState("2");
-  const [dailyOutput, setDailyOutput] = useState("1");
-  const [dailyReasoning, setDailyReasoning] = useState("2");
-  const [cacheHitRate, setCacheHitRate] = useState("50");
-  const [daysPerMonth, setDaysPerMonth] = useState("22");
-
-  const calcInput = Math.max(0, Number(dailyInput) || 0);
-  const calcOutput = Math.max(0, Number(dailyOutput) || 0);
-  const calcReasoning = Math.max(0, Number(dailyReasoning) || 0);
-  const calcCache = Math.max(0, Math.min(100, Number(cacheHitRate) || 0)) / 100;
-  const calcDays = Math.max(1, Number(daysPerMonth) || 0);
+  const {
+    dailyInput,
+    setDailyInput,
+    dailyOutput,
+    setDailyOutput,
+    dailyReasoning,
+    setDailyReasoning,
+    cacheHitRate,
+    setCacheHitRate,
+    daysPerMonth,
+    setDaysPerMonth,
+    calcInput,
+    calcOutput,
+    calcReasoning,
+    calcCache,
+    calcDays,
+  } = useCostEstimator();
 
   const monthlyCosts = useMemo(() => {
     return models.map((model) =>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { num, numOr, str, strOr, bool, obj } from "@/server/parser/primitives";
+import { num, numOr, str, strOr, bool, obj } from "@/server/parsers/primitives";
 
 describe("num", () => {
   it("accepts finite numbers", () => {

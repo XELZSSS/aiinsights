@@ -23,16 +23,18 @@ export interface AppContext {
   log(level: "info" | "warn" | "error", msg: string, meta?: Record<string, unknown>): void;
 }
 
+const CACHE_VERSION = "v1";
+
 let sharedHttp: HttpClient | null = null;
 let sharedCache: CacheService | null = null;
 
 export function buildContext(env: Env): AppContext {
   sharedHttp ??= new HttpClient();
-  sharedCache ??= new CacheService({ kv: env.METRICS ?? null, version: "v1" });
+  sharedCache ??= new CacheService({ kv: env.METRICS ?? null, version: CACHE_VERSION });
   return {
     cache: sharedCache,
     http: sharedHttp,
-    version: "v1",
+    version: CACHE_VERSION,
     kv: env.METRICS ?? null,
     log: (level, msg, meta) => {
       const line = meta ? `${msg} ${JSON.stringify(meta)}` : msg;

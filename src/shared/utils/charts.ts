@@ -1,14 +1,14 @@
 export const COOL_COLORS = [
-  "#6e56cf",
-  "#00a2c7",
-  "#30a46c",
-  "#ffb224",
-  "#e5484d",
-  "#e93d82",
-  "#8e4ec6",
-  "#ff5c00",
-  "#0091ff",
-  "#7c8794",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+  "var(--chart-7)",
+  "var(--chart-8)",
+  "var(--chart-9)",
+  "var(--chart-10)",
 ];
 
 export function getModelColor(index: number): string {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseRscScriptArray, parseRscPayload } from "@/server/parser/rsc";
+import { parseRscScriptArray, parseRscPayload } from "@/server/parsers/rsc";
 
 function scriptHtml(payload: string): string {
   const escaped = JSON.stringify(payload).slice(1, -1);

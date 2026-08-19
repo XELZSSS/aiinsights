@@ -63,7 +63,9 @@ describe("Worker API integration (workerd runtime)", () => {
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as {
-      data: { tokenUsageRankings: { name: string; creator: string; totalTokens: number; pricing: { prompt: number } }[] };
+      data: {
+        tokenUsageRankings: { name: string; creator: string; totalTokens: number; pricing: { prompt: number } }[];
+      };
     };
     expect(body.data.tokenUsageRankings).toHaveLength(1);
     const entry = body.data.tokenUsageRankings[0]!;
@@ -114,7 +116,10 @@ describe("Worker API integration (workerd runtime)", () => {
     expect(res.status).toBe(200);
 
     const body = (await res.json()) as {
-      data: { category: string; models: { model: string; rating: number | null; ratingUpper: number | null; ratingLower: number | null }[] };
+      data: {
+        category: string;
+        models: { model: string; rating: number | null; ratingUpper: number | null; ratingLower: number | null }[];
+      };
     };
     expect(body.data.models).toHaveLength(2);
     expect(body.data.models.some((m) => m.model.includes("deepseek-v4-pro-max"))).toBe(false);

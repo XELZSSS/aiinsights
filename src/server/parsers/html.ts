@@ -61,7 +61,6 @@ const NAMED_ENTITIES: Record<string, string> = {
   eacute: "\u00E9",
   egrave: "\u00E8",
   agrave: "\u00E0",
-  ccedilla: "\u00E7",
   ccedil: "\u00E7",
   uuml: "\u00FC",
   ouml: "\u00F6",

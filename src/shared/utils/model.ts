@@ -60,7 +60,7 @@ export function groupByProvider(models: ArtificialAnalysisModel[]) {
   const providers = new Map<string, { name: string; color: string; models: ArtificialAnalysisModel[] }>();
   for (const m of models) {
     const name = m.model_creators?.name || "Unknown";
-    const color = m.model_creators?.color || "#78716c";
+    const color = m.model_creators?.color || "var(--text-tertiary)";
     let bucket = providers.get(name);
     if (!bucket) {
       bucket = { name, color, models: [] };

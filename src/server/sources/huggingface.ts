@@ -2,7 +2,7 @@ import { upstreamConfig, DEFAULT_TTL_MS } from "@/shared/config";
 import type { OpenSourceModelEntry } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { createSource } from "@/server/core/source";
-import { getOpenLicense } from "@/server/parser/licenses";
+import { getOpenLicense } from "@/server/parsers/licenses";
 
 interface HFModel {
   id?: string;

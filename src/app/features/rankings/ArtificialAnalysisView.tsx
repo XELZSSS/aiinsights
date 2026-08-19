@@ -1,9 +1,10 @@
-import { useDeferredValue, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router";
 
 import { DataTable } from "@/app/components/data";
 import { useTranslation } from "@/app/i18n";
 import { useCompareStore, useSearchStore } from "@/app/stores";
+import { useCostEstimator } from "@/app/hooks";
 import { modelId, formatDollar, calcMonthlyCost } from "@/shared/utils";
 import { TabButton, CompareChipBar, SegmentedGroup } from "@/app/components/composite";
 import { Input } from "@/app/components/ui";
@@ -14,11 +15,8 @@ import { buildRankingColumns, buildPricingColumns, ModelExpandedDetail } from "@
 type ViewMode = "rankings" | "pricing";
 type ReasoningFilter = "all" | "reasoning" | "non-reasoning";
 
-const REASONING_KEYWORDS = /\b(reasoning|thinking)\b/i;
-const REASONING_PREFIXES = /^(o[134]|gpt-5)/i;
-
 function isReasoningModel(model: ArtificialAnalysisModel) {
-  return REASONING_KEYWORDS.test(model.name) || REASONING_PREFIXES.test(model.name);
+  return model.is_reasoning === true;
 }
 
 function matchesSearch(model: ArtificialAnalysisModel, term: string): boolean {
@@ -52,60 +50,6 @@ function useAARankingFilters(rankings: ArtificialAnalysisModel[]) {
   }, [rankings, viewMode, reasoningFilter, searchTerm]);
 
   return { filtered, viewMode, setViewMode, reasoningFilter, setReasoningFilter };
-}
-
-function useCostEstimator(filteredRankings: ArtificialAnalysisModel[]) {
-  const [dailyInput, setDailyInput] = useState("2");
-  const [dailyOutput, setDailyOutput] = useState("1");
-  const [dailyReasoning, setDailyReasoning] = useState("2");
-  const [cacheHitRate, setCacheHitRate] = useState("50");
-  const [daysPerMonth, setDaysPerMonth] = useState("22");
-  const deferredInput = useDeferredValue(dailyInput);
-  const deferredOutput = useDeferredValue(dailyOutput);
-  const deferredReasoning = useDeferredValue(dailyReasoning);
-  const deferredCache = useDeferredValue(cacheHitRate);
-  const deferredDays = useDeferredValue(daysPerMonth);
-  const calcInput = Number(deferredInput) || 0;
-  const calcOutput = Number(deferredOutput) || 0;
-  const calcReasoning = Number(deferredReasoning) || 0;
-  const calcCache = Math.max(0, Math.min(100, Number(deferredCache) || 0)) / 100;
-  const calcDays = Math.max(1, Number(deferredDays) || 0);
-  const avgCost = useMemo(() => {
-    let total = 0,
-      count = 0;
-    for (const m of filteredRankings) {
-      const cost = calcMonthlyCost(m, {
-        dailyInput: calcInput * 1_000_000,
-        dailyOutput: calcOutput * 1_000_000,
-        dailyReasoning: calcReasoning * 1_000_000,
-        cacheHitRate: calcCache,
-        daysPerMonth: calcDays,
-      });
-      if (cost != null) {
-        total += cost;
-        count++;
-      }
-    }
-    return count > 0 ? total / count : 0;
-  }, [filteredRankings, calcInput, calcOutput, calcReasoning, calcCache, calcDays]);
-  return {
-    dailyInput,
-    setDailyInput,
-    dailyOutput,
-    setDailyOutput,
-    dailyReasoning,
-    setDailyReasoning,
-    cacheHitRate,
-    setCacheHitRate,
-    daysPerMonth,
-    setDaysPerMonth,
-    calcInput,
-    calcOutput,
-    calcReasoning,
-    calcCache,
-    calcDays,
-    avgCost,
-  };
 }
 
 function FilterToolbar({
@@ -272,8 +216,26 @@ export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnaly
     calcReasoning,
     calcCache,
     calcDays,
-    avgCost,
-  } = useCostEstimator(filtered);
+  } = useCostEstimator();
+
+  const avgCost = useMemo(() => {
+    let total = 0,
+      count = 0;
+    for (const m of filtered) {
+      const cost = calcMonthlyCost(m, {
+        dailyInput: calcInput * 1_000_000,
+        dailyOutput: calcOutput * 1_000_000,
+        dailyReasoning: calcReasoning * 1_000_000,
+        cacheHitRate: calcCache,
+        daysPerMonth: calcDays,
+      });
+      if (cost != null) {
+        total += cost;
+        count++;
+      }
+    }
+    return count > 0 ? total / count : 0;
+  }, [filtered, calcInput, calcOutput, calcReasoning, calcCache, calcDays]);
 
   const rankingColumns = useMemo(() => buildRankingColumns(t), [t]);
   const pricingColumns = useMemo(() => buildPricingColumns(t), [t]);

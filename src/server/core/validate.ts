@@ -4,9 +4,11 @@ export type QuerySpec =
   | { type: "number"; default?: string; min?: number; max?: number }
   | { type: "enum"; values: readonly string[]; default?: string };
 
-type QuerySchema = Record<string, QuerySpec>;
+export type QuerySchema = Record<string, QuerySpec>;
 
-export function validateQuery(raw: Record<string, string>, schema: QuerySchema): Record<string, string> {
+export type ValidatedQuery<S extends QuerySchema> = { [K in keyof S]: string };
+
+export function validateQuery<S extends QuerySchema>(raw: Record<string, string>, schema: S): ValidatedQuery<S> {
   const out: Record<string, string> = {};
   for (const [name, spec] of Object.entries(schema)) {
     const rawValue = raw[name] ?? spec.default;
@@ -29,5 +31,5 @@ export function validateQuery(raw: Record<string, string>, schema: QuerySchema):
       }
     }
   }
-  return out;
+  return out as ValidatedQuery<S>;
 }

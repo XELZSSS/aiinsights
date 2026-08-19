@@ -4,7 +4,7 @@ import type { NewsItem, NewsCategory } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { ValidationError } from "@/server/core/errors";
 import { createSource } from "@/server/core/source";
-import { decodeEntities, stripHtml } from "@/server/parser/html";
+import { decodeEntities, stripHtml } from "@/server/parsers/html";
 
 const VALID_CATEGORIES = new Set(Object.keys(rssConfig));
 const MAX_ITEMS_PER_FEED = 50;

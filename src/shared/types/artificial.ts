@@ -36,6 +36,7 @@ export interface ArtificialAnalysisModel {
   short_name?: string | null;
   model_creators?: ModelCreators;
   intelligence_index: number | null;
+  is_reasoning?: boolean;
   release_date?: string | null;
   is_open_weights?: boolean;
   context_window_tokens?: number | null;
@@ -46,6 +47,7 @@ export interface ArtificialAnalysisModel {
   benchmarks?: Record<string, number | null>;
   pricing?: ModelPricing;
   speed?: ModelSpeed;
+  reasoning_time_seconds?: number | null;
   input_modality_text?: boolean;
   input_modality_image?: boolean;
   input_modality_speech?: boolean;

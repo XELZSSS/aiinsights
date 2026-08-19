@@ -2,7 +2,7 @@ import { memo, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Button, Card, CardContent, Th, Td, Tr } from "@/app/components/ui";
+import { Button, Card, CardContent, Th, Td, Tr, Dot } from "@/app/components/ui";
 import { BackButton, CompareChipBar } from "@/app/components/composite";
 import { Spinner } from "@/app/components/shared";
 
@@ -129,34 +129,6 @@ const MetricValueDisplay = memo(function MetricValueDisplay({
   );
 });
 
-interface ModelMetricRowProps {
-  model: ArtificialAnalysisModel;
-  index: number;
-  metric: CompareMetric;
-  winners: Map<string, "win" | "loss">;
-  iconSize?: number;
-  className?: string;
-}
-
-const ModelMetricRow = memo(function ModelMetricRow({
-  model,
-  index,
-  metric,
-  winners,
-  iconSize = 12,
-  className = "",
-}: ModelMetricRowProps) {
-  const winner = winners.get(modelId(model)) ?? null;
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-xs truncate" style={{ color: getModelColor(index) }}>
-        {model.short_name || model.name}
-      </span>
-      <MetricValueDisplay value={metric.getValue(model)} winner={winner} iconSize={iconSize} className={className} />
-    </div>
-  );
-});
-
 const CompactMetricCards = memo(function CompactMetricCards({
   metrics,
   models,
@@ -165,31 +137,36 @@ const CompactMetricCards = memo(function CompactMetricCards({
   models: ArtificialAnalysisModel[];
 }) {
   return (
-    <div className="flex flex-col gap-3 w-full min-w-0">
-      {metrics.map((metric) => {
-        const winners = computeMetricWinners(metric, models);
-        return (
-          <Card key={metric.label} accent="top">
-            <CardContent padding="sm">
-              <p className="text-xs font-semibold text-text-secondary mb-2">{metric.label}</p>
-              <div className="flex flex-col gap-1.5">
-                {models.map((model, index) => (
-                  <ModelMetricRow
-                    key={modelId(model) || index}
-                    model={model}
-                    index={index}
-                    metric={metric}
-                    winners={winners}
-                    iconSize={10}
-                    className="text-xs font-mono"
-                  />
-                ))}
+    <Card accent="top">
+      <CardContent padding="sm">
+        <div className="flex flex-col divide-y divide-border">
+          {metrics.map((metric) => {
+            const winners = computeMetricWinners(metric, models);
+            return (
+              <div key={metric.label} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+                <span className="text-xs font-medium text-text-secondary shrink-0">{metric.label}</span>
+                <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+                  {models.map((model, index) => {
+                    const winner = winners.get(modelId(model)) ?? null;
+                    return (
+                      <span key={modelId(model) || index} className="flex items-center gap-1">
+                        <Dot size="sm" color={getModelColor(index)} />
+                        <MetricValueDisplay
+                          value={metric.getValue(model)}
+                          winner={winner}
+                          iconSize={10}
+                          className="text-xs"
+                        />
+                      </span>
+                    );
+                  })}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 });
 
@@ -206,7 +183,9 @@ const MetricTable = memo(function MetricTable({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border">
-            <Th className="px-3 py-2.5 font-semibold text-text-secondary">{t("metric")}</Th>
+            <Th className="px-3 py-2.5 font-semibold text-text-secondary sticky left-0 z-10 bg-bg-card">
+              {t("metric")}
+            </Th>
             {models.map((model, index) => (
               <Th
                 key={modelId(model) || index}
@@ -224,7 +203,7 @@ const MetricTable = memo(function MetricTable({
             const winners = computeMetricWinners(metric, models);
             return (
               <Tr key={metric.label} className="hover:bg-hover transition-colors">
-                <Td className="px-3 py-2.5 text-text-secondary">{metric.label}</Td>
+                <Td className="px-3 py-2.5 text-text-secondary sticky left-0 bg-bg-card z-10">{metric.label}</Td>
                 {models.map((model, index) => (
                   <Td key={modelId(model) || index} align="right" className="px-3 py-2.5">
                     <MetricValueDisplay
@@ -254,7 +233,7 @@ function CompareContent({ models }: { models: ArtificialAnalysisModel[] }) {
       <CardContent padding="lg">
         <div className="flex flex-col md:flex-row gap-4 sm:gap-6 md:items-stretch">
           <div className="min-w-0 w-full md:w-1/2 flex items-center justify-center">
-            <div className="w-full h-[340px] sm:h-[400px]">
+            <div className="w-full h-[240px] sm:h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData} outerRadius="78%" margin={{ top: 24, right: 24, bottom: 8, left: 24 }}>
                   <PolarGrid stroke="var(--border)" />
