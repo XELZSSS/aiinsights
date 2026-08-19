@@ -2,7 +2,11 @@ import { lazy, Suspense, useMemo, useState } from "react";
 
 import { useTranslation } from "@/app/i18n";
 import type { TranslationKey } from "@/shared/i18n";
-import { useArtificialRankings, useOpenSourceModels, useOpenRouterRankings } from "@/app/api/queries";
+import {
+  useSuspenseArtificialRankings,
+  useSuspenseOpenSourceModels,
+  useSuspenseOpenRouterRankings,
+} from "@/app/api/queries";
 import { useHallucinationRankings } from "@/app/domain/hallucination";
 import { SuspenseQuery, Spinner, SearchInput } from "@/app/components/shared";
 import { ArtificialAnalysisView } from "@/app/features/rankings/ArtificialAnalysisView";
@@ -37,48 +41,28 @@ interface RankingsHubProps {
 }
 
 function ModelRankingsTab() {
-  const aaQ = useArtificialRankings();
-  return aaQ.data ? (
-    <Suspense fallback={<Spinner />}>
-      <ArtificialAnalysisView rankings={aaQ.data} />
-    </Suspense>
-  ) : (
-    <Spinner />
-  );
+  const { data } = useSuspenseArtificialRankings();
+  return <ArtificialAnalysisView rankings={data} />;
 }
 
 function OpenRouterTab() {
-  const orQ = useOpenRouterRankings();
-  return orQ.data ? (
+  const { data } = useSuspenseOpenRouterRankings();
+  return (
     <Suspense fallback={<Spinner />}>
-      <OpenRouterRankingsView data={orQ.data} />
+      <OpenRouterRankingsView data={data} />
     </Suspense>
-  ) : (
-    <Spinner />
   );
 }
 
 function OpenSourceTab() {
-  const openSourceQ = useOpenSourceModels();
-  return openSourceQ.data ? (
-    <Suspense fallback={<Spinner />}>
-      <OpenSourceRankingsView rankings={openSourceQ.data} />
-    </Suspense>
-  ) : (
-    <Spinner />
-  );
+  const { data } = useSuspenseOpenSourceModels();
+  return <OpenSourceRankingsView rankings={data} />;
 }
 
 function HallucinationRankingsTab() {
-  const aaQ = useArtificialRankings();
-  const hallucinationRankings = useHallucinationRankings(aaQ.data ?? []);
-  return aaQ.isPending ? (
-    <Spinner />
-  ) : (
-    <Suspense fallback={<Spinner />}>
-      <HallucinationRankingsView rankings={hallucinationRankings} />
-    </Suspense>
-  );
+  const { data } = useSuspenseArtificialRankings();
+  const hallucinationRankings = useHallucinationRankings(data);
+  return <HallucinationRankingsView rankings={hallucinationRankings} />;
 }
 
 const getProviderRowId = (p: ProviderStats) => p.name;
@@ -138,14 +122,8 @@ function ProviderCompareContent({ data }: { data: ArtificialAnalysisModel[] }) {
 }
 
 function ProviderCompareTab() {
-  const aaQ = useArtificialRankings();
-  return aaQ.data ? (
-    <Suspense fallback={<Spinner />}>
-      <ProviderCompareContent data={aaQ.data} />
-    </Suspense>
-  ) : (
-    <Spinner />
-  );
+  const { data } = useSuspenseArtificialRankings();
+  return <ProviderCompareContent data={data} />;
 }
 
 function ActiveTabContent({ activeTabId }: { activeTabId: RankingTabId }) {

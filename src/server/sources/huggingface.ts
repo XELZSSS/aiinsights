@@ -1,4 +1,4 @@
-import { upstreamConfig, DEFAULT_TTL_MS } from "@/shared/config";
+import { upstreamConfig, DEFAULT_TTL_MS, cacheKeys } from "@/shared/config";
 import type { OpenSourceModelEntry } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { createSource } from "@/server/core/source";
@@ -43,7 +43,7 @@ function effectiveDirection(p: ModelQuery): string {
 }
 
 export const getModels = createSource<ModelQuery, OpenSourceModelEntry[]>({
-  cacheKey: (p) => `opensource-models:${p.sort}:${effectiveDirection(p)}:${p.limit}`,
+  cacheKey: (p) => cacheKeys.openSourceModels(p.sort, effectiveDirection(p), p.limit),
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext, p) => {
     const direction = effectiveDirection(p);
@@ -57,7 +57,7 @@ export const getModels = createSource<ModelQuery, OpenSourceModelEntry[]>({
 });
 
 export const getReleases = createSource<Record<string, never>, OpenSourceModelEntry[]>({
-  cacheKey: () => "opensource-releases",
+  cacheKey: () => cacheKeys.openSourceReleases,
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext) => {
     const items = await ctx.http.json<HFModel[]>(`${HF_API}?sort=createdAt&direction=-1&limit=500&full=true`);

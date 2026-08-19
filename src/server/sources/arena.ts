@@ -1,8 +1,8 @@
-import { upstreamConfig, DEFAULT_TTL_MS } from "@/shared/config";
+import { upstreamConfig, DEFAULT_TTL_MS, cacheKeys } from "@/shared/config";
 import type { ArenaModel, ArenaPayload, ArenaCategory } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { createSource } from "@/server/core/source";
-import { parseRscScriptArray } from "@/server/parsers/rsc";
+import { extractRscScripts, findNextData, parseRscPayload } from "@/server/parsers/rsc";
 
 const BASE = upstreamConfig.arena;
 
@@ -42,12 +42,12 @@ function mapEntry(e: RawEntry): ArenaModel | null {
 }
 
 export const getArenaLeaderboard = createSource<{ category: ArenaCategory }, ArenaPayload>({
-  cacheKey: (p) => `arena-leaderboard:${p.category}:v2`,
+  cacheKey: (p) => cacheKeys.arenaLeaderboard(p.category),
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext, params) => {
     const { category } = params;
     const html = await ctx.http.text(`${BASE}/${encodeURIComponent(category)}`);
-    const raw = parseRscScriptArray<RawEntry>(html, "entries");
+    const raw = parseRscPayload<RawEntry>(extractRscScripts(html), "entries", (tree) => findNextData(tree, "entries"));
     const models = raw.map(mapEntry).filter((m): m is ArenaModel => m !== null);
     if (models.length === 0) {
       const head = html.slice(0, 200).replace(/\s+/g, " ").trim();

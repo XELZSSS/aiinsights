@@ -1,8 +1,8 @@
-import { upstreamConfig, DEFAULT_TTL_MS, BENCHMARK_KEYS } from "@/shared/config";
+import { upstreamConfig, DEFAULT_TTL_MS, BENCHMARK_KEYS, cacheKeys } from "@/shared/config";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { num, str, strOr, bool, obj } from "@/server/parsers/primitives";
-import { findNextData, parseRscPayload } from "@/server/parsers/rsc";
+import { findNextData, findArrayInTree, parseRscPayload } from "@/server/parsers/rsc";
 import { createSource } from "@/server/core/source";
 
 const RSC_HEADERS = { RSC: "1", "Next-Router-State-Tree": "%5B%5D" } as const;
@@ -141,26 +141,10 @@ function compactLeaderboardEnrich(m: Record<string, unknown>): Record<string, un
 }
 
 function findLeaderboardModels(tree: unknown): Record<string, unknown>[] | null {
-  const stack: unknown[] = [tree];
-  let best: Record<string, unknown>[] | null = null;
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!current || typeof current !== "object") continue;
-    if (Array.isArray(current)) {
-      if (
-        current.some(
-          (m) => m && typeof m === "object" && "medianReasoningTimeSeconds" in (m as Record<string, unknown>),
-        )
-      ) {
-        const arr = current as Record<string, unknown>[];
-        if (!best || arr.length > best.length) best = arr;
-      }
-      for (const v of current) stack.push(v);
-    } else {
-      for (const v of Object.values(current)) stack.push(v);
-    }
-  }
-  return best;
+  return findArrayInTree<Record<string, unknown>>(
+    tree,
+    (m) => typeof m === "object" && m !== null && "medianReasoningTimeSeconds" in (m as Record<string, unknown>),
+  );
 }
 
 function mergeBySlug(
@@ -184,7 +168,7 @@ function mergeBySlug(
 }
 
 export const getIntelligenceIndex = createSource<Record<string, never>, ArtificialAnalysisModel[]>({
-  cacheKey: () => "aa-models-v3",
+  cacheKey: () => cacheKeys.intelligenceIndex,
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext) => {
     const indexBody = await fetchAaRsc(ctx, INDEX_PATH);

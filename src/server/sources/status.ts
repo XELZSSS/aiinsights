@@ -1,7 +1,8 @@
-import { upstreamConfig, rssConfig } from "@/shared/config";
+import { upstreamConfig, rssConfig, cacheKeys } from "@/shared/config";
 import type { AppContext } from "@/server/app";
 import { createSource } from "@/server/core/source";
 import type { SourceStatus, SourcesStatusPayload } from "@/shared/types";
+import { getUptime } from "@/server/sources/uptime";
 
 const STATUS_TTL_MS = 60_000;
 const PROBE_TIMEOUT_MS = 8_000;
@@ -10,7 +11,6 @@ type SourcesStatusData = Omit<SourcesStatusPayload, "firstLaunchAt" | "uptimeMs"
 
 interface ProbeTarget {
   id: SourceStatus["id"];
-  name: string;
   url: string;
 }
 
@@ -23,15 +23,14 @@ function buildTargets(): ProbeTarget[] {
     ),
   );
   return [
-    { id: "arena", name: "arena.ai", url: `${upstreamConfig.arena}/text` },
+    { id: "arena", url: `${upstreamConfig.arena}/text` },
     {
       id: "artificialAnalysis",
-      name: "Artificial Analysis",
       url: `${upstreamConfig.artificialAnalysis}/evaluations/artificial-analysis-intelligence-index`,
     },
-    { id: "huggingface", name: "Hugging Face", url: `${upstreamConfig.huggingface}?limit=1` },
-    { id: "openrouter", name: "OpenRouter", url: `${upstreamConfig.openrouter}/api/v1/models` },
-    ...newsFeeds.map((url) => ({ id: "news", name: "News RSS", url }) as ProbeTarget),
+    { id: "huggingface", url: `${upstreamConfig.huggingface}?limit=1` },
+    { id: "openrouter", url: `${upstreamConfig.openrouter}/api/v1/models` },
+    ...newsFeeds.map((url) => ({ id: "news", url }) as ProbeTarget),
   ];
 }
 
@@ -55,7 +54,6 @@ async function checkSources(ctx: AppContext): Promise<SourcesStatusData> {
     if (!existing) {
       grouped.set(target.id, {
         id: target.id,
-        name: target.name,
         ok: probe.ok,
         status: probe.status,
         latencyMs: probe.latencyMs,
@@ -82,10 +80,9 @@ async function checkSources(ctx: AppContext): Promise<SourcesStatusData> {
 
   const sources: SourceStatus[] = Array.from(grouped.values()).map((s) => {
     if (s.ok)
-      return { id: s.id, name: s.name, ok: true, status: s.status, latencyMs: s.latencyMs, error: null, checkedAt };
+      return { id: s.id, ok: true, status: s.status, latencyMs: s.latencyMs, error: null, checkedAt };
     return {
       id: s.id,
-      name: s.name,
       ok: false,
       status: s.status,
       latencyMs: s.latencyMs,
@@ -98,9 +95,19 @@ async function checkSources(ctx: AppContext): Promise<SourcesStatusData> {
 }
 
 export const getSourcesStatus = createSource<Record<string, never>, SourcesStatusData>({
-  cacheKey: () => "sources-status",
+  cacheKey: () => cacheKeys.sourcesStatus,
   defaultTtl: STATUS_TTL_MS,
   fetch: async (ctx: AppContext) => ({ data: await checkSources(ctx) }),
 });
 
-export const refreshSourcesStatus = (ctx: AppContext): Promise<SourcesStatusData> => checkSources(ctx);
+export const refreshSourcesStatus = async (ctx: AppContext): Promise<SourcesStatusData> => {
+  const data = await checkSources(ctx);
+  await ctx.cache.set(cacheKeys.sourcesStatus, data, STATUS_TTL_MS);
+  return data;
+};
+
+export const getSourcesStatusFull = async (ctx: AppContext, refresh: boolean): Promise<SourcesStatusPayload> => {
+  const status = refresh ? await refreshSourcesStatus(ctx) : await getSourcesStatus(ctx, {});
+  const uptime = await getUptime(ctx);
+  return { ...status, ...uptime };
+};

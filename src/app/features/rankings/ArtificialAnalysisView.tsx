@@ -3,9 +3,9 @@ import { useNavigate, useLocation } from "react-router";
 
 import { DataTable } from "@/app/components/data";
 import { useTranslation } from "@/app/i18n";
-import { useCompareStore, useSearchStore } from "@/app/stores";
-import { useCostEstimator } from "@/app/hooks";
-import { modelId, formatDollar, calcMonthlyCost } from "@/shared/utils";
+import { useCompareStore } from "@/app/stores";
+import { useFilteredData, useMonthlyCosts } from "@/app/hooks";
+import { modelId, formatDollar } from "@/shared/utils";
 import { TabButton, CompareChipBar, SegmentedGroup } from "@/app/components/composite";
 import { Input } from "@/app/components/ui";
 
@@ -19,15 +19,6 @@ function isReasoningModel(model: ArtificialAnalysisModel) {
   return model.is_reasoning === true;
 }
 
-function matchesSearch(model: ArtificialAnalysisModel, term: string): boolean {
-  if (!term) return true;
-  return (
-    model.name.toLowerCase().includes(term) ||
-    model.slug.toLowerCase().includes(term) ||
-    (model.model_creators?.name || "").toLowerCase().includes(term)
-  );
-}
-
 function useAARankingFilters(rankings: ArtificialAnalysisModel[]) {
   const location = useLocation();
   const [viewMode, setViewMode] = useState<ViewMode>(
@@ -35,19 +26,17 @@ function useAARankingFilters(rankings: ArtificialAnalysisModel[]) {
   );
   const [reasoningFilter, setReasoningFilter] = useState<ReasoningFilter>("all");
 
-  const searchTerm = useSearchStore((s) => s.searchTerm);
+  const searchFiltered = useFilteredData(rankings, (model) => [
+    model.name,
+    model.slug,
+    model.model_creators?.name ?? "",
+  ]);
 
   const filtered = useMemo(() => {
-    const lowerTerm = searchTerm.toLowerCase().trim();
-    return rankings.filter((model) => {
-      if (reasoningFilter === "reasoning" && !isReasoningModel(model)) return false;
-      if (reasoningFilter === "non-reasoning" && isReasoningModel(model)) return false;
-
-      if (!matchesSearch(model, lowerTerm)) return false;
-
-      return true;
-    });
-  }, [rankings, viewMode, reasoningFilter, searchTerm]);
+    if (reasoningFilter === "reasoning") return searchFiltered.filter(isReasoningModel);
+    if (reasoningFilter === "non-reasoning") return searchFiltered.filter((m) => !isReasoningModel(m));
+    return searchFiltered;
+  }, [searchFiltered, reasoningFilter]);
 
   return { filtered, viewMode, setViewMode, reasoningFilter, setReasoningFilter };
 }
@@ -200,59 +189,19 @@ export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnaly
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   const { filtered, viewMode, setViewMode, reasoningFilter, setReasoningFilter } = useAARankingFilters(rankings);
-  const {
-    dailyInput,
-    setDailyInput,
-    dailyOutput,
-    setDailyOutput,
-    dailyReasoning,
-    setDailyReasoning,
-    cacheHitRate,
-    setCacheHitRate,
-    daysPerMonth,
-    setDaysPerMonth,
-    calcInput,
-    calcOutput,
-    calcReasoning,
-    calcCache,
-    calcDays,
-  } = useCostEstimator();
+  const { monthlyCosts, ...costInputs } = useMonthlyCosts(filtered);
 
   const avgCost = useMemo(() => {
-    let total = 0,
-      count = 0;
-    for (const m of filtered) {
-      const cost = calcMonthlyCost(m, {
-        dailyInput: calcInput * 1_000_000,
-        dailyOutput: calcOutput * 1_000_000,
-        dailyReasoning: calcReasoning * 1_000_000,
-        cacheHitRate: calcCache,
-        daysPerMonth: calcDays,
-      });
-      if (cost != null) {
-        total += cost;
-        count++;
-      }
-    }
-    return count > 0 ? total / count : 0;
-  }, [filtered, calcInput, calcOutput, calcReasoning, calcCache, calcDays]);
+    const valid = monthlyCosts.filter((v): v is number => v != null);
+    return valid.length > 0 ? valid.reduce((a, b) => a + b, 0) / valid.length : 0;
+  }, [monthlyCosts]);
 
   const rankingColumns = useMemo(() => buildRankingColumns(t), [t]);
   const pricingColumns = useMemo(() => buildPricingColumns(t), [t]);
 
   const pricingRows = useMemo(
-    () =>
-      filtered.map((model) => ({
-        model,
-        monthlyCost: calcMonthlyCost(model, {
-          dailyInput: calcInput * 1_000_000,
-          dailyOutput: calcOutput * 1_000_000,
-          dailyReasoning: calcReasoning * 1_000_000,
-          cacheHitRate: calcCache,
-          daysPerMonth: calcDays,
-        }),
-      })),
-    [filtered, calcInput, calcOutput, calcReasoning, calcCache, calcDays],
+    () => filtered.map((model, index) => ({ model, monthlyCost: monthlyCosts[index] ?? null })),
+    [filtered, monthlyCosts],
   );
 
   return (
@@ -269,16 +218,16 @@ export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnaly
 
       {viewMode === "pricing" && (
         <PricingInputs
-          dailyInput={dailyInput}
-          onDailyInputChange={setDailyInput}
-          dailyOutput={dailyOutput}
-          onDailyOutputChange={setDailyOutput}
-          dailyReasoning={dailyReasoning}
-          onDailyReasoningChange={setDailyReasoning}
-          cacheHitRate={cacheHitRate}
-          onCacheHitRateChange={setCacheHitRate}
-          daysPerMonth={daysPerMonth}
-          onDaysPerMonthChange={setDaysPerMonth}
+          dailyInput={costInputs.dailyInput}
+          onDailyInputChange={costInputs.setDailyInput}
+          dailyOutput={costInputs.dailyOutput}
+          onDailyOutputChange={costInputs.setDailyOutput}
+          dailyReasoning={costInputs.dailyReasoning}
+          onDailyReasoningChange={costInputs.setDailyReasoning}
+          cacheHitRate={costInputs.cacheHitRate}
+          onCacheHitRateChange={costInputs.setCacheHitRate}
+          daysPerMonth={costInputs.daysPerMonth}
+          onDaysPerMonthChange={costInputs.setDaysPerMonth}
           avgCost={avgCost}
         />
       )}

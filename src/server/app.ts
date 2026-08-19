@@ -9,6 +9,7 @@ import type { RouteDef } from "@/server/routes";
 import { ApiError } from "@/server/core/errors";
 import { CacheService } from "@/server/core/cache";
 import { HttpClient } from "@/server/core/http";
+import { CACHE_VERSION } from "@/shared/config";
 
 export interface Env {
   METRICS?: KVNamespace;
@@ -22,8 +23,6 @@ export interface AppContext {
   kv: KVNamespace | null;
   log(level: "info" | "warn" | "error", msg: string, meta?: Record<string, unknown>): void;
 }
-
-const CACHE_VERSION = "v1";
 
 let sharedHttp: HttpClient | null = null;
 let sharedCache: CacheService | null = null;

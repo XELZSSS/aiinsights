@@ -1,4 +1,4 @@
-import { upstreamConfig, DEFAULT_TTL_MS, PARTIAL_FAIL_TTL_MS } from "@/shared/config";
+import { upstreamConfig, DEFAULT_TTL_MS, PARTIAL_FAIL_TTL_MS, cacheKeys } from "@/shared/config";
 import type { OpenRouterRankingsPayload, OpenRouterRankEntry } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { numOr } from "@/server/parsers/primitives";
@@ -133,7 +133,7 @@ const PRICING_TTL_MS = 30 * 60_000;
 
 async function fetchModelPricing(ctx: AppContext): Promise<Map<string, PricingEntry>> {
   try {
-    const record = await ctx.cache.withTtl("openrouter:pricing-map", PRICING_TTL_MS, async () => {
+    const record = await ctx.cache.withTtl(cacheKeys.openRouterPricing, PRICING_TTL_MS, async () => {
       const res = await ctx.http.json<{ data: PricingRow[] }>(`${OPENROUTER}/api/v1/models`);
       const record: PricingRecord = {};
       for (const m of res?.data ?? []) {
@@ -153,7 +153,7 @@ async function fetchModelPricing(ctx: AppContext): Promise<Map<string, PricingEn
 }
 
 export const getOpenRouterRankings = createSource<Record<string, never>, OpenRouterRankingsPayload>({
-  cacheKey: () => "openrouter-rankings",
+  cacheKey: () => cacheKeys.openRouterRankings,
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext) => {
     const [modelResult, pricingResult] = await Promise.allSettled([

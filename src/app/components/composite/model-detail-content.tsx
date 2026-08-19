@@ -10,6 +10,9 @@ import {
   orNA,
   normalizePercent,
   getOutputSpeed,
+  modelInputPrice,
+  modelOutputPrice,
+  modelCacheHitPrice,
 } from "@/shared/utils";
 import { DetailLayout, StatGrid, InfoGrid } from "./layout";
 import { InfoCard, InfoRow } from "./info-card";
@@ -58,7 +61,6 @@ export function ModelDetailContent({
   showBenchmarks?: boolean;
 }) {
   const { t } = useTranslation();
-  const pricing = model.pricing;
   return (
     <DetailLayout>
       <StatGrid columns={4}>
@@ -76,9 +78,9 @@ export function ModelDetailContent({
           <InfoRow compact label={t("contextWindow")} value={formatTokens(model.context_window_tokens, t)} />
         </InfoCard>
         <InfoCard title={t("pricing")}>
-          <InfoRow compact label={t("promptPrice")} value={formatPricePerMillion(pricing?.input, t)} />
-          <InfoRow compact label={t("completionPrice")} value={formatPricePerMillion(pricing?.output, t)} />
-          <InfoRow compact label={t("cacheHitPrice")} value={formatPricePerMillion(pricing?.cache_hit, t)} />
+          <InfoRow compact label={t("promptPrice")} value={formatPricePerMillion(modelInputPrice(model), t)} />
+          <InfoRow compact label={t("completionPrice")} value={formatPricePerMillion(modelOutputPrice(model), t)} />
+          <InfoRow compact label={t("cacheHitPrice")} value={formatPricePerMillion(modelCacheHitPrice(model), t)} />
           <InfoRow compact label={t("blendedPrice")} value={formatPricePerMillion(model.blended_price, t)} />
         </InfoCard>
       </InfoGrid>

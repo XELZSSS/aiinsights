@@ -1,3 +1,17 @@
+const SCRIPT_PUSH_RE = /self\.__next_f\.push\(\[1,"([\s\S]*?)"\]\)/g;
+
+export function extractRscScripts(html: string): string {
+  const parts: string[] = [];
+  let match: RegExpExecArray | null;
+  SCRIPT_PUSH_RE.lastIndex = 0;
+  while ((match = SCRIPT_PUSH_RE.exec(html)) !== null) {
+    const raw = match[1];
+    if (!raw) continue;
+    parts.push(unescape(raw));
+  }
+  return parts.join("\n");
+}
+
 export function findNextData<T>(root: unknown, key: string): T[] | null {
   const stack: unknown[] = [root];
   while (stack.length > 0) {
@@ -12,55 +26,23 @@ export function findNextData<T>(root: unknown, key: string): T[] | null {
   return null;
 }
 
-const SCRIPT_PUSH_RE = /self\.__next_f\.push\(\[1,"([\s\S]*?)"\]\)/g;
-
-export function parseRscScriptArray<T>(html: string, key: string): T[] {
-  let match: RegExpExecArray | null;
-  SCRIPT_PUSH_RE.lastIndex = 0;
-  while ((match = SCRIPT_PUSH_RE.exec(html)) !== null) {
-    const raw = match[1];
-    if (!raw || !raw.includes(key)) continue;
-    const body = unescape(raw);
-    const marker = `"${key}":[`;
-    const idx = body.indexOf(marker);
-    if (idx < 0) continue;
-    const start = idx + marker.length - 1;
-    const end = findArrayEnd(body, start);
-    if (end <= start) continue;
-    try {
-      const arr = JSON.parse(body.slice(start, end + 1)) as T[];
-      if (Array.isArray(arr) && arr.length > 0) return arr;
-    } catch {
-      continue;
-    }
-  }
-  return [];
-}
-
-function findArrayEnd(s: string, start: number): number {
-  let depth = 0;
-  let inString = false;
-  for (let i = start; i < s.length; i++) {
-    const ch = s[i];
-    if (inString) {
-      if (ch === "\\") {
-        i++;
-        continue;
+export function findArrayInTree<T>(root: unknown, matches: (item: unknown) => boolean): T[] | null {
+  const stack: unknown[] = [root];
+  let best: T[] | null = null;
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!current || typeof current !== "object") continue;
+    if (Array.isArray(current)) {
+      if (current.some((m) => matches(m))) {
+        const arr = current as T[];
+        if (!best || arr.length > best.length) best = arr;
       }
-      if (ch === '"') inString = false;
-      continue;
-    }
-    if (ch === '"') {
-      inString = true;
-      continue;
-    }
-    if (ch === "[") depth++;
-    else if (ch === "]") {
-      depth--;
-      if (depth === 0) return i;
+      for (const v of current) stack.push(v);
+    } else {
+      for (const v of Object.values(current)) stack.push(v);
     }
   }
-  return -1;
+  return best;
 }
 
 const SIMPLE_ESCAPES: Record<string, string> = {

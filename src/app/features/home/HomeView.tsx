@@ -56,8 +56,6 @@ function useHomeDashboardData(
 
     const hallucinationStats: HomeBarStat[] = hallucinationRankings
       .filter((entry) => entry.accuracy != null)
-      .slice()
-      .sort((a, b) => (b.accuracy ?? 0) - (a.accuracy ?? 0))
       .slice(0, 7)
       .map((entry) => ({
         label: entry.model,

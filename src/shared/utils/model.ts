@@ -1,7 +1,32 @@
-import type { ArtificialAnalysisModel } from "@/shared/types";
+import type { ArtificialAnalysisModel, OpenRouterRankEntry } from "@/shared/types";
+import type { ModelSource } from "@/shared/config";
 
 export function modelId(m: { id?: string; slug?: string }): string {
   return m.id || m.slug || "";
+}
+
+export function modelDetailPath(source: ModelSource, id: string): string {
+  return `/model/${source}/${id}`;
+}
+
+export function modelInputPrice(model: ArtificialAnalysisModel): number | null | undefined {
+  return model.pricing?.input;
+}
+
+export function modelOutputPrice(model: ArtificialAnalysisModel): number | null | undefined {
+  return model.pricing?.output;
+}
+
+export function modelCacheHitPrice(model: ArtificialAnalysisModel): number | null | undefined {
+  return model.pricing?.cache_hit;
+}
+
+export function openRouterPromptPrice(entry: OpenRouterRankEntry): number | null | undefined {
+  return entry.pricing?.prompt;
+}
+
+export function openRouterCompletionPrice(entry: OpenRouterRankEntry): number | null | undefined {
+  return entry.pricing?.completion;
 }
 
 export function findModel<T>(data: T[], id: string, ...keys: (keyof T & string)[]): T | undefined {

@@ -2,7 +2,7 @@ import { Lightbulb, Plus, Check } from "lucide-react";
 import type { DataTableColumn } from "@/app/components/data";
 import { Button } from "@/app/components/ui";
 import { RightAlignedText, ModelDetailContent, RankingNameCell } from "@/app/components/composite";
-import { formatScore, formatDollar, formatShortNumber, formatTokens, formatTrend } from "@/shared/utils";
+import { formatScore, formatDollar, formatShortNumber, formatTokens, formatTrend, modelInputPrice, modelOutputPrice, modelCacheHitPrice } from "@/shared/utils";
 import { cn } from "@/shared/utils";
 import type { ArtificialAnalysisModel, OpenRouterRankEntry } from "@/shared/types";
 import type { TFunction, TranslationKey } from "@/shared/i18n";
@@ -147,7 +147,7 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
       header: t("cacheHitPrice"),
       align: "right",
       hiddenMd: true,
-      cell: priceCell((m) => m.model.pricing?.cache_hit, t),
+      cell: priceCell((m) => modelCacheHitPrice(m.model), t),
     },
     {
       id: "blendedPrice",
@@ -160,13 +160,13 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
       id: "promptPrice",
       header: t("promptPrice"),
       align: "right",
-      cell: priceCell((m) => m.model.pricing?.input, t),
+      cell: priceCell((m) => modelInputPrice(m.model), t),
     },
     {
       id: "completionPrice",
       header: t("completionPrice"),
       align: "right",
-      cell: priceCell((m) => m.model.pricing?.output, t),
+      cell: priceCell((m) => modelOutputPrice(m.model), t),
     },
     {
       id: "monthlyCost",

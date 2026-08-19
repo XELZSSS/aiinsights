@@ -78,6 +78,7 @@ export const useSuspenseHomeDashboard = qHomeDashboard.useSuspense;
 export const useOpenRouterRankings = qOpenRouter.use;
 export const useSuspenseOpenRouterRankings = qOpenRouter.useSuspense;
 export const useOpenSourceModels = qOpenSourceModels.use;
+export const useSuspenseOpenSourceModels = qOpenSourceModels.useSuspense;
 export const useSuspenseOpenSourceReleases = qOpenSourceReleases.useSuspense;
 export const useNewsByCategory = (category: NewsCategory) => qNews(category).use();
 

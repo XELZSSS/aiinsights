@@ -1,5 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
-import { rssConfig, NEWS_TTL_MS, PARTIAL_FAIL_TTL_MS } from "@/shared/config";
+import { rssConfig, NEWS_TTL_MS, PARTIAL_FAIL_TTL_MS, cacheKeys } from "@/shared/config";
 import type { NewsItem, NewsCategory } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { ValidationError } from "@/server/core/errors";
@@ -57,7 +57,7 @@ function parseFeed(xml: string, sourceUrl: string): NewsItem[] {
 }
 
 export const getNews = createSource<{ category: NewsCategory }, NewsItem[]>({
-  cacheKey: (p) => `news-${p.category}`,
+  cacheKey: (p) => cacheKeys.news(p.category),
   defaultTtl: NEWS_TTL_MS,
   fetch: async (ctx: AppContext, params) => {
     const category = params.category;

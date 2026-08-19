@@ -1,6 +1,7 @@
 import { useDeferredValue, useMemo } from "react";
 import { useArtificialRankings, useOpenRouterRankings, useAllOpenSourceModels } from "@/app/api/queries";
 import { useHallucinationRankings } from "@/app/domain/hallucination";
+import { modelDetailPath } from "@/shared/utils";
 import type { SearchResult } from "@/shared/types";
 
 interface SearchIndex<T> {
@@ -94,7 +95,7 @@ export function useSearchAllRankings(searchTerm: string): SearchState {
         source: "modelRankings",
         score: m.intelligence_index,
         provider: m.model_creators?.name || null,
-        link: `/model/aa/${m.slug || m.id}`,
+        link: modelDetailPath("aa", m.slug || m.id),
       }),
       collected,
     );
@@ -107,7 +108,7 @@ export function useSearchAllRankings(searchTerm: string): SearchState {
         source: "openRouterRankings",
         score: null,
         provider: m.creator || null,
-        link: `/model/or/${m.id}`,
+        link: modelDetailPath("or", m.id),
       }),
       collected,
     );
@@ -120,7 +121,7 @@ export function useSearchAllRankings(searchTerm: string): SearchState {
         source: "openSourceRankings",
         score: null,
         provider: m.author || null,
-        link: `/model/os/${m.id}`,
+        link: modelDetailPath("os", m.id),
       }),
       collected,
     );
@@ -133,7 +134,7 @@ export function useSearchAllRankings(searchTerm: string): SearchState {
         source: "hallucinationRankings",
         score: m.omniscienceIndex,
         provider: null,
-        link: `/model/hall/${m.slug || m.id}`,
+        link: modelDetailPath("hall", m.slug || m.id),
       }),
       collected,
     );

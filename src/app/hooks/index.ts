@@ -1,5 +1,6 @@
 export { usePagination } from "./usePagination";
 export { useCostEstimator } from "./useCostEstimator";
+export { useMonthlyCosts } from "./useMonthlyCosts";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router";

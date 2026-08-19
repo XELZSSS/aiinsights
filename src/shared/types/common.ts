@@ -21,7 +21,6 @@ export interface SearchResult {
 
 export interface SourceStatus {
   id: "arena" | "artificialAnalysis" | "huggingface" | "openrouter" | "news";
-  name: string;
   ok: boolean;
   status: number | null;
   latencyMs: number | null;

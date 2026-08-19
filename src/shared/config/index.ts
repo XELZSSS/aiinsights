@@ -1,5 +1,5 @@
 import type { TranslationKey } from "@/shared/i18n";
-import type { ArenaCategory, NewsCategory } from "@/shared/types";
+import type { ArenaCategory, NewsCategory, SourceStatus } from "@/shared/types";
 
 export const FIVE_MINUTES = 5 * 60_000;
 export const THIRTY_MINUTES = 30 * 60_000;
@@ -95,6 +95,14 @@ export const MODEL_SOURCES = {
 
 export type ModelSource = keyof typeof MODEL_SOURCES;
 
+export const SOURCE_LABELS: Record<SourceStatus["id"], TranslationKey> = {
+  arena: "sourceNameArena",
+  artificialAnalysis: "sourceNameArtificial",
+  huggingface: "sourceNameHuggingFace",
+  openrouter: "sourceNameOpenRouter",
+  news: "sourceNameNews",
+};
+
 export const BENCHMARK_LABELS: Record<BenchmarkKey, TranslationKey> = {
   aime25: "benchmarkAime25",
   gpqa: "benchmarkGpqa",
@@ -114,6 +122,17 @@ export const BENCHMARK_LABELS: Record<BenchmarkKey, TranslationKey> = {
   omniscience: "benchmarkOmniscience",
 };
 
-export const apiBase = import.meta.env?.VITE_API_BASE?.replace(/\/+$/, "") ?? "";
-
 export const REPO_URL = "https://github.com/XELZSSS/aiinsights";
+
+export const CACHE_VERSION = "v1";
+
+export const cacheKeys = {
+  arenaLeaderboard: (category: ArenaCategory) => `arena-leaderboard:${category}`,
+  intelligenceIndex: "aa-models",
+  openSourceModels: (sort: string, direction: string, limit: number) => `opensource-models:${sort}:${direction}:${limit}`,
+  openSourceReleases: "opensource-releases",
+  news: (category: NewsCategory) => `news:${category}`,
+  openRouterRankings: "openrouter-rankings",
+  openRouterPricing: "openrouter:pricing-map",
+  sourcesStatus: "sources-status",
+} as const;

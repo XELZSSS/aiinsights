@@ -1,36 +1,29 @@
 import { memo, useMemo } from "react";
 import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
-import { Card, CardContent, Input, Th, Td, Tr, Dot } from "@/app/components/ui";
-import { chartTooltipStyle, formatDollar, cn, getModelColor, calcMonthlyCost, approxEq } from "@/shared/utils";
+import { Card, CardContent, Input } from "@/app/components/ui";
+import {
+  chartTooltipStyle,
+  formatDollar,
+  cn,
+  getModelColor,
+  approxEq,
+  modelInputPrice,
+  modelOutputPrice,
+  modelCacheHitPrice,
+} from "@/shared/utils";
+import { CompareTable, type CompareRow } from "@/app/components/data/compare-table";
 import { useTranslation } from "@/app/i18n";
-import { useIsMobile, useCostEstimator } from "@/app/hooks";
+import { useMonthlyCosts } from "@/app/hooks";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { TFunction } from "@/shared/i18n";
 
-interface PriceRow {
-  label: string;
-  getValue: (m: ArtificialAnalysisModel) => number | null | undefined;
-  format: (v: number) => string;
-}
-
-export function buildPriceRows(t: TFunction): PriceRow[] {
+export function buildPriceRows(t: TFunction): CompareRow<ArtificialAnalysisModel>[] {
   return [
-    { label: t("promptPrice"), getValue: (m) => m.pricing?.input, format: (v) => formatDollar(v) },
-    { label: t("completionPrice"), getValue: (m) => m.pricing?.output, format: (v) => formatDollar(v) },
-    { label: t("cacheHitPrice"), getValue: (m) => m.pricing?.cache_hit, format: (v) => formatDollar(v) },
+    { label: t("promptPrice"), getNumeric: (m) => modelInputPrice(m), bestIs: "min" },
+    { label: t("completionPrice"), getNumeric: (m) => modelOutputPrice(m), bestIs: "min" },
+    { label: t("cacheHitPrice"), getNumeric: (m) => modelCacheHitPrice(m), bestIs: "min" },
   ];
-}
-
-export function getBestPrice(rows: PriceRow[], models: ArtificialAnalysisModel[]): Map<string, number> {
-  const best = new Map<string, number>();
-  for (const row of rows) {
-    const values = models
-      .map((m) => row.getValue(m))
-      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
-    if (values.length > 0) best.set(row.label, Math.min(...values));
-  }
-  return best;
 }
 
 const WinnerMark = memo(function WinnerMark() {
@@ -41,134 +34,44 @@ const WinnerMark = memo(function WinnerMark() {
   );
 });
 
-const PriceValue = memo(function PriceValue({
-  value,
-  format,
-  isBest,
+function PriceValue({
+  row,
+  model,
+  winner,
 }: {
-  value: number | null | undefined;
-  format: (v: number) => string;
-  isBest: boolean;
+  row: CompareRow<ArtificialAnalysisModel>;
+  model: ArtificialAnalysisModel;
+  winner: "win" | "loss" | null;
 }) {
   const { t } = useTranslation();
+  const value = row.getNumeric?.(model);
   return typeof value === "number" ? (
-    <span className={cn("font-mono", isBest && "font-bold text-success")}>
-      {format(value)}
-      {isBest && <WinnerMark />}
+    <span className={cn("font-mono", winner === "win" && "font-bold text-success")}>
+      {formatDollar(value)}
+      {winner === "win" && <WinnerMark />}
     </span>
   ) : (
     <span className="text-text-tertiary">{t("notAvailable")}</span>
-  );
-});
-
-function PriceTableDesktop({
-  priceRows,
-  models,
-  bestPrices,
-}: {
-  priceRows: PriceRow[];
-  models: ArtificialAnalysisModel[];
-  bestPrices: Map<string, number>;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="hidden md:block overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            <Th className="text-text-secondary sticky left-0 z-10 bg-bg-card">{t("metric")}</Th>
-            {models.map((model, index) => (
-              <Th key={model.id ?? index} align="right" style={{ color: getModelColor(index) }}>
-                {model.short_name || model.name}
-              </Th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {priceRows.map((row) => {
-            const best = bestPrices.get(row.label);
-            return (
-              <Tr key={row.label}>
-                <Td className="text-text-secondary sticky left-0 bg-bg-card z-10">{row.label}</Td>
-                {models.map((model, index) => {
-                  const v = row.getValue(model);
-                  return (
-                    <Td key={model.id ?? index} align="right" mono>
-                      <PriceValue
-                        value={v}
-                        format={row.format}
-                        isBest={typeof v === "number" && best != null && approxEq(v, best)}
-                      />
-                    </Td>
-                  );
-                })}
-              </Tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function PriceTableMobile({
-  priceRows,
-  models,
-  bestPrices,
-}: {
-  priceRows: PriceRow[];
-  models: ArtificialAnalysisModel[];
-  bestPrices: Map<string, number>;
-}) {
-  return (
-    <div className="flex flex-col gap-2 md:hidden">
-      {models.map((model, index) => (
-        <Card key={model.id ?? index}>
-          <CardContent className="p-3 flex flex-col gap-2">
-            <p
-              className="flex items-center gap-1.5 text-sm font-medium truncate"
-              style={{ color: getModelColor(index) }}
-            >
-              <Dot size="sm" color={getModelColor(index)} />
-              {model.short_name || model.name}
-            </p>
-            <div className="flex flex-col gap-1">
-              {priceRows.map((row) => {
-                const v = row.getValue(model);
-                const best = bestPrices.get(row.label);
-                return (
-                  <div key={row.label} className="flex items-center justify-between gap-2">
-                    <span className="text-xs text-text-secondary">{row.label}</span>
-                    <PriceValue
-                      value={v}
-                      format={row.format}
-                      isBest={typeof v === "number" && best != null && approxEq(v, best)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
   );
 }
 
 export const PriceTable = memo(function PriceTable({
   priceRows,
   models,
-  bestPrices,
 }: {
-  priceRows: PriceRow[];
+  priceRows: CompareRow<ArtificialAnalysisModel>[];
   models: ArtificialAnalysisModel[];
-  bestPrices: Map<string, number>;
 }) {
-  const isMobile = useIsMobile();
-  return isMobile ? (
-    <PriceTableMobile priceRows={priceRows} models={models} bestPrices={bestPrices} />
-  ) : (
-    <PriceTableDesktop priceRows={priceRows} models={models} bestPrices={bestPrices} />
+  return (
+    <CompareTable
+      rows={priceRows}
+      models={models}
+      getKey={(m) => m.id || m.slug}
+      getName={(m) => m.short_name || m.name}
+      getColor={getModelColor}
+      mobileLayout="model-cards"
+      renderValue={(row, model, winner) => <PriceValue row={row} model={model} winner={winner} />}
+    />
   );
 });
 
@@ -178,7 +81,7 @@ export const PriceChart = memo(function PriceChart({
   chartRef,
   chartWidth,
 }: {
-  priceRows: PriceRow[];
+  priceRows: CompareRow<ArtificialAnalysisModel>[];
   models: ArtificialAnalysisModel[];
   chartRef: React.RefObject<HTMLDivElement | null>;
   chartWidth: number;
@@ -189,7 +92,7 @@ export const PriceChart = memo(function PriceChart({
     return priceRows.map((row) => {
       const entry: Record<string, string | number> = { name: row.label };
       models.forEach((model, index) => {
-        const v = row.getValue(model);
+        const v = row.getNumeric?.(model);
         entry[`model_${index}`] = typeof v === "number" ? v : 0;
       });
       return entry;
@@ -244,24 +147,8 @@ export const CostEstimator = memo(function CostEstimator({ models }: { models: A
     setCacheHitRate,
     daysPerMonth,
     setDaysPerMonth,
-    calcInput,
-    calcOutput,
-    calcReasoning,
-    calcCache,
-    calcDays,
-  } = useCostEstimator();
-
-  const monthlyCosts = useMemo(() => {
-    return models.map((model) =>
-      calcMonthlyCost(model, {
-        dailyInput: calcInput * 1_000_000,
-        dailyOutput: calcOutput * 1_000_000,
-        dailyReasoning: calcReasoning * 1_000_000,
-        cacheHitRate: calcCache,
-        daysPerMonth: calcDays,
-      }),
-    );
-  }, [models, calcInput, calcOutput, calcReasoning, calcCache, calcDays]);
+    monthlyCosts,
+  } = useMonthlyCosts(models);
 
   const bestMonthlyCost = useMemo(() => {
     const valid = monthlyCosts.filter((v): v is number => v !== null);

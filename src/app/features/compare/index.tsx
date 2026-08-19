@@ -2,12 +2,13 @@ import { memo, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
-import { Button, Card, CardContent, Th, Td, Tr, Dot } from "@/app/components/ui";
+import { Button, Card, CardContent } from "@/app/components/ui";
 import { BackButton, CompareChipBar } from "@/app/components/composite";
 import { Spinner } from "@/app/components/shared";
+import { CompareTable, type CompareRow } from "@/app/components/data/compare-table";
 
 import { useTranslation } from "@/app/i18n";
-import { useElementWidth, useIsMobile } from "@/app/hooks";
+import { useElementWidth } from "@/app/hooks";
 import { useCompareStore } from "@/app/stores";
 import { useArtificialRankings } from "@/app/api/queries";
 import {
@@ -17,12 +18,11 @@ import {
   getModelColor,
   buildCompareMetrics,
   buildRadarData,
-  approxEq,
   type CompareMetric,
 } from "@/shared/utils";
 import type { TranslationKey } from "@/shared/i18n";
 import type { ArtificialAnalysisModel } from "@/shared/types";
-import { buildPriceRows, getBestPrice, PriceTable, PriceChart, CostEstimator } from "@/app/features/compare/pricing";
+import { buildPriceRows, PriceTable, PriceChart, CostEstimator } from "@/app/features/compare/pricing";
 import { PageContainer, PageHeader } from "@/app/components/layout";
 
 function useCompareModels(): ArtificialAnalysisModel[] | null {
@@ -85,21 +85,16 @@ function ComparePageLayout({ backLabelKey, backTo, backState, title, children }:
   );
 }
 
-function computeMetricWinners(metric: CompareMetric, models: ArtificialAnalysisModel[]): Map<string, "win" | "loss"> {
-  const values = models
-    .map((m) => ({ id: modelId(m), val: metric.getNumericValue?.(m) }))
-    .filter((v): v is { id: string; val: number } => typeof v.val === "number" && Number.isFinite(v.val));
-  if (values.length < 2) return new Map();
-  const best =
-    metric.higherIsBetter === false ? Math.min(...values.map((v) => v.val)) : Math.max(...values.map((v) => v.val));
-  const worst =
-    metric.higherIsBetter === false ? Math.max(...values.map((v) => v.val)) : Math.min(...values.map((v) => v.val));
-  const map = new Map<string, "win" | "loss">();
-  for (const { id, val } of values) {
-    if (approxEq(val, best)) map.set(id, "win");
-    else if (approxEq(val, worst)) map.set(id, "loss");
-  }
-  return map;
+function metricToRow(metric: CompareMetric): CompareRow<ArtificialAnalysisModel> {
+  const best = metric.higherIsBetter === undefined ? undefined : metric.higherIsBetter ? "max" : "min";
+  const worst = metric.higherIsBetter === undefined ? undefined : metric.higherIsBetter ? "min" : "max";
+  return {
+    label: metric.label,
+    getValue: metric.getValue,
+    getNumeric: metric.getNumericValue,
+    bestIs: best,
+    worstIs: worst,
+  };
 }
 
 const MetricValueDisplay = memo(function MetricValueDisplay({
@@ -129,102 +124,31 @@ const MetricValueDisplay = memo(function MetricValueDisplay({
   );
 });
 
-const CompactMetricCards = memo(function CompactMetricCards({
+const MetricCompareTable = memo(function MetricCompareTable({
   metrics,
   models,
 }: {
   metrics: CompareMetric[];
   models: ArtificialAnalysisModel[];
 }) {
+  const rows = useMemo(() => metrics.map(metricToRow), [metrics]);
   return (
-    <Card accent="top">
-      <CardContent padding="sm">
-        <div className="flex flex-col divide-y divide-border">
-          {metrics.map((metric) => {
-            const winners = computeMetricWinners(metric, models);
-            return (
-              <div key={metric.label} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
-                <span className="text-xs font-medium text-text-secondary shrink-0">{metric.label}</span>
-                <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
-                  {models.map((model, index) => {
-                    const winner = winners.get(modelId(model)) ?? null;
-                    return (
-                      <span key={modelId(model) || index} className="flex items-center gap-1">
-                        <Dot size="sm" color={getModelColor(index)} />
-                        <MetricValueDisplay
-                          value={metric.getValue(model)}
-                          winner={winner}
-                          iconSize={10}
-                          className="text-xs"
-                        />
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
-  );
-});
-
-const MetricTable = memo(function MetricTable({
-  metrics,
-  models,
-}: {
-  metrics: CompareMetric[];
-  models: ArtificialAnalysisModel[];
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="min-w-0 w-full overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            <Th className="px-3 py-2.5 font-semibold text-text-secondary sticky left-0 z-10 bg-bg-card">
-              {t("metric")}
-            </Th>
-            {models.map((model, index) => (
-              <Th
-                key={modelId(model) || index}
-                align="right"
-                className="px-3 py-2.5 font-semibold"
-                style={{ color: getModelColor(index) }}
-              >
-                {model.short_name || model.name}
-              </Th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {metrics.map((metric) => {
-            const winners = computeMetricWinners(metric, models);
-            return (
-              <Tr key={metric.label} className="hover:bg-hover transition-colors">
-                <Td className="px-3 py-2.5 text-text-secondary sticky left-0 bg-bg-card z-10">{metric.label}</Td>
-                {models.map((model, index) => (
-                  <Td key={modelId(model) || index} align="right" className="px-3 py-2.5">
-                    <MetricValueDisplay
-                      value={metric.getValue(model)}
-                      winner={winners.get(modelId(model)) ?? null}
-                      iconSize={12}
-                    />
-                  </Td>
-                ))}
-              </Tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+    <CompareTable
+      rows={rows}
+      models={models}
+      getKey={(m) => modelId(m)}
+      getName={(m) => m.short_name || m.name}
+      getColor={getModelColor}
+      mobileCard
+      renderValue={(row, model, winner) => (
+        <MetricValueDisplay value={row.getValue?.(model) ?? ""} winner={winner} />
+      )}
+    />
   );
 });
 
 function CompareContent({ models }: { models: ArtificialAnalysisModel[] }) {
   const { t } = useTranslation();
-  const isMobile = useIsMobile();
   const metrics = useMemo(() => buildCompareMetrics(t), [t]);
   const radarData = useMemo(() => buildRadarData(t, models), [models, t]);
 
@@ -255,11 +179,7 @@ function CompareContent({ models }: { models: ArtificialAnalysisModel[] }) {
             </div>
           </div>
           <div className="min-w-0 w-full md:w-1/2 md:flex md:items-center">
-            {isMobile ? (
-              <CompactMetricCards metrics={metrics} models={models} />
-            ) : (
-              <MetricTable metrics={metrics} models={models} />
-            )}
+            <MetricCompareTable metrics={metrics} models={models} />
           </div>
         </div>
       </CardContent>
@@ -289,14 +209,13 @@ const PriceCompareContent = memo(function PriceCompareContent({
   const { t } = useTranslation();
 
   const priceRows = useMemo(() => buildPriceRows(t), [t]);
-  const bestPrices = useMemo(() => getBestPrice(priceRows, models), [priceRows, models]);
 
   return (
     <>
       <Card accent="top">
         <CardContent padding="md">
           <p className="text-sm font-semibold mb-3">{t("priceBreakdown")}</p>
-          <PriceTable priceRows={priceRows} models={models} bestPrices={bestPrices} />
+          <PriceTable priceRows={priceRows} models={models} />
         </CardContent>
       </Card>
 

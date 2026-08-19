@@ -5,15 +5,7 @@ import { useSourcesStatus } from "@/app/api/queries";
 import { Button, Dot } from "@/app/components/ui";
 import { cn, formatRelativeTime, formatUptime } from "@/shared/utils";
 import type { SourceStatus } from "@/shared/types";
-import type { TranslationKey } from "@/shared/i18n";
-
-const SOURCE_LABEL_KEYS: Record<SourceStatus["id"], TranslationKey> = {
-  arena: "sourceNameArena",
-  artificialAnalysis: "sourceNameArtificial",
-  huggingface: "sourceNameHuggingFace",
-  openrouter: "sourceNameOpenRouter",
-  news: "sourceNameNews",
-};
+import { SOURCE_LABELS } from "@/shared/config";
 
 const dotColors = {
   ok: "var(--success)",
@@ -23,7 +15,7 @@ const dotColors = {
 
 const SourceRow = memo(function SourceRow({ source }: { source: SourceStatus }) {
   const { t } = useTranslation();
-  const label = t(SOURCE_LABEL_KEYS[source.id]);
+  const label = t(SOURCE_LABELS[source.id]);
   return (
     <div className="flex items-center justify-between gap-2 min-w-0">
       <div className="flex items-center gap-2 min-w-0">

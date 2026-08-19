@@ -1,22 +1,11 @@
 import { createApp } from "@/server/app";
-import { routeDefs } from "@/server/routes";
+import { buildWarmUrls, routeDefs } from "@/server/routes";
 import type { Env } from "@/server/app";
 
 const app = createApp(routeDefs);
 
-const WARM_URLS = [
-  "https://aiinsights.internal/api/arena-leaderboard?category=text",
-  "https://aiinsights.internal/api/arena-leaderboard?category=text-to-image",
-  "https://aiinsights.internal/api/artificial-analysis-index",
-  "https://aiinsights.internal/api/open-source-models",
-  "https://aiinsights.internal/api/open-source-releases",
-  "https://aiinsights.internal/api/openrouter-rankings",
-  "https://aiinsights.internal/api/home-dashboard",
-  "https://aiinsights.internal/api/news?category=industry",
-  "https://aiinsights.internal/api/news?category=opensource",
-  "https://aiinsights.internal/api/news?category=hardware",
-  "https://aiinsights.internal/api/news?category=funding",
-];
+const WARM_BASE = "https://aiinsights.internal";
+const WARM_URLS = buildWarmUrls(WARM_BASE);
 
 async function warmUrls(env: Env): Promise<void> {
   const CONCURRENCY = 8;

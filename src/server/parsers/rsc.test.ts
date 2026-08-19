@@ -1,33 +1,58 @@
 import { describe, expect, it } from "vitest";
-import { parseRscScriptArray, parseRscPayload } from "@/server/parsers/rsc";
+import { extractRscScripts, findArrayInTree, findNextData, parseRscPayload } from "@/server/parsers/rsc";
 
 function scriptHtml(payload: string): string {
   const escaped = JSON.stringify(payload).slice(1, -1);
   return `<html><script>self.__next_f.push([1,"${escaped}"])</script></html>`;
 }
 
-describe("parseRscScriptArray", () => {
-  it("extracts an array by key from escaped next.js payloads", () => {
+describe("extractRscScripts", () => {
+  it("extracts and unescapes payloads from next.js scripts", () => {
     const payload = JSON.stringify({
       entries: [
         { rank: 1, name: "A" },
         { rank: 2, name: "B" },
       ],
     });
-    const arr = parseRscScriptArray<{ rank: number; name: string }>(scriptHtml(payload), "entries");
-    expect(arr).toHaveLength(2);
-    expect(arr[0]).toEqual({ rank: 1, name: "A" });
-  });
-
-  it("returns empty when key is missing", () => {
-    const payload = JSON.stringify({ other: [1] });
-    expect(parseRscScriptArray(scriptHtml(payload), "entries")).toEqual([]);
+    expect(extractRscScripts(scriptHtml(payload))).toBe(payload);
   });
 
   it("handles unicode escapes inside payloads", () => {
     const payload = JSON.stringify({ entries: [{ name: "Über" }] });
-    const arr = parseRscScriptArray<{ name: string }>(scriptHtml(payload), "entries");
-    expect(arr[0]?.name).toBe("Über");
+    expect(extractRscScripts(scriptHtml(payload))).toContain("Über");
+  });
+
+  it("returns an empty string when no scripts are present", () => {
+    expect(extractRscScripts("<html><body>plain</body></html>")).toBe("");
+  });
+});
+
+describe("findNextData", () => {
+  it("finds the first array under a key in a nested tree", () => {
+    const tree = { leaderboard: { entries: [{ rank: 1 }] } };
+    expect(findNextData(tree, "entries")).toEqual([{ rank: 1 }]);
+  });
+
+  it("returns null when the key is absent", () => {
+    expect(findNextData({ other: [1] }, "entries")).toBeNull();
+  });
+});
+
+describe("findArrayInTree", () => {
+  it("returns the largest matching array", () => {
+    const tree = {
+      a: [{ id: 1, marker: true }],
+      b: [
+        { id: 2, marker: true },
+        { id: 3, marker: true },
+      ],
+    };
+    const result = findArrayInTree<{ id: number }>(tree, (m) => (m as { marker?: boolean })?.marker === true);
+    expect(result).toHaveLength(2);
+  });
+
+  it("returns null when no array matches", () => {
+    expect(findArrayInTree({ a: [1] }, () => false)).toBeNull();
   });
 });
 

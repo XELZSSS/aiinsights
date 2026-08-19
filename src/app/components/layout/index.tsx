@@ -56,22 +56,6 @@ function DesktopNav({ onSettingsOpen }: { onSettingsOpen: () => void }) {
   return (
     <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 h-14 items-center border-b border-border bg-nav-bg backdrop-blur-lg">
       <div className="max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 flex items-center">
-        <button
-          type="button"
-          onClick={() => navigate("/")}
-          aria-label={t("home")}
-          className="flex items-center gap-2 mr-8 shrink-0"
-        >
-          <svg
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            className="size-5 text-accent"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path d="M4.59 7.41l4.94 3.54L4.59 24zm0-7.41v6.36l9.53 5.29 4.59-3.52zm0 24l14.82-8.47v-6.7Z" />
-          </svg>
-          <span className="text-sm sm:text-base font-bold">AIInsights</span>
-        </button>
         <div className="flex items-center gap-1.5">
           {all.map((item) => {
             const active = isNavActive(pathname, item);

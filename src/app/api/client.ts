@@ -1,6 +1,6 @@
-import { apiBase } from "@/shared/config";
-
 const FETCH_TIMEOUT_MS = 90_000;
+
+const apiBase = import.meta.env?.VITE_API_BASE?.replace(/\/+$/, "") ?? "";
 
 export interface QueryCtx {
   signal?: AbortSignal;
