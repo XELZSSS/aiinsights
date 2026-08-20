@@ -27,6 +27,7 @@ interface DatedModel {
 
 function useReleaseFeedEntries(openSourceReleases: OpenSourceModelEntry[]): FeedEntry[] {
   return useMemo(() => {
+    // Dedupe events by id|type|timestamp so duplicate Hugging Face entries collapse into one.
     const seen = new Map<string, FeedEntry>();
     for (const m of openSourceReleases) {
       const name = m.id.split("/").pop() || m.id;
@@ -45,6 +46,7 @@ function useReleaseFeedEntries(openSourceReleases: OpenSourceModelEntry[]): Feed
             });
         }
       }
+      // A distinct "update" event when the repo changed after its initial release.
       if (m.lastModified && m.lastModified !== m.createdAt) {
         const ts = Date.parse(m.lastModified);
         if (Number.isFinite(ts)) {
@@ -69,6 +71,7 @@ function useReleaseDateRows(artificialRankings: ArtificialAnalysisModel[]): Date
   return useMemo(
     () =>
       artificialRankings
+        // Date-only release dates are parsed as UTC midnight so sorting is consistent.
         .map((model) => ({ model, time: model.release_date ? Date.parse(`${model.release_date}T00:00:00Z`) : NaN }))
         .filter((item): item is DatedModel => Number.isFinite(item.time))
         .sort((a, b) => b.time - a.time),
@@ -222,6 +225,7 @@ function ReleasesContent() {
   );
 }
 
+/** Release activity view: an open-source event feed and a release-date table. */
 export function ReleasesView() {
   return (
     <SuspenseQuery>

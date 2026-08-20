@@ -9,6 +9,10 @@ export interface NavItem {
   matchPrefix?: string[];
 }
 
+/**
+ * Builds the primary and secondary nav items (localised). Secondary items are shown in
+ * the mobile "More" sheet; `matchPrefix` keeps a nav item active on nested routes.
+ */
 export function useNavigation() {
   const { t } = useTranslation();
   return useMemo(() => {
@@ -34,6 +38,7 @@ export function useNavigation() {
   }, [t]);
 }
 
+/** Active if the path equals the item path or matches any configured prefix (nested routes). */
 export function isNavActive(pathname: string, item: NavItem): boolean {
   if (pathname === item.path) return true;
   if (item.matchPrefix) return item.matchPrefix.some((p) => pathname.startsWith(p));

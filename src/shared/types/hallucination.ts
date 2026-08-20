@@ -1,3 +1,4 @@
+/** A model row in the hallucination-rate ranking derived from AA Omniscience scores. */
 export interface HallucinationRankingEntry {
   id: string;
   slug: string;

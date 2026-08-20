@@ -24,6 +24,7 @@ class RetryableHttpError extends Error {
 }
 
 function isRetryableError(e: unknown): boolean {
+  // TypeError covers network failures; DOMException TimeoutError covers AbortSignal.timeout expiry.
   if (e instanceof RetryableHttpError) return true;
   if (e instanceof TypeError) return true;
   if (e instanceof DOMException) return e.name === "TimeoutError";
@@ -52,12 +53,14 @@ export class HttpClient {
     const externalSignal = rest.signal;
 
     let lastErr: unknown;
+    // Retry transient failures with exponential backoff; client errors (except 429) are treated as permanent.
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         const timeoutSignal = AbortSignal.timeout(timeoutMs);
         const signal = externalSignal ? AbortSignal.any([externalSignal, timeoutSignal]) : timeoutSignal;
         const res = await fetch(url, { headers, signal });
         if (!res.ok) {
+          // 4xx (except rate-limit 429) reflects a bad request, not a transient failure, so capture the body and bail.
           if (res.status >= 400 && res.status < 500 && res.status !== 429) {
             const body = accept.includes("json") ? await res.text().catch(() => "") : "";
             throw new Error(`HTTP ${res.status} for ${url}${body ? `: ${body.slice(0, 200)}` : ""}`);
@@ -69,6 +72,7 @@ export class HttpClient {
         lastErr = e;
         if (!isRetryableError(e)) throw e;
         if (attempt < retries) {
+          // Exponential backoff with jitter to spread retries across concurrent requests.
           const delay = BASE_DELAY_MS * (1 << attempt) + Math.random() * BASE_DELAY_MS;
           await new Promise((r) => setTimeout(r, delay));
         }
@@ -93,6 +97,7 @@ export class HttpClient {
         signal: AbortSignal.timeout(timeoutMs),
       });
       const latencyMs = Date.now() - started;
+      // Cancel the body early so we only pay for headers, not the full payload.
       res.body?.cancel().catch(() => {});
       return { ok: res.ok, status: res.status, latencyMs, error: res.ok ? null : `HTTP ${res.status}` };
     } catch (e) {

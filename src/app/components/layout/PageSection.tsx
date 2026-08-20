@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { cn } from "@/shared/utils";
 
+/** Section with an accent-bar heading, optional description, and consistent bottom spacing. */
 export function PageSection({
   title,
   description,

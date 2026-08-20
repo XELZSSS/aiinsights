@@ -1,9 +1,11 @@
 import type { TranslationKey } from "@/shared/i18n";
 import type { ArenaCategory, NewsCategory, SourceStatus } from "@/shared/types";
 
+// Cache TTL constants, in milliseconds.
 export const FIVE_MINUTES = 5 * 60_000;
 export const THIRTY_MINUTES = 30 * 60_000;
 
+// Upstream endpoints used by the server to fetch rankings and model data.
 export const upstreamConfig = {
   arena: "https://arena.ai/leaderboard",
   artificialAnalysis: "https://artificialanalysis.ai",
@@ -15,6 +17,7 @@ export const USER_AGENT = "AIInsights/2.0";
 
 export const DEFAULT_TTL_MS = FIVE_MINUTES;
 export const NEWS_TTL_MS = THIRTY_MINUTES;
+// Shorter TTL so partially failed fetches are retried sooner.
 export const PARTIAL_FAIL_TTL_MS = 60_000;
 
 export const ARENA_CATEGORIES: readonly ArenaCategory[] = ["text", "text-to-image"] as const;
@@ -30,6 +33,7 @@ const HF_BLOG = "https://huggingface.co/blog/feed.xml";
 const ANALYTICS_VIDHYA = "https://www.analyticsvidhya.com/blog/category/artificial-intelligence/feed/";
 const MIT_TECH_REVIEW = "https://www.technologyreview.com/topic/artificial-intelligence/feed/";
 
+// RSS feed URLs grouped by news category.
 export const rssConfig: Record<NewsCategory, readonly string[]> = {
   industry: [VENTUREBEAT_AI, TECHCRUNCH_AI, ARS_TECHNICA, WIRED, MIT_TECH_REVIEW],
   opensource: [ANALYTICS_VIDHYA, HF_BLOG],
@@ -37,6 +41,7 @@ export const rssConfig: Record<NewsCategory, readonly string[]> = {
   funding: [TECHCRUNCH_STARTUPS, CRUNCHBASE],
 };
 
+// Benchmark identifiers used across model detail pages; must match BENCHMARK_LABELS below.
 export const BENCHMARK_KEYS = [
   "aime25",
   "gpqa",
@@ -58,6 +63,7 @@ export const BENCHMARK_KEYS = [
 
 export type BenchmarkKey = (typeof BENCHMARK_KEYS)[number];
 
+// localStorage keys for client-side persisted state.
 export const STORAGE_KEYS = {
   lang: "lang",
   theme: "theme",
@@ -66,6 +72,7 @@ export const STORAGE_KEYS = {
 
 const DEFAULT_BACK = "backToModelRankings" as const;
 
+// Per-source UI metadata: i18n label keys and the detail-page back link.
 export const MODEL_SOURCES = {
   aa: {
     labelKey: "modelRankings" as const,
@@ -124,8 +131,10 @@ export const BENCHMARK_LABELS: Record<BenchmarkKey, TranslationKey> = {
 
 export const REPO_URL = "https://github.com/XELZSSS/aiinsights";
 
+// Bump to invalidate all cached upstream data after a schema or key change.
 export const CACHE_VERSION = "v2";
 
+// Cache key builders shared by the server cache and client data hooks.
 export const cacheKeys = {
   arenaLeaderboard: (category: ArenaCategory) => `arena-leaderboard:${category}`,
   intelligenceIndex: "aa-models",

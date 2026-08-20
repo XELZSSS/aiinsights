@@ -7,6 +7,7 @@ export interface ApiQueryOptions<T> {
   queryFn?: (ctx: QueryCtx) => Promise<T>;
 }
 
+/** Builds a react-query for one API path, exposing a regular `.use()` and a Suspense-based `.useSuspense()`. */
 export function createApiQuery<T>(
   key: readonly (string | number)[],
   path: string,

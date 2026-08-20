@@ -1,3 +1,4 @@
+// Common HTML named entities seen in scraped content; numeric references are handled by ENTITY_RE below.
 const NAMED_ENTITIES: Record<string, string> = {
   amp: "&",
   lt: "<",
@@ -67,8 +68,10 @@ const NAMED_ENTITIES: Record<string, string> = {
   auml: "\u00E4",
 };
 
+// Matches hex (&#x..), decimal (&#..), and named entities; the trailing semicolon is optional but a following alnum char still disallows a match.
 const ENTITY_RE = /&(?:#x([0-9a-fA-F]+)|#([0-9]+)|([a-zA-Z][a-zA-Z0-9]*))(?![a-zA-Z0-9]);?/g;
 
+/** Decode HTML entities to their Unicode characters, leaving unknown entities untouched. */
 export function decodeEntities(s: string): string {
   return s.replace(ENTITY_RE, (m, hex?: string, dec?: string, name?: string) => {
     if (hex) return safeFromCodePoint(parseInt(hex, 16));
@@ -77,6 +80,7 @@ export function decodeEntities(s: string): string {
   });
 }
 
+// Only emit valid Unicode scalar values; out-of-range or unassigned code points are dropped.
 function safeFromCodePoint(cp: number): string {
   if (!Number.isFinite(cp) || cp <= 0 || cp > 0x10ffff) return "";
   try {
@@ -86,6 +90,7 @@ function safeFromCodePoint(cp: number): string {
   }
 }
 
+/** Strip tags while keeping text; ignores ">" inside quoted attribute values and tolerates unterminated tags. */
 export function stripHtml(s: string): string {
   let out = "";
   let i = 0;

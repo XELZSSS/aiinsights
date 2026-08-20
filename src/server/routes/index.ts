@@ -15,6 +15,7 @@ import { getSourcesStatusFull } from "@/server/sources/status";
 import { ARENA_CATEGORIES } from "@/shared/config";
 import type { ArenaCategory, NewsCategory } from "@/shared/types";
 
+/** Declarative route descriptor: path, optional query schema (validated per request), and the handler. */
 export interface RouteDef<P extends Record<string, string> = Record<string, string>, R = unknown> {
   path: string;
   query?: { [K in keyof P]: QuerySpec };
@@ -32,6 +33,7 @@ export function registerRoutes(app: Hono, routes: RouteDef[]): void {
       const context = ctx(c);
       startTime(c, "upstream");
       try {
+        // Query params are validated against the route's schema before the handler runs.
         const params = validateQuery(c.req.query(), route.query ?? {});
         const data = await route.handler(context, params as Record<string, string>);
         return c.json({ data });
@@ -42,6 +44,7 @@ export function registerRoutes(app: Hono, routes: RouteDef[]): void {
   }
 }
 
+/** Expand each route into concrete warmup URLs: cartesian product of enum params filled with defaults; non-warm routes use defaults only. */
 export function buildWarmUrls(base: string): string[] {
   return routeDefs.flatMap((route) => {
     const specs = route.query ?? {};
@@ -49,10 +52,12 @@ export function buildWarmUrls(base: string): string[] {
     let combos: Record<string, string>[] = [{}];
 
     if (route.warm) {
+      // Enumerate every combination of enum-valued params so each variant is warmed.
       for (const [name, spec] of entries) {
         if (spec.type !== "enum") continue;
         combos = combos.flatMap((combo) => spec.values.map((v) => ({ ...combo, [name]: v })));
       }
+      // Fill any remaining params with their defaults.
       for (const [name, spec] of entries) {
         if (spec.type === "enum" || spec.default === undefined) continue;
         for (const combo of combos) if (combo[name] === undefined) combo[name] = spec.default;
@@ -73,6 +78,7 @@ export function buildWarmUrls(base: string): string[] {
   });
 }
 
+// Route table: every endpoint registered on the app and warmed on the scheduled trigger.
 export const routeDefs: RouteDef[] = [
   {
     path: "/api/arena-leaderboard",

@@ -25,6 +25,7 @@ function CompareButton({ model }: { model: ArtificialAnalysisModel }) {
       variant="ghost"
       size="icon"
       onClick={(e) => {
+        // Prevent the click from toggling the row's expand/collapse state.
         e.stopPropagation();
         toggleCompareModel(model);
       }}
@@ -35,6 +36,7 @@ function CompareButton({ model }: { model: ArtificialAnalysisModel }) {
   );
 }
 
+/** Expanded row body showing the full model detail card. */
 export function ModelExpandedDetail({ model }: { model: ArtificialAnalysisModel }) {
   return (
     <div className="p-4 sm:p-5">
@@ -63,6 +65,7 @@ function priceCell(get: (m: PricedModel) => number | null | undefined, t: TFunct
   return (m: PricedModel) => formatDollar(get(m), t);
 }
 
+// Factory for a right-aligned score column that hides on small screens.
 function scoreColumn(
   id: string,
   header: string,
@@ -78,6 +81,7 @@ function scoreColumn(
   };
 }
 
+/** Ranking table columns: scores, reasoning time and context window. */
 export function buildRankingColumns(t: TFunction): DataTableColumn<ArtificialAnalysisModel>[] {
   return [
     {
@@ -95,6 +99,7 @@ export function buildRankingColumns(t: TFunction): DataTableColumn<ArtificialAna
     },
     {
       ...scoreColumn("intelligence", t("intelligenceIndex"), (m) => m.intelligence_index, t),
+      // Intelligence is the headline metric, so it stays visible (and primary) on mobile.
       mobilePrimary: true,
     },
     scoreColumn("coding", t("coding"), (m) => m.coding_index, t),
@@ -121,6 +126,7 @@ export function buildRankingColumns(t: TFunction): DataTableColumn<ArtificialAna
   ];
 }
 
+/** Pricing table columns: cache/prompt/completion prices and estimated monthly cost. */
 export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[] {
   return [
     {
@@ -179,6 +185,7 @@ export function buildPricingColumns(t: TFunction): DataTableColumn<PricedModel>[
   ];
 }
 
+// Neutral gray for no change; green for growth, red for decline (zero counts as neutral).
 function trendClass(change?: number | null) {
   if (change == null || change === 0) return "bg-bg-tertiary text-text-secondary border-border";
   return change > 0
@@ -186,6 +193,7 @@ function trendClass(change?: number | null) {
     : "bg-destructive-soft text-destructive border-destructive/20";
 }
 
+// Factory for a right-aligned token-count column with monospace formatting.
 const tokenColumn = <T,>(id: string, header: string, accessor: (item: T) => number | null | undefined): DataTableColumn<T> => ({
   id,
   header,
@@ -195,6 +203,7 @@ const tokenColumn = <T,>(id: string, header: string, accessor: (item: T) => numb
   ),
 });
 
+// Factory for a right-aligned request-count column, hidden on small screens.
 const requestColumn = <T extends { requestCount?: number | null }>(header: string): DataTableColumn<T> => ({
   id: "requests",
   header,
@@ -203,6 +212,7 @@ const requestColumn = <T extends { requestCount?: number | null }>(header: strin
   cell: (item) => <span className="font-mono text-text-secondary">{formatShortNumber(item.requestCount || 0)}</span>,
 });
 
+/** OpenRouter token-usage columns plus the request-count trend badge. */
 export function buildOpenRouterColumns(t: (key: TranslationKey) => string): DataTableColumn<OpenRouterRankEntry>[] {
   return [
     {

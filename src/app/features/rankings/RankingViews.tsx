@@ -40,6 +40,7 @@ function RankingTable<T>({ data, columns, getRowId, getSearchFields }: RankingTa
 const getOpenSourceRowId = (model: OpenSourceModelEntry) => model.id;
 const getOpenSourceSearchFields = (model: OpenSourceModelEntry) => [model.id];
 
+/** Open-source model table ranked by downloads, with search. */
 export function OpenSourceRankingsView({ rankings }: { rankings: OpenSourceModelEntry[] }) {
   const { t } = useTranslation();
 
@@ -95,6 +96,7 @@ function fmtScore(v: number) {
 const getHallRowId = (entry: HallucinationRankingEntry) => entry.id || entry.slug || entry.model;
 const getHallSearchFields = (entry: HallucinationRankingEntry) => [entry.model];
 
+/** Hallucination benchmark table: hallucination rate, accuracy, attempt rate, omniscience index. */
 export function HallucinationRankingsView({ rankings }: { rankings: HallucinationRankingEntry[] }) {
   const { t } = useTranslation();
 

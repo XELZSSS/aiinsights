@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { validateQuery } from "@/server/core/validate";
 import { ValidationError } from "@/server/core/errors";
 
+// Query param validation tests: defaults, coercion, and rejection paths.
 describe("validateQuery", () => {
   it("applies defaults when the param is missing", () => {
     const out = validateQuery({}, { sort: { type: "enum", values: ["a", "b"], default: "a" } });

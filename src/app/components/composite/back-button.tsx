@@ -4,6 +4,10 @@ import { Button } from "@/app/components/ui";
 import { useTranslation } from "@/app/i18n";
 import type { TranslationKey } from "@/shared/i18n";
 
+/**
+ * Navigates to a target route, forwarding optional router state so the
+ * destination page can restore context (e.g. a previously selected model).
+ */
 export function BackButton({
   labelKey = "backToHome",
   to,

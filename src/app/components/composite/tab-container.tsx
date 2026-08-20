@@ -13,6 +13,7 @@ interface TabButtonProps {
   "aria-controls"?: string;
 }
 
+/** Accessible tab button; only the active tab is keyboard-focusable (roving tabindex). */
 export const TabButton = memo(function TabButton({
   active,
   onClick,
@@ -61,9 +62,14 @@ interface TabContainerProps {
   children: ((activeTab: string) => ReactNode) | ReactNode;
 }
 
+/**
+ * Tab list with keyboard navigation (arrow keys wrap around and move focus) and ARIA wiring.
+ * `children` may be a function receiving the active tab id, or static content.
+ */
 export function TabContainer({ tabs, activeTab, className, tabSize = "md", onTabChange, children }: TabContainerProps) {
   const content = typeof children === "function" ? children(activeTab) : children;
 
+  // Arrow keys move selection cyclically and keep focus on the newly selected tab.
   const handleTablistKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     const currentIndex = tabs.findIndex((tab) => tab.id === activeTab);
     if (currentIndex < 0) return;

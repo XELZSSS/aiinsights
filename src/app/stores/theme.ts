@@ -11,6 +11,7 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
+      // Default follows the OS color scheme; the persisted user choice overrides it later.
       themeMode:
         typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
       toggleTheme: () =>

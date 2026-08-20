@@ -7,12 +7,14 @@ interface MobileNavProps {
   onMoreOpen: () => void;
 }
 
+/** Fixed bottom navigation bar for mobile; primary items plus a "More" button. */
 export function MobileNav({ onMoreOpen }: MobileNavProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { mobilePrimary, mobileMore } = useNavigation();
 
+  // Highlight "More" when the current route belongs to a secondary (collapsed) nav item.
   const isMoreActive = mobileMore.some((n) => isNavActive(pathname, n));
 
   return (

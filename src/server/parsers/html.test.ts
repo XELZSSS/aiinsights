@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { decodeEntities, stripHtml } from "@/server/parsers/html";
 
+// HTML entity decoding and tag-stripping tests.
 describe("decodeEntities", () => {
   it("decodes named entities", () => {
     expect(decodeEntities("AT&amp;T")).toBe("AT&T");

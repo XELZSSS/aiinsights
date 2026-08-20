@@ -8,6 +8,7 @@ export type QuerySchema = Record<string, QuerySpec>;
 
 export type ValidatedQuery<S extends QuerySchema> = { [K in keyof S]: string };
 
+/** Validate raw query params against a schema, applying defaults and coercing numbers; unknown params are dropped. */
 export function validateQuery<S extends QuerySchema>(raw: Record<string, string>, schema: S): ValidatedQuery<S> {
   const out: Record<string, string> = {};
   for (const [name, spec] of Object.entries(schema)) {

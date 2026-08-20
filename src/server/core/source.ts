@@ -7,6 +7,7 @@ interface SourceResult<Data> {
 
 type SourceFn<Params, Data> = (ctx: AppContext, params: Params) => Promise<Data>;
 
+/** Wrap a data fetcher so results are cached with a default TTL; the fetcher may return a shorter per-result ttl. */
 export function createSource<Params, Data>(opts: {
   cacheKey: (params: Params) => string;
   defaultTtl: number;

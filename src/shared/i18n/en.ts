@@ -1,3 +1,4 @@
+// English translations. This dictionary is the source of truth for the TranslationKey type.
 export const en = {
   home: "Home",
   rankings: "Rankings",

@@ -7,6 +7,7 @@ import { MobileNav } from "./MobileNav";
 import { MobileMoreSheet } from "./MobileMoreSheet";
 import { SettingsSheet } from "./SettingsSheet";
 
+/** Application chrome: desktop/mobile nav, main scroll area, settings and "more" sheets. */
 export function AppShell({ children }: { children: ReactNode }) {
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -18,10 +19,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
   const closeMore = useCallback(() => setMobileMoreOpen(false), []);
 
+  // Toggle the theme before paint to avoid flashing the wrong theme on load/switch.
   useLayoutEffect(() => {
     document.documentElement.classList.toggle("dark", themeMode === "dark");
   }, [themeMode]);
 
+  // Scroll the main pane to the top whenever the route changes.
   useLayoutEffect(() => {
     mainRef.current?.scrollTo({ top: 0 });
   }, [location.pathname]);
@@ -35,6 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {t("skipToContent")}
       </a>
       <DesktopNav onSettingsOpen={() => setSettingsOpen(true)} />
+      {/* Bottom padding keeps content clear of the fixed mobile nav (plus iOS safe-area). */}
       <main
         ref={mainRef}
         id="main-content"

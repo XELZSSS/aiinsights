@@ -42,6 +42,8 @@ interface MobileColumnLayout<T> {
   secondaryCols: DataTableColumn<T>[];
 }
 
+// On mobile the table becomes a list: the first visible column is the row title, the first
+// stat column is emphasized, and the remaining columns are condensed into small pairs.
 function resolveMobileColumns<T>(columns: DataTableColumn<T>[]): MobileColumnLayout<T> {
   const visibleCols = columns.filter((col) => !col.hiddenMd);
   const primaryCol = visibleCols[0]!;
@@ -51,6 +53,8 @@ function resolveMobileColumns<T>(columns: DataTableColumn<T>[]): MobileColumnLay
   return { primaryCol, mainStatCol, secondaryCols };
 }
 
+// True if the click/keydown originated in an interactive element; used to avoid toggling
+// row expansion when the user interacts with a button/link/input inside the row.
 function isFromInteractive(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest("button, a, input, select, textarea") !== null;
 }
@@ -268,11 +272,13 @@ function DataTableInner<T>({
   renderExpandedRow,
 }: DataTableProps<T>) {
   const { isMobile } = useDevice();
+  // Cap page size on mobile so long lists don't force excessive scrolling.
   const effectivePageSize = isMobile ? Math.min(pageSize, 15) : pageSize;
   const { t } = useTranslation();
 
   const isExpandable = !!(renderExpandedRow && onToggleExpand);
 
+  // Deduplicate by getRowId so the same model isn't listed twice (e.g. across ranking sources).
   const dedupedData = useMemo(() => {
     if (!getRowId) return data;
     const seen = new Set<string>();
@@ -331,4 +337,8 @@ function DataTableInner<T>({
   );
 }
 
+/**
+ * Paginated data table with optional expandable rows; renders a native table on desktop
+ * and a stacked card list on mobile, with a mobile-optimised column layout.
+ */
 export const DataTable = memo(DataTableInner) as typeof DataTableInner;

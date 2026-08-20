@@ -1,5 +1,7 @@
+// Next.js embeds route data in <script>self.__next_f.push([1,"..."]);</script> payloads; capture the escaped string chunks.
 const SCRIPT_PUSH_RE = /self\.__next_f\.push\(\[1,"([\s\S]*?)"\]\)/g;
 
+/** Concatenate all RSC script payload strings from a Next.js HTML page. */
 export function extractRscScripts(html: string): string {
   const parts: string[] = [];
   let match: RegExpExecArray | null;
@@ -12,6 +14,7 @@ export function extractRscScripts(html: string): string {
   return parts.join("\n");
 }
 
+/** Depth-first search for the first array stored under a given key anywhere in a parsed RSC tree. */
 export function findNextData<T>(root: unknown, key: string): T[] | null {
   const stack: unknown[] = [root];
   while (stack.length > 0) {
@@ -26,6 +29,7 @@ export function findNextData<T>(root: unknown, key: string): T[] | null {
   return null;
 }
 
+/** Depth-first search returning the largest array that contains at least one element matching the predicate. */
 export function findArrayInTree<T>(root: unknown, matches: (item: unknown) => boolean): T[] | null {
   const stack: unknown[] = [root];
   let best: T[] | null = null;
@@ -57,6 +61,7 @@ const SIMPLE_ESCAPES: Record<string, string> = {
   "0": "\0",
 };
 
+// Unescape the JS-string-literal escaping Next.js applies to payloads, including \uXXXX escapes and surrogate pairs.
 function unescape(s: string): string {
   let out = "";
   let i = 0;

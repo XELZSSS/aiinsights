@@ -25,6 +25,10 @@ import type { ArtificialAnalysisModel } from "@/shared/types";
 import { buildPriceRows, PriceTable, PriceChart, CostEstimator } from "@/app/features/compare/pricing";
 import { PageContainer, PageHeader } from "@/app/components/layout";
 
+/**
+ * Resolves the compared model ids from the compare store into full model objects,
+ * returning null while the rankings query is still loading.
+ */
 function useCompareModels(): ArtificialAnalysisModel[] | null {
   const compareIds = useCompareStore((s) => s.compareIds);
   const rankingsQ = useArtificialRankings();
@@ -85,6 +89,8 @@ function ComparePageLayout({ backLabelKey, backTo, backState, title, children }:
   );
 }
 
+// Translate each metric's "higher is better" flag into the table's best/worst
+// markers so every column highlights the appropriate extreme.
 function metricToRow(metric: CompareMetric): CompareRow<ArtificialAnalysisModel> {
   const best = metric.higherIsBetter === undefined ? undefined : metric.higherIsBetter ? "max" : "min";
   const worst = metric.higherIsBetter === undefined ? undefined : metric.higherIsBetter ? "min" : "max";
@@ -162,6 +168,7 @@ function CompareContent({ models }: { models: ArtificialAnalysisModel[] }) {
                 <RadarChart data={radarData} outerRadius="78%" margin={{ top: 24, right: 24, bottom: 8, left: 24 }}>
                   <PolarGrid stroke="var(--border)" />
                   <PolarAngleAxis dataKey="metric" tick={{ fontSize: 11, fill: "var(--text-secondary)" }} />
+                  {/* dataKey `model_${index}` matches the series keys produced by buildRadarData */}
                   {models.map((model, index) => (
                     <Radar
                       key={modelId(model) || index}
@@ -187,6 +194,7 @@ function CompareContent({ models }: { models: ArtificialAnalysisModel[] }) {
   );
 }
 
+/** Side-by-side model comparison with a radar chart and per-metric best/worst highlighting. */
 export function CompareView() {
   const { t } = useTranslation();
 
@@ -226,6 +234,7 @@ const PriceCompareContent = memo(function PriceCompareContent({
   );
 });
 
+/** Price-focused comparison: pricing table, per-row bar chart and a monthly cost estimator. */
 export function PriceCompareView() {
   const { t } = useTranslation();
   const [chartRef, chartWidth] = useElementWidth<HTMLDivElement>();

@@ -32,6 +32,7 @@ function NewsList({
 }) {
   const { t } = useTranslation();
   const { isMobile } = useDevice();
+  // Fewer items per page on mobile to keep the list manageable.
   const itemsPerPage = isMobile ? 10 : 20;
   const { page, totalPages, pagedData: currentNews, goToPage } = usePagination(news, itemsPerPage);
 
@@ -99,6 +100,7 @@ function NewsList({
 
 function NewsCategoryContent({ categoryId, color }: { categoryId: NewsCategory; color: string }) {
   const result = useNewsByCategory(categoryId);
+  // Keying the list by category remounts it so pagination resets between tabs.
   return (
     <NewsList
       key={categoryId}
@@ -110,6 +112,7 @@ function NewsCategoryContent({ categoryId, color }: { categoryId: NewsCategory; 
   );
 }
 
+/** Tabbed AI news feed, one category at a time with per-category pagination. */
 export function NewsView() {
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<NewsCategory>("industry");

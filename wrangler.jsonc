@@ -6,6 +6,7 @@
   "keep_vars": true,
   "workers_dev": false,
 
+  // Serve the built Vite client from the ASSETS binding; unknown routes fall back to index.html for the SPA.
   "assets": {
     "directory": "./dist/client",
     "binding": "ASSETS",
@@ -16,10 +17,12 @@
     "enabled": true
   },
 
+  // Smart placement co-locates the Worker with the KV store for lower latency.
   "placement": {
     "mode": "smart"
   },
 
+  // Cron job refreshes the upstream data cache every 4 minutes.
   "triggers": {
     "crons": ["*/4 * * * *"]
   },
@@ -28,6 +31,7 @@
     "enabled": true
   },
 
+  // KV namespace that backs the upstream-data cache (raw sources + parsed payloads).
   "kv_namespaces": [
     {
       "binding": "METRICS",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { num, numOr, str, strOr, bool, obj } from "@/server/parsers/primitives";
 
+// Tests for the defensive coercion helpers used on untyped upstream JSON.
 describe("num", () => {
   it("accepts finite numbers", () => {
     expect(num(42)).toBe(42);

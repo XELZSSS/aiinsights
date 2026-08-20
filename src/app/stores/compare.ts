@@ -4,6 +4,7 @@ import type { ArtificialAnalysisModel } from "@/shared/types";
 import { STORAGE_KEYS } from "@/shared/config";
 import { modelId } from "@/shared/utils";
 
+// The compare view is limited to two models side by side.
 const MAX_COMPARE = 2;
 
 interface CompareState {
@@ -36,6 +37,7 @@ export const useCompareStore = create<CompareState>()(
     }),
     {
       name: STORAGE_KEYS.compare,
+      // sessionStorage keeps the selection per-tab instead of persisting it across sessions.
       storage: createJSONStorage(() => sessionStorage),
       partialize: (state) => ({ compareIds: state.compareIds }),
     },

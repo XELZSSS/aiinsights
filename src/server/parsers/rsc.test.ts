@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { extractRscScripts, findArrayInTree, findNextData, parseRscPayload } from "@/server/parsers/rsc";
 
+// Next.js RSC payload extraction, tree search, and stream parsing tests.
 function scriptHtml(payload: string): string {
   const escaped = JSON.stringify(payload).slice(1, -1);
   return `<html><script>self.__next_f.push([1,"${escaped}"])</script></html>`;

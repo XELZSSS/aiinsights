@@ -4,6 +4,7 @@ import { reset } from "cloudflare:test";
 import worker from "@/server/worker";
 import { upstreamConfig } from "@/shared/config";
 
+// End-to-end Worker API tests running inside the workerd test runtime with mocked upstreams.
 const OR = upstreamConfig.openrouter;
 
 function jsonResponse(body: unknown, status = 200): Response {

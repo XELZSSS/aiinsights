@@ -7,6 +7,7 @@ interface DesktopNavProps {
   onSettingsOpen: () => void;
 }
 
+/** Top navigation bar shown on desktop (hidden below the `md` breakpoint). */
 export function DesktopNav({ onSettingsOpen }: DesktopNavProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();

@@ -32,6 +32,7 @@ export interface HomeBarStat {
   valueLabel: string;
 }
 
+/** Renders the ELO rating as a "point (lower–upper)" confidence interval when present. */
 function formatRatingInterval(entry: ArenaModel): string {
   if (entry.ratingUpper == null || entry.ratingLower == null) return "";
   return ` (${entry.ratingLower.toFixed(0)}–${entry.ratingUpper.toFixed(0)})`;
@@ -43,17 +44,20 @@ function useHomeDashboardData(
   dashboardData: HomeDashboardData,
   t: (key: TranslationKey, params?: Record<string, string | number>) => string,
 ) {
+  // Aggregate the various datasets into the shapes the dashboard sections consume.
   return useMemo(() => {
     const openSourceRankings = dashboardData.opensource ?? [];
     const arenaT2IModels = dashboardData.arena?.models ?? [];
     const latestOpenRouterModel = dashboardData.orRankings?.tokenUsageRankings?.[0] ?? null;
 
+    // Use the last path segment of the Hugging Face id (the repo name) for display.
     const downloadStats: HomeBarStat[] = openSourceRankings.slice(0, 7).map((model) => ({
       label: model.id.split("/").pop() || model.id,
       value: model.downloads,
       valueLabel: formatShortNumber(model.downloads),
     }));
 
+    // Chart only models with a measured accuracy; others have no comparable value.
     const hallucinationStats: HomeBarStat[] = hallucinationRankings
       .filter((entry) => entry.accuracy != null)
       .slice(0, 7)
@@ -63,6 +67,7 @@ function useHomeDashboardData(
         valueLabel: `${entry.accuracy?.toFixed(1)}%`,
       }));
 
+    // Pick the most recent release across the Artificial Analysis dataset.
     const latestRelease = artificialData.reduce(
       (best, m) => {
         if (!m.release_date) return best;
@@ -72,6 +77,7 @@ function useHomeDashboardData(
       null as ArtificialAnalysisModel | null,
     );
 
+    // -Infinity sentinel keeps models without an intelligence index from ever winning.
     const bestReasoningModel = artificialData.reduce(
       (best, m) => {
         if (m.is_reasoning !== true) return best;
@@ -103,6 +109,7 @@ function useHomeDashboardData(
         const avgSpeed = speeds.length > 0 ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0;
         return { name, color, avgSpeed, count: models.length };
       })
+      // Order providers by average output speed so the fastest lead the card.
       .sort((a, b) => b.avgSpeed - a.avgSpeed);
 
     return { downloadStats, hallucinationStats, kpiStrip, providerStats, arenaT2IModels };
@@ -265,6 +272,10 @@ const HomeContent = memo(function HomeContent() {
   );
 });
 
+/**
+ * Landing page dashboard: KPI strip, intelligence-index chart, provider speeds,
+ * download/hallucination stats and text-to-image arena highlights.
+ */
 export function HomeView() {
   return (
     <SuspenseQuery>

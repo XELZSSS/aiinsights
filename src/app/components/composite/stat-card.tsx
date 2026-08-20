@@ -11,6 +11,7 @@ interface StatCardProps {
   trend?: "up" | "down" | "neutral";
 }
 
+/** Compact metric card used in stat grids; `trend` tints the value to signal up/down. */
 export const StatCard = memo(function StatCard({
   label,
   value,

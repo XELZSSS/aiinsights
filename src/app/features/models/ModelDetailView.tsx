@@ -34,6 +34,8 @@ import type {
   OpenSourceModelEntry,
 } from "@/shared/types";
 
+// The wildcard route param carries the model id/slug, which may be URL-encoded
+// (e.g. slashes in Hugging Face ids); decode defensively.
 function useModelSourceParams(): { src: ModelSource | null; decodedId: string } {
   const { source, "*": splat } = useParams<{ source: string; "*": string }>();
   const src = (source && source in MODEL_SOURCES ? source : null) as ModelSource | null;
@@ -48,6 +50,10 @@ function useModelSourceParams(): { src: ModelSource | null; decodedId: string } 
   return { src, decodedId };
 }
 
+/**
+ * Higher-order factory producing a detail view for a given query: shows a spinner
+ * while the query is pending and a not-found state when the model is missing.
+ */
 function createDetailView<T>(
   useQuery: () => { data: T[]; isPending?: boolean },
   Content: ComponentType<{ model: T }>,
@@ -65,6 +71,7 @@ function createDetailView<T>(
 const AADetail = createDetailView(useSuspenseArtificialRankings, ModelDetailContent, "id", "slug");
 const OSDetail = createDetailView(useAllOpenSourceModels, OsDetail, "id");
 
+// Dispatch table mapping each model source (aa/or/os/hall) to its detail view.
 const SOURCE_COMPONENTS: Record<ModelSource, ComponentType<{ decodedId: string }>> = {
   aa: AADetail,
   or: OrDetail,
@@ -115,6 +122,7 @@ function HallDetailContent({
 
 function HallDetail({ decodedId }: { decodedId: string }) {
   const { data: aaData } = useSuspenseArtificialRankings();
+  // Hallucination metrics are derived from the same Artificial Analysis dataset.
   const hallucinationRankings = useHallucinationRankings(aaData);
   const entry = findModel(hallucinationRankings, decodedId, "id", "slug");
   const aaModel = findModel(aaData, decodedId, "id", "slug");
@@ -155,6 +163,7 @@ function OsDetail({ model }: { model: OpenSourceModelEntry }) {
           />
         </InfoCard>
         <InfoCard title={t("repository")}>
+          {/* Hugging Face URLs must not start with a slash, so strip it from the model id. */}
           <a
             href={`https://huggingface.co/${model.id.replace(/^\//, "")}`}
             target="_blank"
@@ -199,6 +208,10 @@ function ModelDetailContentInner() {
   );
 }
 
+/**
+ * Model detail page. Reads the source and slug from the URL and renders the
+ * matching detail view (Artificial Analysis, OpenRouter, open-source, hallucination).
+ */
 export function ModelDetailView() {
   return (
     <SuspenseQuery>

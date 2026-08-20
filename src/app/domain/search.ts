@@ -9,6 +9,7 @@ interface SearchIndex<T> {
   items: T[];
 }
 
+// Pre-normalize each item's fields once (lowercased/trimmed) so matching is cheap and case-insensitive.
 function buildIndex<T>(data: T[], fields: (item: T) => (string | undefined | null)[]): SearchIndex<T> | null {
   if (data.length === 0) return null;
   return {
@@ -17,6 +18,7 @@ function buildIndex<T>(data: T[], fields: (item: T) => (string | undefined | nul
   };
 }
 
+// Scoring: exact match = 4, prefix = 3, substring = 2; higher scores sort earlier in results.
 export function matchTerm(fields: string[], term: string): { matched: boolean; score: number } {
   for (const f of fields) {
     if (!f) continue;
@@ -58,7 +60,9 @@ export interface SearchState {
   isError: boolean;
 }
 
+/** Searches all ranking datasets (artificial index, open-router, open-source, hallucination) for `searchTerm`. */
 export function useSearchAllRankings(searchTerm: string): SearchState {
+  // Only query once the term is at least 2 chars to avoid noisy partial searches.
   const enabled = searchTerm.length >= 2;
   const artificialQ = useArtificialRankings(enabled);
   const openSourceQ = useAllOpenSourceModels(enabled);
@@ -80,6 +84,7 @@ export function useSearchAllRankings(searchTerm: string): SearchState {
     [hallucinationRankings],
   );
 
+  // Defer the term so rapid keystrokes don't rebuild every search index on each frame.
   const deferredTerm = useDeferredValue(searchTerm);
 
   const results = useMemo(() => {
@@ -138,6 +143,7 @@ export function useSearchAllRankings(searchTerm: string): SearchState {
       }),
       collected,
     );
+    // Rank by match quality first, then the model's own score, and cap the list at 20 hits.
     return collected
       .sort((a, b) => b.match - a.match || b.itemScore - a.itemScore)
       .map((c) => c.result)

@@ -12,6 +12,7 @@ import { apiFetch, apiPaths, type QueryCtx } from "@/app/api/client";
 import { createApiQuery } from "./base";
 import { queryKeys } from "./keys";
 
+// Index-like data changes slowly (cached 30 min); rankings and the dashboard poll every 5 min.
 export const qArtificial = createApiQuery<ArtificialAnalysisModel[]>(queryKeys.artificialIndex, apiPaths.artificialIndex, {
   staleTime: THIRTY_MINUTES,
 });
@@ -35,6 +36,7 @@ export const qNews = (category: NewsCategory) =>
     refetchInterval: THIRTY_MINUTES,
   });
 
+// ?refresh=1 asks the server to re-scrape sources; cache:"no-store" guarantees fresh results.
 export const fetchSourcesStatus =
   (refresh: boolean) =>
   ({ signal }: QueryCtx): Promise<SourcesStatusPayload> =>

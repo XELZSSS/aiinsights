@@ -3,6 +3,7 @@ import { env } from "cloudflare:workers";
 import { reset } from "cloudflare:test";
 import { CacheService } from "@/server/core/cache";
 
+// Integration tests for CacheService against a real KV namespace inside the workerd test runtime.
 describe("CacheService (KV backend in workerd)", () => {
   beforeEach(async () => {
     await reset();

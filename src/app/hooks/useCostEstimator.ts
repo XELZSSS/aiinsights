@@ -21,6 +21,7 @@ export interface CostEstimatorState extends CostInputState {
   calcDays: number;
 }
 
+/** Cost-input form state plus sanitized numeric values derived from the raw string inputs. */
 export function useCostEstimator(): CostEstimatorState {
   const [dailyInput, setDailyInput] = useState("2");
   const [dailyOutput, setDailyOutput] = useState("1");
@@ -28,6 +29,7 @@ export function useCostEstimator(): CostEstimatorState {
   const [cacheHitRate, setCacheHitRate] = useState("50");
   const [daysPerMonth, setDaysPerMonth] = useState("22");
 
+  // Defer parsing so heavy list re-renders don't block typing in the inputs.
   const deferredInput = useDeferredValue(dailyInput);
   const deferredOutput = useDeferredValue(dailyOutput);
   const deferredReasoning = useDeferredValue(dailyReasoning);
@@ -37,6 +39,7 @@ export function useCostEstimator(): CostEstimatorState {
   const calcInput = Math.max(0, Number(deferredInput) || 0);
   const calcOutput = Math.max(0, Number(deferredOutput) || 0);
   const calcReasoning = Math.max(0, Number(deferredReasoning) || 0);
+  // Cache hit rate is clamped to 0-100% and normalized to a 0..1 fraction for the cost math.
   const calcCache = Math.max(0, Math.min(100, Number(deferredCache) || 0)) / 100;
   const calcDays = Math.max(1, Number(deferredDays) || 0);
 

@@ -3,6 +3,7 @@ import { Route, Routes } from "react-router";
 import { useSearchResetOnNavigate } from "@/app/hooks";
 import { NotFound } from "@/app/components/shared";
 
+// Route-level lazy() imports split each view into its own chunk, loaded on first navigation.
 const HomeView = lazy(() => import("./features/home/HomeView").then((m) => ({ default: m.HomeView })));
 const RankingsHubView = lazy(() =>
   import("./features/rankings/RankingsHubView").then((m) => ({ default: m.RankingsHubView })),
@@ -16,6 +17,7 @@ const ModelDetailView = lazy(() =>
 );
 
 export function AppRoutes() {
+  // Clear the global search term whenever the user navigates between routes.
   useSearchResetOnNavigate();
 
   return (

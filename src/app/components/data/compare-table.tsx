@@ -23,6 +23,8 @@ export interface CompareTableProps<T> {
   mobileCard?: boolean;
 }
 
+// For each numeric row, flag the model(s) with the best value as "win" and the worst as "loss".
+// approxEq avoids marking near-ties as winners due to floating-point noise.
 function computeWinners<T>(
   rows: CompareRow<T>[],
   models: T[],
@@ -200,6 +202,7 @@ function CompareTableInner<T>({
   const { isMobile } = useDevice();
   const winners = computeWinners(rows, models, getKey);
 
+  // On mobile, swap the table for a compact list: either per-metric rows or per-model cards.
   if (isMobile) {
     if (mobileLayout === "model-cards") {
       return (
@@ -247,4 +250,8 @@ function CompareTableInner<T>({
   );
 }
 
+/**
+ * Comparison table that renders a horizontal desktop table or a mobile-friendly
+ * metric-rows/model-cards layout, highlighting best/worst values per metric.
+ */
 export const CompareTable = memo(CompareTableInner) as typeof CompareTableInner;

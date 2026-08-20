@@ -18,6 +18,7 @@ import { DetailLayout, StatGrid, InfoGrid } from "./layout";
 import { InfoCard, InfoRow } from "./info-card";
 import { StatCard } from "./stat-card";
 
+// Tailwind classes colouring each input/output modality pill.
 const MODALITY_STYLES = {
   text: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
   image: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -36,6 +37,7 @@ function ModalitySection({
   model: ArtificialAnalysisModel;
   t: TFunction;
 }) {
+  // Model fields follow the naming `<prefix>_modality_<type>`, so the field name is derived from the prefix.
   const key = (m: string) => `${prefix}_modality_${m}` as keyof ArtificialAnalysisModel;
   return (
     <div>
@@ -53,6 +55,10 @@ function ModalitySection({
   );
 }
 
+/**
+ * Full detail view for an AI model: key scores, metadata, pricing, benchmarks and modalities.
+ * `showBenchmarks` hides the benchmarks card (used on list pages that already show scores).
+ */
 export function ModelDetailContent({
   model,
   showBenchmarks = true,
@@ -88,6 +94,7 @@ export function ModelDetailContent({
         <InfoCard title={t("benchmarks")}>
           <StatGrid columns={4}>
             {Object.entries(model.benchmarks).map(([key, value]) => {
+              // Skip benchmarks the model didn't report (normalizePercent returns null).
               const normalized = normalizePercent(value);
               return normalized == null ? null : (
                 <StatCard key={key} label={benchmarkLabel(key, t)} value={formatScore(t, normalized)} />

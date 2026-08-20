@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { cn } from "@/shared/utils";
 
+/** Pill-group container used to visually group segmented controls (e.g. tabs). */
 export function SegmentedGroup({ className, children, ...rest }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div className={cn("flex gap-1 p-0.5 rounded-lg bg-bg-secondary", className)} {...rest}>
@@ -9,6 +10,9 @@ export function SegmentedGroup({ className, children, ...rest }: React.HTMLAttri
   );
 }
 
+/**
+ * Responsive card grid: 1 column on mobile, 2 from `sm`, and up to `cols` on `lg`.
+ */
 export function CardGrid({
   cols = 3,
   gap = 2,
@@ -37,10 +41,15 @@ export function CardGrid({
   );
 }
 
+/** Vertical stack with consistent spacing used for detail pages. */
 export function DetailLayout({ children }: { children: ReactNode }) {
   return <div className="flex flex-col gap-4">{children}</div>;
 }
 
+/**
+ * Statistic grid. Note `columns={4}` renders 2 columns on mobile and 4 from `md` up,
+ * so stat cards stay readable on narrow screens.
+ */
 export function StatGrid({ columns = 4, children }: { columns?: 2 | 3 | 4; children: ReactNode }) {
   return (
     <div
@@ -56,6 +65,7 @@ export function StatGrid({ columns = 4, children }: { columns?: 2 | 3 | 4; child
   );
 }
 
+/** Two-column grid on desktop, single column on mobile, for label/value card pairs. */
 export function InfoGrid({ children }: { children: ReactNode }) {
   return <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">{children}</div>;
 }

@@ -14,6 +14,7 @@ export function DeviceProvider({ children }: { children: ReactNode }) {
   return <DeviceContext.Provider value={{ isMobile }}>{children}</DeviceContext.Provider>;
 }
 
+/** Device info; falls back to a local matchMedia check when used outside the provider. */
 export function useDevice(): DeviceContextValue {
   const ctx = useContext(DeviceContext);
   const localIsMobile = useIsMobile(MOBILE_BREAKPOINT);

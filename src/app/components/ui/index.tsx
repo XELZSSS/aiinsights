@@ -25,6 +25,7 @@ const sizeClass: Record<string, string> = {
   icon: "size-9 rounded-md",
 };
 
+/** Shared button with variant/size presets; resets the default form submit type. */
 export const Button = memo(function Button({
   variant = "default",
   size = "default",
@@ -43,6 +44,7 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   accent?: "top" | "left" | "none";
 }
 
+/** Card container with an optional coloured accent bar on the top or left edge. */
 export const Card = memo(function Card({ children, className, accent = "none", ...props }: CardProps) {
   return (
     <div
@@ -96,9 +98,11 @@ interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "
   className?: string;
 }
 
+// Hide the native number-input spinners (webkit + Firefox) for a cleaner field.
 const noSpinners =
   "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
+/** Text/number input; number fields have native spinners hidden via `noSpinners`. */
 export function Input({ className, type, ...props }: InputProps) {
   return (
     <input
@@ -221,6 +225,7 @@ interface PaginationProps {
   className?: string;
 }
 
+/** Prev/next pagination control; renders nothing when there's only one page. */
 export const Pagination = memo(function Pagination({ page, totalPages, onChange, className }: PaginationProps) {
   const { t } = useTranslation();
   if (totalPages <= 1) return null;
@@ -252,6 +257,7 @@ export const Pagination = memo(function Pagination({ page, totalPages, onChange,
   );
 });
 
+// Selector for elements that should be reachable inside the sheet for the focus trap.
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -262,10 +268,16 @@ interface SheetProps {
   className?: string;
 }
 
+/**
+ * Bottom-sheet dialog (centered on desktop) rendered in a portal. While open it traps
+ * focus, closes on Escape, and restores focus to the trigger element on close.
+ */
 export function Sheet({ open, onClose, children, className }: SheetProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<Element | null>(null);
 
+  // Remember the trigger so focus can be restored on close; while open, trap focus
+  // within the panel (Tab cycles first/last) and Escape closes the sheet.
   useEffect(() => {
     if (!open) return;
     triggerRef.current = document.activeElement;
@@ -286,6 +298,7 @@ export function Sheet({ open, onClose, children, className }: SheetProps) {
       }
     };
     document.addEventListener("keydown", handler);
+    // Delay the initial focus a tick so the sheet has mounted before we focus its first element.
     const timer = setTimeout(() => {
       const firstFocusable = panelRef.current?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
       firstFocusable?.focus();

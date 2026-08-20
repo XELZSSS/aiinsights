@@ -4,6 +4,7 @@ import { useTranslation } from "@/app/i18n";
 import { modelId } from "@/shared/utils";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 
+/** Selection bar listing chosen models with per-chip removal plus clear/compare actions. */
 export function CompareChipBar({
   models,
   onRemove,
@@ -18,6 +19,7 @@ export function CompareChipBar({
   compareLabel?: string;
 }) {
   const { t } = useTranslation();
+  // Comparing needs at least two models, otherwise the action stays disabled.
   const canCompare = models.length >= 2;
   return (
     <div className="flex flex-wrap gap-3 sm:gap-4 items-center justify-between p-3 sm:p-4 rounded-lg border border-border bg-bg-secondary/50">
@@ -56,6 +58,7 @@ export function CompareChipBar({
           </Button>
         )}
       </div>
+      {/* Hint only makes sense when compare is offered but too few models are chosen. */}
       {onCompare && !canCompare && models.length > 0 && (
         <p className="text-xs text-text-secondary w-full">{t("compareLimit")}</p>
       )}

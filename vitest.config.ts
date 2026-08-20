@@ -12,6 +12,7 @@ export default defineConfig({
     },
   },
   plugins: [
+    // Run tests inside a simulated Cloudflare Workers runtime so Worker/KV code is testable locally.
     cloudflareTest({
       wrangler: { configPath: "./wrangler.jsonc" },
     }),

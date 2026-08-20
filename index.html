@@ -9,6 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="/icons/app-icon.svg" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <script>
+      // Apply the saved/OS theme before first paint to avoid a light/dark flash on load.
       (function () {
         var stored = null;
         try {

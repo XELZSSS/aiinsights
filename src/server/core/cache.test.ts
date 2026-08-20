@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { CacheService } from "@/server/core/cache";
 
+// Unit tests for CacheService against the in-memory backend (no KV bindings required).
 describe("CacheService (memory backend)", () => {
   it("returns cached values", async () => {
     const cache = new CacheService({});

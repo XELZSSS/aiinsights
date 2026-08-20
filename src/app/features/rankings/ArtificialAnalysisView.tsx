@@ -20,6 +20,7 @@ function isReasoningModel(model: ArtificialAnalysisModel) {
 
 function useAARankingFilters(rankings: ArtificialAnalysisModel[]) {
   const location = useLocation();
+  // Restore the last-used view mode when navigating back (e.g. from the compare page).
   const [viewMode, setViewMode] = useState<ViewMode>(
     (location.state as { viewMode?: ViewMode })?.viewMode ?? "rankings",
   );
@@ -92,6 +93,10 @@ function FilterToolbar({
   );
 }
 
+/**
+ * Artificial Analysis rankings/pricing tables with compare support, a reasoning
+ * filter and estimated monthly costs.
+ */
 export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnalysisModel[] }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -121,6 +126,7 @@ export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnaly
       <FilterToolbar
         viewMode={viewMode}
         onViewModeChange={(mode) => {
+          // Reset any expanded detail row when switching between rankings and pricing.
           setViewMode(mode);
           setExpandedRowId(null);
         }}

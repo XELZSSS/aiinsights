@@ -14,12 +14,15 @@ import { DetailLayout, StatGrid, InfoGrid } from "./layout";
 import { InfoCard, InfoRow } from "./info-card";
 import { StatCard } from "./stat-card";
 
+// Prices are stored per token; convert to per-million-token for display consistency.
 function toPerMillion(price: number | null | undefined): number | undefined {
   return typeof price === "number" && Number.isFinite(price) ? price * 1_000_000 : undefined;
 }
 
+/** Detail view for an OpenRouter ranking entry: stats, pricing, recommendation and badges. */
 export function OpenRouterModelDetail({ model }: { model: OpenRouterRankEntry }) {
   const { t } = useTranslation();
+  // Only surface meaningful variants; "standard"/"free" are the defaults and add noise.
   const showVariantBadge = !!model.variant && model.variant !== "standard" && model.variant !== "free";
   return (
     <DetailLayout>

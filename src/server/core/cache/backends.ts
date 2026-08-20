@@ -1,3 +1,4 @@
+/** Pluggable key/value store with per-entry TTLs. */
 export interface CacheBackend {
   get<T>(key: string): Promise<T | undefined>;
   set<T>(key: string, value: T, ttlMs: number): Promise<void>;
@@ -15,6 +16,7 @@ export class MemoryBackend implements CacheBackend {
       this.store.delete(key);
       return undefined;
     }
+    // Re-insert on read so the entry's position reflects recency (approximate LRU).
     this.store.delete(key);
     this.store.set(key, entry);
     return entry.data as T;
@@ -26,6 +28,7 @@ export class MemoryBackend implements CacheBackend {
     if (this.store.size > MAX_ENTRIES) this.evict();
   }
 
+  // Drop expired entries first, then oldest by insertion order until back under capacity.
   private evict() {
     const now = Date.now();
     for (const [k, v] of this.store) {
@@ -44,6 +47,7 @@ export class KvBackend implements CacheBackend {
   constructor(private kv: KVNamespace) {}
 
   async get<T>(key: string): Promise<T | undefined> {
+    // cacheTtl keeps hot keys in KV's edge cache; values are stored as JSON strings.
     const raw = await this.kv.get(key, { type: "text", cacheTtl: 30 });
     if (!raw) return undefined;
     try {
@@ -54,6 +58,7 @@ export class KvBackend implements CacheBackend {
   }
 
   async set<T>(key: string, value: T, ttlMs: number): Promise<void> {
+    // KV enforces a 60s minimum TTL, so clamp short-lived values up to it.
     await this.kv.put(key, JSON.stringify(value), { expirationTtl: Math.max(60, Math.ceil(ttlMs / 1000)) });
   }
 }

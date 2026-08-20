@@ -21,6 +21,7 @@ import { PageContainer } from "@/app/components/layout";
 import type { SearchResult } from "@/shared/types";
 import { cn } from "@/shared/utils";
 
+/** 404 page with a link back to the home route. */
 export function NotFound() {
   const { t } = useTranslation();
   return (
@@ -41,8 +42,10 @@ export function NotFound() {
   );
 }
 
+// Wait this long after the last keystroke before running the global search.
 const DEBOUNCE_MS = 250;
 
+/** Combobox search box with debounced query, keyboard navigation and click-outside close. */
 export function SearchInput() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -56,6 +59,7 @@ export function SearchInput() {
   const setSearchTerm = useSearchStore((s) => s.setSearchTerm);
   const [inputValue, setInputValue] = useState(searchTerm);
 
+  // Debounce input so the store/query only updates once the user pauses typing.
   useEffect(() => {
     const timer = setTimeout(() => setSearchTerm(inputValue), DEBOUNCE_MS);
     return () => clearTimeout(timer);
@@ -67,6 +71,7 @@ export function SearchInput() {
 
   const { results, isPending, isError } = useSearchAllRankings(searchTerm);
 
+  // Close the dropdown when clicking anywhere outside the search box.
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -88,6 +93,7 @@ export function SearchInput() {
       if (e.key === "ArrowDown" || e.key === "ArrowUp") e.preventDefault();
       return;
     }
+    // Arrow keys cycle through results (wrapping at the ends); Enter selects, Escape closes.
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIndex((i) => (i + 1) % results.length);
@@ -221,6 +227,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error("[ErrorBoundary]", error, info.componentStack);
   }
+  // Bump resetKey so children are remounted from scratch on retry.
   private handleRetry = () => {
     this.setState((s) => ({ hasError: false, error: null, resetKey: s.resetKey + 1 }));
   };
@@ -244,6 +251,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
+/** Centered loading spinner with an optional label. */
 export const Spinner = memo(function Spinner({ label }: { label?: string }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-16" role="status" aria-live="polite">
@@ -258,6 +266,10 @@ interface SuspenseQueryProps {
   fallback?: ReactNode;
 }
 
+/**
+ * Wraps async data components with a Suspense fallback and an error boundary.
+ * The boundary is keyed by route so navigation resets any failed state.
+ */
 export function SuspenseQuery({ children, fallback }: SuspenseQueryProps) {
   const { t } = useTranslation();
   const location = useLocation();

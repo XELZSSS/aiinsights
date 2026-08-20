@@ -1,3 +1,4 @@
+// Query keys are namespaced under "api"; the news key appends the category so each feed caches separately.
 export const queryKeys = {
   artificialIndex: ["api", "artificial-analysis-index"] as const,
   openSourceReleases: ["api", "open-source-releases"] as const,

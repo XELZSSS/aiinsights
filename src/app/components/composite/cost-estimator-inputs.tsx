@@ -13,6 +13,7 @@ interface CostFieldDef {
 }
 
 function getCostFields(state: CostInputState, t: TFunction): CostFieldDef[] {
+  // Token volumes are entered in millions ("M") and the hit rate as a percentage.
   return [
     { value: state.dailyInput, onChange: state.setDailyInput, label: t("dailyPromptTokens"), unit: "M" },
     { value: state.dailyOutput, onChange: state.setDailyOutput, label: t("dailyCompletionTokens"), unit: "M" },
@@ -28,6 +29,10 @@ export interface CostEstimatorInputsProps {
   avgCost?: number;
 }
 
+/**
+ * Numeric inputs driving the cost estimator, rendered in one of two
+ * label/input arrangements to fit different screen widths.
+ */
 export const CostEstimatorInputs = memo(function CostEstimatorInputs({
   state,
   layout = "input-label",

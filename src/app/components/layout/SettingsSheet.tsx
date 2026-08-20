@@ -26,6 +26,7 @@ const SettingRow = memo(function SettingRow({
   );
 });
 
+/** Settings bottom sheet: language, theme and GitHub link, plus upstream source status. */
 export function SettingsSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t, lang, toggleLang } = useTranslation();
   const themeMode = useThemeStore((s) => s.themeMode);

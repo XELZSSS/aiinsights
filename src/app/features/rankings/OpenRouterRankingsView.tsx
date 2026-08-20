@@ -10,6 +10,7 @@ import { buildOpenRouterColumns } from "@/app/features/rankings/columns";
 
 const getModelRowId = (r: OpenRouterRankEntry) => r.id;
 
+/** Token-usage rankings table from OpenRouter, with expandable per-model details. */
 export function OpenRouterRankingsView({ data }: { data?: OpenRouterRankingsPayload }) {
   const { t } = useTranslation();
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);

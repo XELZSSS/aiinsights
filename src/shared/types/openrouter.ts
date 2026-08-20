@@ -1,5 +1,7 @@
+/** Usage-based ranking categories from OpenRouter. */
 type OpenRouterCategory = "coding" | "reasoning" | "general";
 
+/** A model row in the OpenRouter usage rankings. */
 export interface OpenRouterRankEntry {
   rank: number;
   id: string;
@@ -22,6 +24,7 @@ export interface OpenRouterRankEntry {
   isFree?: boolean;
 }
 
+/** Wrapper for the OpenRouter usage-rankings response. */
 export interface OpenRouterRankingsPayload {
   tokenUsageRankings: OpenRouterRankEntry[];
   fetchedAt: string;

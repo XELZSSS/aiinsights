@@ -1,3 +1,4 @@
+/** A model from the Hugging Face Hub open-source leaderboard. */
 export interface OpenSourceModelEntry {
   id: string;
   author: string;

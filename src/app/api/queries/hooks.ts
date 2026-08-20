@@ -9,6 +9,7 @@ export type SourcesStatusQuery = UseQueryResult<SourcesStatusPayload> & {
   refresh: () => Promise<void>;
 };
 
+/** sources-status query extended with an explicit `refresh()` that bypasses the cache and `isRefreshing` state. */
 export function useSourcesStatus(): SourcesStatusQuery {
   const queryClient = useQueryClient();
   const query = qSourcesStatus.use();
@@ -20,6 +21,7 @@ export function useSourcesStatus(): SourcesStatusQuery {
       const fresh = await apiFetch<SourcesStatusPayload>(`${apiPaths.sourcesStatus}?refresh=1`, undefined, {
         cache: "no-store",
       });
+      // Write the fresh payload straight into the cache so all consumers update without a refetch.
       queryClient.setQueryData(["api", "sources-status"], fresh);
     } catch {
       await query.refetch();
@@ -37,6 +39,7 @@ export interface OpenSourceModelsQuery {
   isError: boolean;
 }
 
+/** Merges trending and release lists, de-duplicating by model id so each model appears once. */
 export function useAllOpenSourceModels(enabled = true): OpenSourceModelsQuery {
   const trending = qOpenSourceModels.use(enabled);
   const releases = qOpenSourceReleases.use(enabled);

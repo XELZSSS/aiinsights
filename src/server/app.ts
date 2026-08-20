@@ -11,11 +11,13 @@ import { CacheService } from "@/server/core/cache";
 import { HttpClient } from "@/server/core/http";
 import { CACHE_VERSION } from "@/shared/config";
 
+/** Cloudflare Worker bindings: optional KV namespace and a static-assets fetcher for non-API routes. */
 export interface Env {
   METRICS?: KVNamespace;
   ASSETS?: Fetcher;
 }
 
+/** Dependency container handed to every route handler. */
 export interface AppContext {
   cache: CacheService;
   http: HttpClient;
@@ -24,9 +26,11 @@ export interface AppContext {
   log(level: "info" | "warn" | "error", msg: string, meta?: Record<string, unknown>): void;
 }
 
+// Reuse the HTTP client and cache across warmup and request paths within the same isolate.
 let sharedHttp: HttpClient | null = null;
 let sharedCache: CacheService | null = null;
 
+/** Build the per-request context, wiring in the optional KV backend for the cache. */
 export function buildContext(env: Env): AppContext {
   sharedHttp ??= new HttpClient();
   sharedCache ??= new CacheService({ kv: env.METRICS ?? null, version: CACHE_VERSION });
@@ -64,6 +68,7 @@ export function createApp(routeDefs: RouteDef[]): Hono {
   app.use("/api/*", async (c, next) => {
     await next();
     if (c.req.method === "GET" && c.res.status === 200) {
+      // sources-status reflects live probe results and must not be cached; everything else gets short browser + longer CDN caching.
       const noStore = c.req.path === "/api/sources-status";
       c.header("Cache-Control", noStore ? "no-store, max-age=0" : "public, max-age=60");
       c.header(
@@ -76,6 +81,7 @@ export function createApp(routeDefs: RouteDef[]): Hono {
   registerRoutes(app, routeDefs);
 
   app.onError((err, c) => {
+    // Map known API errors to their HTTP status; anything else is treated as an unexpected 500.
     if (err instanceof ApiError) {
       const status = (err.status >= 100 && err.status < 600 ? err.status : 500) as ContentfulStatusCode;
       return c.json({ error: { code: status, message: err.message } }, status);

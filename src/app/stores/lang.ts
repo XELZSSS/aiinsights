@@ -12,6 +12,7 @@ interface LangState {
 export const useLangStore = create<LangState>()(
   persist(
     (set) => ({
+      // Default to Chinese; the persisted choice wins on next load.
       lang: "zh",
       setLang: (lang) => set({ lang }),
       toggleLang: () => set((state) => ({ lang: state.lang === "en" ? "zh" : "en" })),

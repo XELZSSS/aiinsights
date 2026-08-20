@@ -8,9 +8,11 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig(() => ({
+  // react: fast-refresh JSX transforms; tailwindcss: Tailwind v4 CSS pipeline; cloudflare: Workers dev server & build.
   plugins: [react(), tailwindcss(), cloudflare()],
   resolve: {
     alias: {
+      // Map the "@/" import alias used across src/ to the repo's src directory.
       "@": path.resolve(__dirname, "src"),
     },
   },
@@ -21,6 +23,7 @@ export default defineConfig(() => ({
     target: "es2022",
     rollupOptions: {
       output: {
+        // Split vendor libraries into stable chunks so browser caches survive app-only rebuilds.
         manualChunks(id: string) {
           if (id.includes("node_modules/react/") || id.includes("node_modules/react-dom/")) {
             return "vendor-react";

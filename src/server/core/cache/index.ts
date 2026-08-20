@@ -3,6 +3,7 @@ import { MemoryBackend, KvBackend } from "./backends";
 
 export type { CacheBackend } from "./backends";
 
+/** TTL cache fronting a backend (memory or KV); keys are namespaced by a version so a schema change can invalidate all entries. */
 export class CacheService {
   private backend: CacheBackend;
   private version: string;
@@ -30,6 +31,7 @@ export class CacheService {
     const cached = await this.backend.get<T>(vKey);
     if (cached !== undefined) return cached;
 
+    // Coalesce concurrent misses for the same key into a single upstream fetch.
     const existing = this.inflight.get(vKey) as Promise<T> | undefined;
     if (existing) return existing;
 

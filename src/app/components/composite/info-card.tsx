@@ -2,6 +2,7 @@ import { memo, type ReactNode } from "react";
 import { Card, CardContent } from "@/app/components/ui";
 import { cn } from "@/shared/utils";
 
+/** Card that groups a title above a vertical stack of label/value rows. */
 export const InfoCard = memo(function InfoCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Card accent="top">
@@ -13,6 +14,7 @@ export const InfoCard = memo(function InfoCard({ title, children }: { title: str
   );
 });
 
+/** Single label/value row for use inside an InfoCard; `compact` shrinks the text size. */
 export const InfoRow = memo(function InfoRow({
   label,
   value,

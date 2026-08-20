@@ -1,3 +1,4 @@
+// Chart palette referencing CSS variables so colors adapt to the active theme.
 export const COOL_COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",
@@ -11,10 +12,12 @@ export const COOL_COLORS = [
   "var(--chart-10)",
 ];
 
+/** Returns the chart color for a model, cycling through the palette. */
 export function getModelColor(index: number): string {
   return COOL_COLORS[index % COOL_COLORS.length]!;
 }
 
+// Inline styles for chart tooltips that follow the app theme.
 export const chartTooltipStyle = {
   background: "var(--bg-secondary)",
   border: "1px solid var(--border)",

@@ -10,12 +10,14 @@ interface MobileMoreSheetProps {
   onSettingsOpen: () => void;
 }
 
+/** Bottom-sheet "More" menu for mobile: secondary nav links plus the settings entry. */
 export function MobileMoreSheet({ open, onClose, onSettingsOpen }: MobileMoreSheetProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { all, mobileMore } = useNavigation();
 
+  // Show which page the sheet was opened from; fall back to home for unmatched routes.
   const currentNavLabel = all.find((n) => n.path === pathname)?.label || t("home");
 
   return (

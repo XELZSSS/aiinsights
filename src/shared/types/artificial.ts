@@ -1,18 +1,24 @@
+// Field names mirror the Artificial Analysis API response (snake_case).
+
+/** Creator/vendor metadata, including a display color. */
 export interface ModelCreators {
   name?: string;
   color?: string;
 }
 
+/** Per-1M-token prices in USD; cache_hit is the cached-input price. */
 export interface ModelPricing {
   input?: number | null;
   output?: number | null;
   cache_hit?: number | null;
 }
 
+/** Output speed in tokens per second. */
 export interface ModelSpeed {
   median_output_speed?: number | null;
 }
 
+/** Cost breakdown in USD. */
 export interface ModelCost {
   total?: number | null;
   input?: number | null;
@@ -20,6 +26,7 @@ export interface ModelCost {
   reasoning?: number | null;
 }
 
+/** Omniscience sub-scores: accuracy, attempt rate, and hallucination rate. */
 export interface ModelOmniscienceBreakdown {
   total?: {
     accuracy?: number | null;
@@ -29,6 +36,7 @@ export interface ModelOmniscienceBreakdown {
   };
 }
 
+/** A single model entry from the Artificial Analysis intelligence index. */
 export interface ArtificialAnalysisModel {
   id: string;
   slug: string;

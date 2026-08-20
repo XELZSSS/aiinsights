@@ -1,3 +1,4 @@
+// Unit tests for the search scoring rules in domain/search.ts.
 import { describe, expect, it } from "vitest";
 import { matchTerm } from "@/app/domain/search";
 

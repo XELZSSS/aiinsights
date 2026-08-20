@@ -1,6 +1,7 @@
 import { type ReactNode } from "react";
 import { cn } from "@/shared/utils";
 
+/** Page title block: stacks on mobile, becomes a row with actions on wider screens. */
 export function PageHeader({
   title,
   description,

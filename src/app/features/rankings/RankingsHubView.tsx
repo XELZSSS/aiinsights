@@ -28,6 +28,7 @@ const OpenRouterRankingsView = lazy(() =>
   import("./OpenRouterRankingsView").then((m) => ({ default: m.OpenRouterRankingsView })),
 );
 
+// Each tab reports its data source label (Artificial Analysis / OpenRouter / Hugging Face).
 const TAB_SOURCE_LABEL: Record<RankingTabId, TranslationKey> = {
   modelRankings: MODEL_SOURCES.aa.sourceLabelKey,
   openRouterRankings: MODEL_SOURCES.or.sourceLabelKey,
@@ -145,6 +146,7 @@ function ActiveTabContent({ activeTabId }: { activeTabId: RankingTabId }) {
 
 function RankingsContent({ defaultTab }: { defaultTab: number }) {
   const { t } = useTranslation();
+  // Fall back to the first tab when an out-of-range defaultTab is requested.
   const [activeTabId, setActiveTabId] = useState<RankingTabId>(() => RANKING_TABS[defaultTab] ?? RANKING_TABS[0]);
 
   const tabs: TabItem[] = useMemo(() => RANKING_TABS.map((id) => ({ id, label: t(id as TranslationKey) })), [t]);
@@ -170,6 +172,10 @@ function RankingsContent({ defaultTab }: { defaultTab: number }) {
   );
 }
 
+/**
+ * Rankings hub with tabs for model rankings, OpenRouter usage, open-source models,
+ * hallucination benchmarks and provider comparison.
+ */
 export function RankingsHubView({ defaultTab = 0 }: RankingsHubProps) {
   return (
     <SuspenseQuery>

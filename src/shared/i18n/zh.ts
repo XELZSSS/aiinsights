@@ -1,5 +1,6 @@
 import type { EnDict } from "./index";
 
+// Simplified Chinese translations, type-checked against the English dictionary.
 export const zh = {
   home: "首页",
   rankings: "排行",

@@ -38,6 +38,7 @@ const SourceRow = memo(function SourceRow({ source }: { source: SourceStatus }) 
   );
 });
 
+/** Live summary of upstream data-source health: uptime, per-source status and refresh. */
 export const SourcesStatusList = memo(function SourcesStatusList() {
   const { t } = useTranslation();
   const { data, isPending, isError, isRefreshing, refresh } = useSourcesStatus();

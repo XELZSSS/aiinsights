@@ -10,6 +10,7 @@ import { useMonthlyCosts } from "@/app/hooks";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { TFunction } from "@/shared/i18n";
 
+/** Price comparison rows for prompt/completion/cache-hit rates; lower is always better. */
 export function buildPriceRows(t: TFunction): CompareRow<ArtificialAnalysisModel>[] {
   return [
     { label: t("promptPrice"), getNumeric: (m) => modelInputPrice(m), bestIs: "min" },
@@ -83,6 +84,8 @@ export const PriceChart = memo(function PriceChart({
   const chartData = useMemo(() => {
     return priceRows.map((row) => {
       const entry: Record<string, string | number> = { name: row.label };
+      // Build one bar-series key per model (`model_${index}`) so each model
+      // renders as its own bar; missing prices become 0 rather than dropping the series.
       models.forEach((model, index) => {
         const v = row.getNumeric?.(model);
         entry[`model_${index}`] = typeof v === "number" ? v : 0;
@@ -125,11 +128,14 @@ export const PriceChart = memo(function PriceChart({
   );
 });
 
+/** Interactive monthly-cost estimator that highlights the cheapest model. */
 export const CostEstimator = memo(function CostEstimator({ models }: { models: ArtificialAnalysisModel[] }) {
   const { t } = useTranslation();
 
   const { monthlyCosts, ...inputs } = useMonthlyCosts(models);
 
+  // Cheapest model among valid monthly estimates; compared with approxEq below
+  // because costs are derived floats and may not be bit-identical.
   const bestMonthlyCost = useMemo(() => {
     const valid = monthlyCosts.filter((v): v is number => v !== null);
     return valid.length > 0 ? Math.min(...valid) : null;

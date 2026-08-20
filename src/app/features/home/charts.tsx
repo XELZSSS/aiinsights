@@ -7,6 +7,10 @@ import { getModelColor, COOL_COLORS, chartTooltipStyle } from "@/shared/utils";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { HomeBarStat } from "@/app/features/home/HomeView";
 
+/**
+ * Line chart of the top-10 models by intelligence index, plotting the coding index
+ * alongside for context. The Y-axis is pinned to a fixed 0-100 scale.
+ */
 export const IndexLineChart = memo(function IndexLineChart({ models }: { models: ArtificialAnalysisModel[] }) {
   const { t } = useTranslation();
   const top10 = useMemo(
@@ -78,6 +82,7 @@ export const IndexLineChart = memo(function IndexLineChart({ models }: { models:
   );
 });
 
+/** Two ranked stat cards: open-source download counts and hallucination accuracy. */
 export const StatisticsSection = memo(function StatisticsSection({
   downloadStats,
   hallucinationStats,

@@ -12,12 +12,14 @@ interface I18nContextValue {
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
+/** Reads the i18n context; must be used inside an I18nProvider. */
 export function useTranslation() {
   const ctx = use(I18nContext);
   if (!ctx) throw new Error("useTranslation must be used within I18nProvider");
   return ctx;
 }
 
+// Mirror the active language into <html lang> and the meta description for SEO and a11y.
 function syncDocumentMeta(lang: Lang) {
   document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
   const desc = document.querySelector('meta[name="description"]');
@@ -37,6 +39,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
 
   const setLang = useCallback((newLang: Lang) => setLangState(newLang), [setLangState]);
 
+  // Rebuild the translator bound to the current language only when the language changes.
   const t = useCallback(createT(lang), [lang]);
 
   const contextValue = useMemo<I18nContextValue>(
