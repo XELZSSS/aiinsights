@@ -252,11 +252,6 @@ const HomeContent = memo(function HomeContent() {
               <IndexLineChart models={artificialData} />
             </Suspense>
           </div>
-          <div className="hidden lg:block">
-            <ProviderSpeedCard providerStats={providerStats} />
-          </div>
-        </div>
-        <div className="mt-4 lg:hidden">
           <ProviderSpeedCard providerStats={providerStats} />
         </div>
       </PageSection>

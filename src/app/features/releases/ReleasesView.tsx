@@ -98,6 +98,7 @@ function FeedTab({ allEntries }: { allEntries: FeedEntry[] }) {
     return [
       {
         id: "model",
+        header: t("model"),
         cell: (row) => (
           <div className="min-w-0">
             <p className="text-sm font-medium truncate">{row.name}</p>
@@ -112,6 +113,7 @@ function FeedTab({ allEntries }: { allEntries: FeedEntry[] }) {
       },
       {
         id: "date",
+        header: t("releaseDate"),
         align: "right",
         width: 100,
         hiddenMd: true,
@@ -119,6 +121,7 @@ function FeedTab({ allEntries }: { allEntries: FeedEntry[] }) {
       },
       {
         id: "type",
+        header: t("releaseType"),
         align: "right",
         width: 140,
         hiddenMd: true,
@@ -140,10 +143,22 @@ function ReleaseDatesTab({ releaseRows }: { releaseRows: DatedModel[] }) {
     () => [
       {
         id: "model",
-        cell: (row) => <span className="text-sm font-semibold truncate min-w-0">{row.model.name}</span>,
+        header: t("model"),
+        cell: (row) => (
+          <div className="min-w-0">
+            <p className="text-sm font-semibold truncate">{row.model.name}</p>
+            <div className="flex md:hidden mt-1 items-center gap-1.5">
+              {row.model.model_creators?.name && (
+                <span className="text-xs text-text-secondary">{row.model.model_creators.name}</span>
+              )}
+              <span className="text-xs text-text-tertiary">{formatDate(row.time, lang)}</span>
+            </div>
+          </div>
+        ),
       },
       {
         id: "creator",
+        header: t("creator"),
         align: "right",
         width: "24%",
         hiddenMd: true,
@@ -151,6 +166,7 @@ function ReleaseDatesTab({ releaseRows }: { releaseRows: DatedModel[] }) {
       },
       {
         id: "releaseDate",
+        header: t("releaseDate"),
         align: "right",
         width: "18%",
         hiddenMd: true,

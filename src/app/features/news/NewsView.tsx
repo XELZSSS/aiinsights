@@ -8,7 +8,8 @@ import { Spinner } from "@/app/components/shared";
 import { safeHref, formatRelativeTime, COOL_COLORS } from "@/shared/utils";
 import { TabContainer, type TabItem } from "@/app/components/composite";
 import type { NewsItem, NewsCategory } from "@/shared/types";
-import { useIsMobile, usePagination } from "@/app/hooks";
+import { useDevice } from "@/app/device";
+import { usePagination } from "@/app/hooks";
 import { PageContainer, PageHeader } from "@/app/components/layout";
 
 const CATEGORIES: { id: NewsCategory; labelKey: TranslationKey; color: string }[] = [
@@ -30,7 +31,7 @@ function NewsList({
   isError: boolean;
 }) {
   const { t } = useTranslation();
-  const isMobile = useIsMobile();
+  const { isMobile } = useDevice();
   const itemsPerPage = isMobile ? 10 : 20;
   const { page, totalPages, pagedData: currentNews, goToPage } = usePagination(news, itemsPerPage);
 
@@ -64,14 +65,14 @@ function NewsList({
           className="group block"
           aria-label={`${item.title} - ${item.source}`}
         >
-          <Card className="p-4 sm:p-5 hover:border-accent/30 transition-colors">
+          <Card className="p-4 sm:p-5 hover:border-accent/30 transition-colors active:bg-hover">
             <div className="flex items-start justify-between gap-4">
               <h3 className="text-sm font-semibold text-text-primary leading-relaxed group-hover:text-accent transition-colors min-w-0 break-words">
                 {item.title}
               </h3>
               <ExternalLink
                 size={14}
-                className="shrink-0 text-text-secondary mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="shrink-0 text-text-secondary mt-0.5 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
               />
             </div>
             <div className="flex items-center gap-3 mt-2.5">

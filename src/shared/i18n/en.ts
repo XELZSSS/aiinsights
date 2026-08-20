@@ -75,6 +75,7 @@ export const en = {
   releaseUpdate: "Updated",
   releaseOpenSource: "Open Source Release",
   releaseModel: "Model Release",
+  releaseType: "Type",
   events: "{count} events",
   promptPrice: "Input",
   completionPrice: "Output",

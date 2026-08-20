@@ -151,7 +151,7 @@ export function SearchInput() {
         <div
           id={listboxId}
           role="listbox"
-          className="absolute top-full left-0 right-0 mt-1.5 max-h-[28rem] overflow-y-auto overscroll-contain no-scrollbar bg-bg-card border border-border rounded-lg shadow-lg z-50 sm:w-72"
+          className="absolute top-full left-0 right-0 mt-1.5 max-h-[28rem] overflow-y-auto overscroll-contain no-scrollbar bg-bg-card border border-border rounded-lg shadow-lg z-50 sm:w-72 animate-fade-in"
         >
           <div className="p-1">
             {isPending && results.length === 0 ? (
@@ -172,7 +172,7 @@ export function SearchInput() {
                   role="option"
                   aria-selected={activeIndex === index}
                   className={cn(
-                    "w-full text-left p-3 rounded-md transition-colors",
+                    "w-full text-left p-3 rounded-md transition-colors active:bg-hover",
                     activeIndex === index ? "bg-hover" : "hover:bg-hover",
                   )}
                   onMouseEnter={() => setActiveIndex(index)}

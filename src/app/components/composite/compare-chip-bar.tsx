@@ -40,12 +40,18 @@ export function CompareChipBar({
           </span>
         ))}
       </div>
-      <div className="flex gap-2">
-        <Button size="sm" variant="outline" onClick={onClear}>
+      <div className="flex gap-2 w-full sm:w-auto">
+        <Button size="sm" variant="outline" onClick={onClear} className="flex-1 sm:flex-none">
           <Trash2 size={14} /> {t("clear")}
         </Button>
         {onCompare && (
-          <Button size="sm" variant="outline" onClick={onCompare} disabled={!canCompare}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onCompare}
+            disabled={!canCompare}
+            className="flex-1 sm:flex-none"
+          >
             <ArrowLeftRight size={14} /> {compareLabel ?? t("compareSelected")}
           </Button>
         )}

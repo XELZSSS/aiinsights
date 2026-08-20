@@ -70,6 +70,7 @@ export const zh = {
   releaseUpdate: "更新",
   releaseOpenSource: "开源发布",
   releaseModel: "模型发布",
+  releaseType: "类型",
   events: "{count} 个事件",
   promptPrice: "输入",
   completionPrice: "输出",

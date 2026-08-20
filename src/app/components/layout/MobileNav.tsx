@@ -26,7 +26,7 @@ export function MobileNav({ onMoreOpen }: MobileNavProps) {
             aria-label={item.label}
             aria-current={active ? "page" : undefined}
             onClick={() => navigate(item.path)}
-            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${active ? "text-accent" : "text-text-secondary"}`}
+            className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors active:bg-hover ${active ? "text-accent" : "text-text-secondary"}`}
           >
             {item.icon}
             <span>{item.label}</span>
@@ -37,7 +37,7 @@ export function MobileNav({ onMoreOpen }: MobileNavProps) {
         type="button"
         onClick={onMoreOpen}
         aria-label={t("more")}
-        className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium ${isMoreActive ? "text-accent" : "text-text-secondary"}`}
+        className={`flex-1 flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors active:bg-hover ${isMoreActive ? "text-accent" : "text-text-secondary"}`}
       >
         <MoreHorizontal size={18} />
         <span>{t("more")}</span>

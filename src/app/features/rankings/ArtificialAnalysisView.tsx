@@ -57,7 +57,7 @@ function FilterToolbar({
       <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-end min-w-0">
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap gap-1.5 items-center">
-            <SegmentedGroup>
+            <SegmentedGroup className="overflow-x-auto no-scrollbar">
               <TabButton active={viewMode === "rankings"} onClick={() => onViewModeChange("rankings")}>
                 {t("modelRankings")}
               </TabButton>
@@ -66,8 +66,8 @@ function FilterToolbar({
               </TabButton>
             </SegmentedGroup>
             <>
-              <div className="w-px h-4 bg-border mx-1" />
-              <SegmentedGroup>
+              <div className="w-px h-4 bg-border mx-1 shrink-0" />
+              <SegmentedGroup className="overflow-x-auto no-scrollbar">
                 <TabButton active={reasoningFilter === "all"} onClick={() => onReasoningFilterChange("all")}>
                   {t("all")}
                 </TabButton>

@@ -1,4 +1,5 @@
-import { useCallback, useLayoutEffect, useState, type ReactNode } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useLocation } from "react-router";
 import { useThemeStore } from "@/app/stores";
 import { useTranslation } from "@/app/i18n";
 import { DesktopNav } from "./DesktopNav";
@@ -11,6 +12,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const themeMode = useThemeStore((s) => s.themeMode);
   const { t } = useTranslation();
+  const mainRef = useRef<HTMLElement>(null);
+  const location = useLocation();
 
   const closeSettings = useCallback(() => setSettingsOpen(false), []);
   const closeMore = useCallback(() => setMobileMoreOpen(false), []);
@@ -18,6 +21,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   useLayoutEffect(() => {
     document.documentElement.classList.toggle("dark", themeMode === "dark");
   }, [themeMode]);
+
+  useLayoutEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [location.pathname]);
 
   return (
     <div className="h-dvh flex flex-col bg-bg-primary overflow-x-hidden">
@@ -29,9 +36,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       </a>
       <DesktopNav onSettingsOpen={() => setSettingsOpen(true)} />
       <main
+        ref={mainRef}
         id="main-content"
         tabIndex={-1}
-        className="flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable] pt-0 md:pt-16 pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-4"
+        className="flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable] pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-4"
       >
         {children}
       </main>

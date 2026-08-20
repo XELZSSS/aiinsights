@@ -1,7 +1,8 @@
 import { memo, Fragment, useMemo, type ReactNode } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
-import { useIsMobile, usePagination } from "@/app/hooks";
+import { useDevice } from "@/app/device";
+import { usePagination } from "@/app/hooks";
 import { cn } from "@/shared/utils";
 import { Pagination } from "@/app/components/ui";
 
@@ -35,8 +36,57 @@ interface TableBodyProps<T> {
   renderExpandedRow?: (row: T) => ReactNode;
 }
 
+interface MobileColumnLayout<T> {
+  primaryCol: DataTableColumn<T>;
+  mainStatCol?: DataTableColumn<T>;
+  secondaryCols: DataTableColumn<T>[];
+}
+
+function resolveMobileColumns<T>(columns: DataTableColumn<T>[]): MobileColumnLayout<T> {
+  const visibleCols = columns.filter((col) => !col.hiddenMd);
+  const primaryCol = visibleCols[0]!;
+  const restCols = visibleCols.slice(1);
+  const mainStatCol = restCols.find((col) => col.mobilePrimary) ?? restCols[0];
+  const secondaryCols = restCols.filter((col) => col !== mainStatCol);
+  return { primaryCol, mainStatCol, secondaryCols };
+}
+
 function isFromInteractive(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest("button, a, input, select, textarea") !== null;
+}
+
+function cellClasses<T>(col: DataTableColumn<T>, isExpandable: boolean): string {
+  return cn(
+    "px-3 py-3 sm:py-2.5",
+    col.hiddenMd && "hidden md:table-cell",
+    isExpandable && "cursor-pointer",
+  );
+}
+
+function cellInnerClasses<T>(col: DataTableColumn<T>): string {
+  return cn("flex items-center gap-2 min-w-0", col.align === "right" && "justify-end");
+}
+
+function TableHeader<T>({ columns, isExpandable }: { columns: DataTableColumn<T>[]; isExpandable: boolean }) {
+  return (
+    <thead>
+      <tr className="border-b border-border bg-bg-secondary/60">
+        {columns.map((col, colIdx) => (
+          <th
+            key={col.id}
+            scope="col"
+            className={cn(cellClasses(col, false), "font-semibold text-text-secondary whitespace-nowrap")}
+            style={{ width: col.width }}
+          >
+            <div className={cellInnerClasses(col)}>
+              {isExpandable && colIdx === 0 && <span className="w-3.5 shrink-0" aria-hidden="true" />}
+              {col.header}
+            </div>
+          </th>
+        ))}
+      </tr>
+    </thead>
+  );
 }
 
 function TableBodyInner<T>({
@@ -62,6 +112,7 @@ function TableBodyInner<T>({
                 "border-b border-border last:border-b-0 transition-colors",
                 rowIndex % 2 === 0 ? "bg-bg-card" : "bg-bg-primary",
                 "hover:bg-hover",
+                isExpandable && "active:bg-selected",
                 isExpanded && "bg-accent-light",
               )}
               onClick={isExpandable ? (e) => (isFromInteractive(e.target) ? undefined : toggle()) : undefined}
@@ -80,21 +131,16 @@ function TableBodyInner<T>({
               tabIndex={isExpandable ? 0 : undefined}
             >
               {columns.map((col, colIdx) => (
-                <td
-                  key={col.id}
-                  className={cn(
-                    "px-3 py-3 sm:py-2.5",
-                    col.align === "right" && "text-right",
-                    col.align === "center" && "text-center",
-                    col.hiddenMd && "hidden md:table-cell",
-                    isExpandable && "cursor-pointer",
-                  )}
-                  style={{ width: col.width }}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
+                <td key={col.id} className={cellClasses(col, isExpandable)} style={{ width: col.width }}>
+                  <div className={cellInnerClasses(col)}>
                     {isExpandable && colIdx === 0 && (
-                      <span className="shrink-0 text-text-secondary">
-                        {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                      <span
+                        className={cn(
+                          "shrink-0 text-text-secondary transition-transform duration-200",
+                          isExpanded && "rotate-90",
+                        )}
+                      >
+                        <ChevronRight size={14} />
                       </span>
                     )}
                     {col.cell(row)}
@@ -105,7 +151,7 @@ function TableBodyInner<T>({
             {isExpanded && renderExpandedRow && (
               <tr className="border-b border-border last:border-b-0 bg-bg-secondary/50">
                 <td colSpan={columns.length} className="p-0">
-                  {renderExpandedRow(row)}
+                  <div className="animate-fade-in">{renderExpandedRow(row)}</div>
                 </td>
               </tr>
             )}
@@ -127,17 +173,13 @@ function MobileTableBodyInner<T>({
   onToggleExpand,
   renderExpandedRow,
 }: TableBodyProps<T>) {
+  const { primaryCol, mainStatCol, secondaryCols } = resolveMobileColumns(columns);
   return (
     <div className="flex flex-col gap-2.5">
       {pagedData.map((row, rowIndex) => {
         const rowId = getRowId?.(row) ?? String(rowIndex);
         const isExpanded = expandedRowId === rowId;
         const toggle = () => onToggleExpand?.(isExpanded ? null : rowId);
-        const visibleCols = columns.filter((col) => !col.hiddenMd);
-        const primaryCol = visibleCols[0];
-        const restCols = visibleCols.slice(1);
-        const mainStatCol = restCols.find((col) => col.mobilePrimary) ?? restCols[0];
-        const secondaryCols = restCols.filter((col) => col !== mainStatCol);
         return (
           <Fragment key={rowId}>
             <div
@@ -146,7 +188,7 @@ function MobileTableBodyInner<T>({
               tabIndex={isExpandable ? 0 : undefined}
               className={cn(
                 "rounded-lg border border-border bg-bg-card p-3.5 transition-colors",
-                isExpandable && "cursor-pointer",
+                isExpandable && "cursor-pointer active:bg-selected",
                 "hover:bg-hover",
                 isExpanded && "bg-accent-light",
               )}
@@ -165,8 +207,13 @@ function MobileTableBodyInner<T>({
             >
               <div className="flex items-start gap-2 min-w-0">
                 {isExpandable && (
-                  <span className="shrink-0 text-text-secondary mt-0.5">
-                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <span
+                    className={cn(
+                      "shrink-0 text-text-secondary mt-0.5 transition-transform duration-200",
+                      isExpanded && "rotate-90",
+                    )}
+                  >
+                    <ChevronRight size={16} />
                   </span>
                 )}
                 <div className="min-w-0 flex-1">{primaryCol?.cell(row)}</div>
@@ -198,7 +245,7 @@ function MobileTableBodyInner<T>({
               )}
             </div>
             {isExpanded && renderExpandedRow && (
-              <div className="rounded-lg border border-border bg-bg-secondary/50 overflow-hidden">
+              <div className="rounded-lg border border-border bg-bg-secondary/50 overflow-hidden animate-slide-up">
                 {renderExpandedRow(row)}
               </div>
             )}
@@ -220,7 +267,7 @@ function DataTableInner<T>({
   onToggleExpand,
   renderExpandedRow,
 }: DataTableProps<T>) {
-  const isMobile = useIsMobile();
+  const { isMobile } = useDevice();
   const effectivePageSize = isMobile ? Math.min(pageSize, 15) : pageSize;
   const { t } = useTranslation();
 
@@ -263,6 +310,7 @@ function DataTableInner<T>({
         <>
           <div className="rounded-lg border border-border overflow-x-auto min-w-0">
             <table className="w-full text-sm table-auto">
+              <TableHeader columns={columns} isExpandable={isExpandable} />
               <TableBody
                 pagedData={pagedData}
                 columns={columns}

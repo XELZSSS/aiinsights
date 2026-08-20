@@ -283,6 +283,49 @@ h6 {
   }
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@utility animate-fade-in {
+  animation: fade-in 0.2s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-slide-up {
+  animation: slide-up 0.2s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
+@keyframes sheet-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@utility animate-sheet-up {
+  animation: sheet-up 0.2s cubic-bezier(0.32, 0.72, 0, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

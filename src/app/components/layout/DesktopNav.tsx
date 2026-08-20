@@ -14,7 +14,7 @@ export function DesktopNav({ onSettingsOpen }: DesktopNavProps) {
   const { t } = useTranslation();
 
   return (
-    <nav className="hidden md:flex fixed top-0 left-0 right-0 z-50 h-14 items-center border-b border-border bg-nav-bg backdrop-blur-lg">
+    <nav className="hidden md:flex h-14 shrink-0 items-center border-b border-border bg-nav-bg backdrop-blur-lg">
       <div className="max-w-7xl mx-auto w-full px-3 sm:px-6 lg:px-8 flex items-center">
         <div className="flex items-center gap-1.5">
           {all.map((item) => {
@@ -26,7 +26,7 @@ export function DesktopNav({ onSettingsOpen }: DesktopNavProps) {
                 aria-label={item.label}
                 aria-current={active ? "page" : undefined}
                 onClick={() => navigate(item.path)}
-                className={`relative px-3.5 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
+                className={`relative px-3.5 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap active:bg-hover ${
                   active ? "text-accent bg-accent-light" : "text-text-secondary hover:text-text-primary hover:bg-hover"
                 }`}
               >

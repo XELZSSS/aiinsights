@@ -1,17 +1,14 @@
 import { memo, useMemo } from "react";
-import { Line, LineChart, CartesianGrid, Tooltip, XAxis, YAxis, Legend } from "recharts";
+import { Line, LineChart, CartesianGrid, Tooltip, XAxis, YAxis, Legend, ResponsiveContainer } from "recharts";
 import { useTranslation } from "@/app/i18n";
 import { Card, CardContent } from "@/app/components/ui";
 import { PageSection } from "@/app/components/layout";
 import { getModelColor, COOL_COLORS, chartTooltipStyle } from "@/shared/utils";
-import { useElementWidth } from "@/app/hooks";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { HomeBarStat } from "@/app/features/home/HomeView";
 
 export const IndexLineChart = memo(function IndexLineChart({ models }: { models: ArtificialAnalysisModel[] }) {
   const { t } = useTranslation();
-  const [chartRef, chartWidth] = useElementWidth<HTMLDivElement>();
-  const chartHeight = chartWidth >= 560 ? 260 : 210;
   const top10 = useMemo(
     () =>
       [...models]
@@ -35,48 +32,45 @@ export const IndexLineChart = memo(function IndexLineChart({ models }: { models:
         <p className="text-sm font-semibold mb-3">
           {t("intelligenceIndex")} — {t("top10")}
         </p>
-        <div ref={chartRef} className="w-full" style={{ height: chartHeight }}>
-          {chartWidth > 0 && top10.length > 0 && (
-            <LineChart
-              width={chartWidth}
-              height={chartHeight}
-              data={chartData}
-              margin={{ top: 4, right: 12, bottom: 4, left: 0 }}
-            >
-              <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
-              <XAxis dataKey="name" tick={false} stroke="var(--border)" />
-              <YAxis
-                tick={{ fontSize: 10, fill: "var(--text-tertiary)" }}
-                stroke="var(--border)"
-                domain={[0, 100]}
-                tickCount={6}
-                tickFormatter={(v: number) => Math.round(v).toString()}
-              />
-              <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => Math.round(Number(value))} />
-              <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
-              <Line
-                type="monotone"
-                dataKey="intelligence"
-                name={t("intelligence")}
-                stroke={getModelColor(0)}
-                strokeWidth={2.5}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-                isAnimationActive={false}
-                connectNulls={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="coding"
-                name={t("coding")}
-                stroke={getModelColor(1)}
-                strokeWidth={2}
-                dot={{ r: 3 }}
-                activeDot={{ r: 5 }}
-                isAnimationActive={false}
-                connectNulls={false}
-              />
-            </LineChart>
+        <div className="w-full h-[210px] sm:h-[260px]">
+          {top10.length > 0 && (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
+                <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis dataKey="name" tick={false} stroke="var(--border)" />
+                <YAxis
+                  tick={{ fontSize: 10, fill: "var(--text-tertiary)" }}
+                  stroke="var(--border)"
+                  domain={[0, 100]}
+                  tickCount={6}
+                  tickFormatter={(v: number) => Math.round(v).toString()}
+                />
+                <Tooltip contentStyle={chartTooltipStyle} formatter={(value) => Math.round(Number(value))} />
+                <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
+                <Line
+                  type="monotone"
+                  dataKey="intelligence"
+                  name={t("intelligence")}
+                  stroke={getModelColor(0)}
+                  strokeWidth={2.5}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  isAnimationActive={false}
+                  connectNulls={false}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="coding"
+                  name={t("coding")}
+                  stroke={getModelColor(1)}
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                  activeDot={{ r: 5 }}
+                  isAnimationActive={false}
+                  connectNulls={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
           )}
         </div>
       </CardContent>

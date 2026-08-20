@@ -1,6 +1,6 @@
 import { memo, type ReactNode } from "react";
 import { useTranslation } from "@/app/i18n";
-import { useIsMobile } from "@/app/hooks";
+import { useDevice } from "@/app/device";
 import { Card, CardContent, Dot, Td, Th, Tr } from "@/app/components/ui";
 import { approxEq } from "@/shared/utils";
 
@@ -197,7 +197,7 @@ function CompareTableInner<T>({
   mobileLayout = "metric-rows",
   mobileCard = false,
 }: CompareTableProps<T>) {
-  const isMobile = useIsMobile();
+  const { isMobile } = useDevice();
   const winners = computeWinners(rows, models, getKey);
 
   if (isMobile) {

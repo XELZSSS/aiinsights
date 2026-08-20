@@ -301,13 +301,13 @@ export function Sheet({ open, onClose, children, className }: SheetProps) {
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center" onClick={onClose}>
-      <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+      <div className="fixed inset-0 bg-black/40 animate-fade-in" aria-hidden="true" />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-50 w-full max-w-md rounded-t-xl sm:rounded-xl border border-border bg-bg-primary shadow-lg",
+          "relative z-50 w-full max-w-md rounded-t-xl sm:rounded-xl border border-border bg-bg-primary shadow-lg animate-sheet-up",
           className,
         )}
         onClick={(e) => e.stopPropagation()}
