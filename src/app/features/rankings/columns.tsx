@@ -2,7 +2,16 @@ import { Lightbulb, Plus, Check } from "lucide-react";
 import type { DataTableColumn } from "@/app/components/data";
 import { Button } from "@/app/components/ui";
 import { RightAlignedText, ModelDetailContent, RankingNameCell } from "@/app/components/composite";
-import { formatScore, formatDollar, formatShortNumber, formatTokens, formatTrend, modelInputPrice, modelOutputPrice, modelCacheHitPrice } from "@/shared/utils";
+import {
+  formatScore,
+  formatDollar,
+  formatShortNumber,
+  formatTokens,
+  formatTrend,
+  modelInputPrice,
+  modelOutputPrice,
+  modelCacheHitPrice,
+} from "@/shared/utils";
 import { cn } from "@/shared/utils";
 import type { ArtificialAnalysisModel, OpenRouterRankEntry } from "@/shared/types";
 import type { TFunction, TranslationKey } from "@/shared/i18n";
@@ -194,7 +203,11 @@ function trendClass(change?: number | null) {
 }
 
 // Factory for a right-aligned token-count column with monospace formatting.
-const tokenColumn = <T,>(id: string, header: string, accessor: (item: T) => number | null | undefined): DataTableColumn<T> => ({
+const tokenColumn = <T,>(
+  id: string,
+  header: string,
+  accessor: (item: T) => number | null | undefined,
+): DataTableColumn<T> => ({
   id,
   header,
   align: "right",

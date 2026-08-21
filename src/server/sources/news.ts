@@ -25,7 +25,9 @@ const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_
 function parseFeed(xml: string, sourceUrl: string): NewsItem[] {
   const feed = parser.parse(xml);
   const channel = feed?.rss?.channel || feed?.feed;
-  if (!channel) return [];
+  // An unparseable/garbage feed is a failure, not an empty success, so partial-failure
+  // accounting (failCount / PARTIAL_FAIL_TTL) can react to it.
+  if (!channel) throw new Error(`Unrecognized feed format at ${sourceUrl}`);
   const rawTitle = channel.title;
   const sourceName =
     decodeEntities(typeof rawTitle === "string" ? rawTitle : ((rawTitle?.["#text"] as string | undefined) ?? "")) ||

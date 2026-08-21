@@ -8,10 +8,15 @@ export class CacheService {
   private backend: CacheBackend;
   private version: string;
   private inflight = new Map<string, Promise<unknown>>();
+  private logWriteError: (err: unknown) => void;
 
-  constructor(opts: { kv?: KVNamespace | null; version?: string }) {
+  constructor(opts: { kv?: KVNamespace | null; version?: string; onWriteError?: (err: unknown) => void }) {
     this.backend = opts.kv ? new KvBackend(opts.kv) : new MemoryBackend();
     this.version = opts.version ?? "v1";
+    // A failed cache write must never fail the request that produced the data.
+    this.logWriteError =
+      opts.onWriteError ??
+      ((err) => console.warn(`[cache] write failed: ${err instanceof Error ? err.message : String(err)}`));
   }
 
   private versionedKey(key: string): string {
@@ -38,7 +43,11 @@ export class CacheService {
     const promise = (async () => {
       try {
         const { data, ttl } = await fn();
-        await this.backend.set(vKey, data, ttl ?? defaultTtl);
+        try {
+          await this.backend.set(vKey, data, ttl ?? defaultTtl);
+        } catch (err) {
+          this.logWriteError(err);
+        }
         return data;
       } finally {
         this.inflight.delete(vKey);

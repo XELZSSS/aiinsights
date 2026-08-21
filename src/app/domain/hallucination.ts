@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { ArtificialAnalysisModel, HallucinationRankingEntry } from "@/shared/types";
 import { normalizePercent } from "@/shared/utils";
+import { useSuspenseArtificialRankings } from "@/app/api/queries";
 
 // One entry per model that has an omniscience breakdown; models without one are skipped.
 // Sorted by accuracy descending so the most reliable models rank first.
@@ -28,4 +29,13 @@ function buildHallucinationRankings(models: ArtificialAnalysisModel[]): Hallucin
 /** Memoized hallucination rankings; empty until `enabled` and data are both present. */
 export function useHallucinationRankings(data: ArtificialAnalysisModel[], enabled = true): HallucinationRankingEntry[] {
   return useMemo(() => (enabled && data.length > 0 ? buildHallucinationRankings(data) : []), [data, enabled]);
+}
+
+/**
+ * Suspense wrapper combining the Artificial Analysis rankings query with the
+ * hallucination rankings derived from it — the standard way to consume both.
+ */
+export function useSuspenseHallucinationRankings(): HallucinationRankingEntry[] {
+  const { data } = useSuspenseArtificialRankings();
+  return useHallucinationRankings(data);
 }

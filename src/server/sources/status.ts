@@ -43,13 +43,13 @@ async function checkSources(ctx: AppContext): Promise<SourcesStatusData> {
   const checkedAt = new Date().toISOString();
   const grouped = new Map<SourceStatus["id"], SourceStatus & { total: number; failures: number }>();
 
-  for (let i = 0; i < targets.length; i++) {
-    const target = targets[i]!;
-    const result = results[i]!;
-    const probe =
+  for (const result of results) {
+    // A rejected probe (should not happen: probe catches internally) counts as a failed target.
+    const { target, probe } =
       result.status === "fulfilled"
-        ? result.value.probe
-        : { ok: false, status: null, latencyMs: null, error: "probe error" };
+        ? result.value
+        : { target: null, probe: { ok: false, status: null, latencyMs: null, error: "probe error" } };
+    if (!target) continue;
     const existing = grouped.get(target.id);
     if (!existing) {
       grouped.set(target.id, {
@@ -79,8 +79,7 @@ async function checkSources(ctx: AppContext): Promise<SourcesStatusData> {
   }
 
   const sources: SourceStatus[] = Array.from(grouped.values()).map((s) => {
-    if (s.ok)
-      return { id: s.id, ok: true, status: s.status, latencyMs: s.latencyMs, error: null, checkedAt };
+    if (s.ok) return { id: s.id, ok: true, status: s.status, latencyMs: s.latencyMs, error: null, checkedAt };
     return {
       id: s.id,
       ok: false,
@@ -94,15 +93,21 @@ async function checkSources(ctx: AppContext): Promise<SourcesStatusData> {
   return { sources, checkedAt };
 }
 
-export const getSourcesStatus = createSource<Record<string, never>, SourcesStatusData>({
+// Internal: cached probe of every upstream source.
+const getSourcesStatus = createSource<Record<string, never>, SourcesStatusData>({
   cacheKey: () => cacheKeys.sourcesStatus,
   defaultTtl: STATUS_TTL_MS,
   fetch: async (ctx: AppContext) => ({ data: await checkSources(ctx) }),
 });
 
-export const refreshSourcesStatus = async (ctx: AppContext): Promise<SourcesStatusData> => {
+// Internal: force a fresh probe round and seed the cache with it.
+const refreshSourcesStatus = async (ctx: AppContext): Promise<SourcesStatusData> => {
   const data = await checkSources(ctx);
-  await ctx.cache.set(cacheKeys.sourcesStatus, data, STATUS_TTL_MS);
+  try {
+    await ctx.cache.set(cacheKeys.sourcesStatus, data, STATUS_TTL_MS);
+  } catch {
+    // Cache seeding is best-effort; the fresh payload is still returned.
+  }
   return data;
 };
 

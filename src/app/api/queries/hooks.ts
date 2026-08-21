@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import { apiFetch, apiPaths } from "@/app/api/client";
+import { queryKeys } from "./keys";
 import type { OpenSourceModelEntry, SourcesStatusPayload } from "@/shared/types";
 import { qSourcesStatus, qOpenSourceModels, qOpenSourceReleases } from "./definitions";
 
@@ -22,7 +23,7 @@ export function useSourcesStatus(): SourcesStatusQuery {
         cache: "no-store",
       });
       // Write the fresh payload straight into the cache so all consumers update without a refetch.
-      queryClient.setQueryData(["api", "sources-status"], fresh);
+      queryClient.setQueryData(queryKeys.sourcesStatus, fresh);
     } catch {
       await query.refetch();
     } finally {

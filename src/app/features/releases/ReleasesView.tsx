@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
-import type { DataTableColumn } from "@/app/components/data";
-import { DataTable } from "@/app/components/data";
+import { DataTable, type DataTableColumn } from "@/app/components/data";
 import { useTranslation } from "@/app/i18n";
 import { useFilteredData } from "@/app/hooks";
 

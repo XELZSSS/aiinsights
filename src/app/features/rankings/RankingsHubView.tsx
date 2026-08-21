@@ -7,7 +7,7 @@ import {
   useSuspenseOpenSourceModels,
   useSuspenseOpenRouterRankings,
 } from "@/app/api/queries";
-import { useHallucinationRankings } from "@/app/domain/hallucination";
+import { useSuspenseHallucinationRankings } from "@/app/domain/hallucination";
 import { SuspenseQuery, Spinner, SearchInput } from "@/app/components/shared";
 import { ArtificialAnalysisView } from "@/app/features/rankings/ArtificialAnalysisView";
 import { TabContainer, type TabItem } from "@/app/components/composite";
@@ -61,8 +61,7 @@ function OpenSourceTab() {
 }
 
 function HallucinationRankingsTab() {
-  const { data } = useSuspenseArtificialRankings();
-  const hallucinationRankings = useHallucinationRankings(data);
+  const hallucinationRankings = useSuspenseHallucinationRankings();
   return <HallucinationRankingsView rankings={hallucinationRankings} />;
 }
 

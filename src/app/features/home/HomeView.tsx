@@ -2,16 +2,14 @@ import { memo, useMemo, lazy, Suspense } from "react";
 import { Rocket, Image, BarChart3, Lightbulb } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
 import { useSuspenseArtificialRankings, useSuspenseHomeDashboard } from "@/app/api/queries";
-import { useHallucinationRankings } from "@/app/domain/hallucination";
-import { SuspenseQuery } from "@/app/components/shared";
+import { useSuspenseHallucinationRankings } from "@/app/domain/hallucination";
+import { SuspenseQuery, SearchInput } from "@/app/components/shared";
 import { StatCard, CardGrid } from "@/app/components/composite";
 import { Card, CardContent, Dot } from "@/app/components/ui";
 import { PageContainer, PageSection } from "@/app/components/layout";
-import { getModelColor, groupByProvider, formatShortNumber } from "@/shared/utils";
+import { getModelColor, computeProviderStats, formatShortNumber } from "@/shared/utils";
 import type { ArenaModel, ArtificialAnalysisModel, HallucinationRankingEntry, HomeDashboardData } from "@/shared/types";
 import type { TranslationKey } from "@/shared/i18n";
-
-import { SearchInput } from "@/app/components/shared";
 
 interface HomeKpi {
   label: string;
@@ -102,13 +100,8 @@ function useHomeDashboardData(
       },
     ];
 
-    const providers = groupByProvider(artificialData);
-    const providerStats: HomeProviderStat[] = providers
-      .map(({ name, color, models }) => {
-        const speeds = models.map((m) => m.speed?.median_output_speed).filter((s): s is number => s != null);
-        const avgSpeed = speeds.length > 0 ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0;
-        return { name, color, avgSpeed, count: models.length };
-      })
+    const providerStats: HomeProviderStat[] = computeProviderStats(artificialData)
+      .map(({ name, color, count, avgSpeed }) => ({ name, color, avgSpeed: avgSpeed ?? 0, count }))
       // Order providers by average output speed so the fastest lead the card.
       .sort((a, b) => b.avgSpeed - a.avgSpeed);
 
@@ -221,7 +214,7 @@ const HomeContent = memo(function HomeContent() {
   const { t } = useTranslation();
 
   const { data: artificialData } = useSuspenseArtificialRankings();
-  const hallucinationRankings = useHallucinationRankings(artificialData);
+  const hallucinationRankings = useSuspenseHallucinationRankings();
   const { data: dashboardData } = useSuspenseHomeDashboard();
 
   const { downloadStats, hallucinationStats, kpiStrip, providerStats, arenaT2IModels } = useHomeDashboardData(

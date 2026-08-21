@@ -8,11 +8,7 @@ export interface ApiQueryOptions<T> {
 }
 
 /** Builds a react-query for one API path, exposing a regular `.use()` and a Suspense-based `.useSuspense()`. */
-export function createApiQuery<T>(
-  key: readonly (string | number)[],
-  path: string,
-  opts?: ApiQueryOptions<T>,
-) {
+export function createApiQuery<T>(key: readonly (string | number)[], path: string, opts?: ApiQueryOptions<T>) {
   const { queryFn, ...queryOpts } = opts ?? {};
   const qf = queryFn ?? fetcher<T>(path);
   return {

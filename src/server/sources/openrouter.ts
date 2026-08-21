@@ -1,9 +1,9 @@
-import { upstreamConfig, DEFAULT_TTL_MS, PARTIAL_FAIL_TTL_MS, cacheKeys } from "@/shared/config";
+import { upstreamConfig, DEFAULT_TTL_MS, THIRTY_MINUTES, PARTIAL_FAIL_TTL_MS, cacheKeys } from "@/shared/config";
 import type { OpenRouterRankingsPayload, OpenRouterRankEntry } from "@/shared/types";
 import type { AppContext } from "@/server/app";
 import { numOr } from "@/server/parsers/primitives";
 import { createSource } from "@/server/core/source";
-import { formatSettleErrors } from "@/server/core/utils";
+import { formatSettleErrors, errMsg } from "@/server/core/utils";
 
 const OPENROUTER = upstreamConfig.openrouter;
 
@@ -130,7 +130,7 @@ interface PricingRow {
 
 type PricingRecord = Record<string, PricingEntry>;
 
-const PRICING_TTL_MS = 30 * 60_000;
+const PRICING_TTL_MS = THIRTY_MINUTES;
 
 async function fetchModelPricing(ctx: AppContext): Promise<Map<string, PricingEntry>> {
   try {
@@ -150,7 +150,9 @@ async function fetchModelPricing(ctx: AppContext): Promise<Map<string, PricingEn
       return { data: record };
     });
     return new Map(Object.entries(record));
-  } catch {
+  } catch (err) {
+    // Rankings are still served without pricing; log so the degradation is observable.
+    ctx.log("warn", `[openrouter] pricing fetch failed: ${errMsg(err)}`);
     return new Map<string, PricingEntry>();
   }
 }
@@ -164,9 +166,7 @@ export const getOpenRouterRankings = createSource<Record<string, never>, OpenRou
       fetchModelPricing(ctx),
     ]);
     const modelRows =
-      modelResult.status === "fulfilled" && Array.isArray(modelResult.value?.data)
-        ? modelResult.value.data
-        : [];
+      modelResult.status === "fulfilled" && Array.isArray(modelResult.value?.data) ? modelResult.value.data : [];
     const pricingMap = pricingResult.status === "fulfilled" ? pricingResult.value : new Map<string, PricingEntry>();
     if (modelRows.length === 0) {
       const reasons = formatSettleErrors([modelResult], ["models"]);

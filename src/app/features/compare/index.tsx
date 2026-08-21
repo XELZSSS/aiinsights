@@ -8,7 +8,7 @@ import { Spinner } from "@/app/components/shared";
 import { CompareTable, type CompareRow } from "@/app/components/data/compare-table";
 
 import { useTranslation } from "@/app/i18n";
-import { useElementWidth } from "@/app/hooks";
+import { useCompareModels, useElementWidth } from "@/app/hooks";
 import { useCompareStore } from "@/app/stores";
 import { useArtificialRankings } from "@/app/api/queries";
 import {
@@ -26,18 +26,16 @@ import { buildPriceRows, PriceTable, PriceChart, CostEstimator } from "@/app/fea
 import { PageContainer, PageHeader } from "@/app/components/layout";
 
 /**
- * Resolves the compared model ids from the compare store into full model objects,
- * returning null while the rankings query is still loading.
+ * Resolves the compared model ids into full model objects via the rankings query,
+ * returning null while the query is still loading.
  */
-function useCompareModels(): ArtificialAnalysisModel[] | null {
-  const compareIds = useCompareStore((s) => s.compareIds);
+function useComparedModelsOrNull(): ArtificialAnalysisModel[] | null {
   const rankingsQ = useArtificialRankings();
+  const models = useCompareModels(rankingsQ.data ?? []);
   return useMemo(() => {
     if (rankingsQ.isPending || !rankingsQ.data) return null;
-    return compareIds
-      .map((id) => rankingsQ.data.find((m) => modelId(m) === id))
-      .filter((m): m is ArtificialAnalysisModel => !!m);
-  }, [compareIds, rankingsQ.data, rankingsQ.isPending]);
+    return models;
+  }, [rankingsQ.isPending, rankingsQ.data, models]);
 }
 
 interface ComparePageLayoutProps {
@@ -53,7 +51,7 @@ function ComparePageLayout({ backLabelKey, backTo, backState, title, children }:
   const { t } = useTranslation();
   const removeCompareModel = useCompareStore((s) => s.removeCompareModel);
   const clearCompare = useCompareStore((s) => s.clearCompare);
-  const models = useCompareModels();
+  const models = useComparedModelsOrNull();
 
   if (models === null) return <Spinner />;
 
@@ -146,9 +144,7 @@ const MetricCompareTable = memo(function MetricCompareTable({
       getName={(m) => m.short_name || m.name}
       getColor={getModelColor}
       mobileCard
-      renderValue={(row, model, winner) => (
-        <MetricValueDisplay value={row.getValue?.(model) ?? ""} winner={winner} />
-      )}
+      renderValue={(row, model, winner) => <MetricValueDisplay value={row.getValue?.(model) ?? ""} winner={winner} />}
     />
   );
 });

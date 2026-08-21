@@ -42,16 +42,21 @@ function effectiveDirection(p: ModelQuery): string {
   return p.sort === "createdAt" ? p.direction : "-1";
 }
 
+/** Fetch a page of models and guard against non-array upstream responses. */
+async function fetchHFModels(ctx: AppContext, sort: string, direction: string, limit: number): Promise<HFModel[]> {
+  const items = await ctx.http.json<HFModel[]>(
+    `${HF_API}?sort=${sort}&direction=${direction}&limit=${limit}&full=true`,
+  );
+  if (!Array.isArray(items))
+    throw new Error(`HuggingFace API returned non-array response (got ${items === null ? "null" : typeof items})`);
+  return items;
+}
+
 export const getModels = createSource<ModelQuery, OpenSourceModelEntry[]>({
   cacheKey: (p) => cacheKeys.openSourceModels(p.sort, effectiveDirection(p), p.limit),
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext, p) => {
-    const direction = effectiveDirection(p);
-    const items = await ctx.http.json<HFModel[]>(
-      `${HF_API}?sort=${p.sort}&direction=${direction}&limit=${p.limit}&full=true`,
-    );
-    if (!Array.isArray(items))
-      throw new Error(`HuggingFace API returned non-array response (got ${items === null ? "null" : typeof items})`);
+    const items = await fetchHFModels(ctx, p.sort, effectiveDirection(p), p.limit);
     return { data: items.map(mapModel).filter((m) => m.downloads > 0) };
   },
 });
@@ -60,9 +65,7 @@ export const getReleases = createSource<Record<string, never>, OpenSourceModelEn
   cacheKey: () => cacheKeys.openSourceReleases,
   defaultTtl: DEFAULT_TTL_MS,
   fetch: async (ctx: AppContext) => {
-    const items = await ctx.http.json<HFModel[]>(`${HF_API}?sort=createdAt&direction=-1&limit=500&full=true`);
-    if (!Array.isArray(items))
-      throw new Error(`HuggingFace API returned non-array response (got ${items === null ? "null" : typeof items})`);
+    const items = await fetchHFModels(ctx, "createdAt", "-1", 500);
     const releases = items
       .filter(
         (m) =>
@@ -73,8 +76,8 @@ export const getReleases = createSource<Record<string, never>, OpenSourceModelEn
       )
       .map(mapModel)
       .sort((a, b) => {
-        const da = Date.parse(a.createdAt!);
-        const db = Date.parse(b.createdAt!);
+        const da = Date.parse(a.createdAt ?? "");
+        const db = Date.parse(b.createdAt ?? "");
         if (Number.isNaN(da) && Number.isNaN(db)) return 0;
         if (Number.isNaN(da)) return 1;
         if (Number.isNaN(db)) return -1;

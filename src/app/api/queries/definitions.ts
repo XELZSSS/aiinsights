@@ -13,23 +13,35 @@ import { createApiQuery } from "./base";
 import { queryKeys } from "./keys";
 
 // Index-like data changes slowly (cached 30 min); rankings and the dashboard poll every 5 min.
-export const qArtificial = createApiQuery<ArtificialAnalysisModel[]>(queryKeys.artificialIndex, apiPaths.artificialIndex, {
-  staleTime: THIRTY_MINUTES,
-});
+export const qArtificial = createApiQuery<ArtificialAnalysisModel[]>(
+  queryKeys.artificialIndex,
+  apiPaths.artificialIndex,
+  {
+    staleTime: THIRTY_MINUTES,
+  },
+);
 export const qOpenSourceReleases = createApiQuery<OpenSourceModelEntry[]>(
   queryKeys.openSourceReleases,
   apiPaths.openSourceReleases,
   { staleTime: THIRTY_MINUTES },
 );
-export const qOpenRouter = createApiQuery<OpenRouterRankingsPayload>(queryKeys.openRouterRankings, apiPaths.openRouterRankings, {
-  staleTime: FIVE_MINUTES,
-});
+export const qOpenRouter = createApiQuery<OpenRouterRankingsPayload>(
+  queryKeys.openRouterRankings,
+  apiPaths.openRouterRankings,
+  {
+    staleTime: FIVE_MINUTES,
+  },
+);
 export const qHomeDashboard = createApiQuery<HomeDashboardData>(queryKeys.homeDashboard, apiPaths.homeDashboard, {
   staleTime: FIVE_MINUTES,
 });
-export const qOpenSourceModels = createApiQuery<OpenSourceModelEntry[]>(queryKeys.openSourceModels, apiPaths.openSourceModels(), {
-  staleTime: FIVE_MINUTES,
-});
+export const qOpenSourceModels = createApiQuery<OpenSourceModelEntry[]>(
+  queryKeys.openSourceModels,
+  apiPaths.openSourceModels(),
+  {
+    staleTime: FIVE_MINUTES,
+  },
+);
 export const qNews = (category: NewsCategory) =>
   createApiQuery<NewsItem[]>(queryKeys.news(category), apiPaths.news(category), {
     staleTime: THIRTY_MINUTES,
@@ -40,11 +52,9 @@ export const qNews = (category: NewsCategory) =>
 export const fetchSourcesStatus =
   (refresh: boolean) =>
   ({ signal }: QueryCtx): Promise<SourcesStatusPayload> =>
-    apiFetch<SourcesStatusPayload>(
-      refresh ? `${apiPaths.sourcesStatus}?refresh=1` : apiPaths.sourcesStatus,
-      signal,
-      { cache: "no-store" },
-    );
+    apiFetch<SourcesStatusPayload>(refresh ? `${apiPaths.sourcesStatus}?refresh=1` : apiPaths.sourcesStatus, signal, {
+      cache: "no-store",
+    });
 
 export const qSourcesStatus = createApiQuery<SourcesStatusPayload>(queryKeys.sourcesStatus, apiPaths.sourcesStatus, {
   staleTime: 60_000,

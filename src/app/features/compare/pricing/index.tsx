@@ -3,7 +3,16 @@ import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent } from "@/app/components/ui";
 import { CostEstimatorInputs } from "@/app/components/composite";
-import { chartTooltipStyle, formatDollar, cn, getModelColor, approxEq, modelInputPrice, modelOutputPrice, modelCacheHitPrice } from "@/shared/utils";
+import {
+  chartTooltipStyle,
+  formatDollar,
+  cn,
+  getModelColor,
+  approxEq,
+  modelInputPrice,
+  modelOutputPrice,
+  modelCacheHitPrice,
+} from "@/shared/utils";
 import { CompareTable, type CompareRow } from "@/app/components/data/compare-table";
 import { useTranslation } from "@/app/i18n";
 import { useMonthlyCosts } from "@/app/hooks";

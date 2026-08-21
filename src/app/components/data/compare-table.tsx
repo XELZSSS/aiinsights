@@ -167,10 +167,7 @@ function ModelCardsMobile<T>({
       {models.map((model, index) => (
         <Card key={getKey(model, index)}>
           <CardContent className="p-3 flex flex-col gap-2">
-            <p
-              className="flex items-center gap-1.5 text-sm font-medium truncate"
-              style={{ color: getColor(index) }}
-            >
+            <p className="flex items-center gap-1.5 text-sm font-medium truncate" style={{ color: getColor(index) }}>
               <Dot size="sm" color={getColor(index)} />
               {getName(model)}
             </p>

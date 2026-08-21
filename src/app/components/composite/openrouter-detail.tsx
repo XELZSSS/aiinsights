@@ -48,8 +48,16 @@ export function OpenRouterModelDetail({ model }: { model: OpenRouterRankEntry })
           <InfoRow compact label={t("totalTokens")} value={formatShortNumber(model.totalTokens ?? 0)} />
         </InfoCard>
         <InfoCard title={t("pricing")}>
-          <InfoRow compact label={t("promptPrice")} value={formatPricePerMillion(toPerMillion(openRouterPromptPrice(model)), t)} />
-          <InfoRow compact label={t("completionPrice")} value={formatPricePerMillion(toPerMillion(openRouterCompletionPrice(model)), t)} />
+          <InfoRow
+            compact
+            label={t("promptPrice")}
+            value={formatPricePerMillion(toPerMillion(openRouterPromptPrice(model)), t)}
+          />
+          <InfoRow
+            compact
+            label={t("completionPrice")}
+            value={formatPricePerMillion(toPerMillion(openRouterCompletionPrice(model)), t)}
+          />
         </InfoCard>
       </InfoGrid>
       <InfoCard title={t("techSelectionAdvice")}>

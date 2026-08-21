@@ -138,7 +138,8 @@ export const CACHE_VERSION = "v2";
 export const cacheKeys = {
   arenaLeaderboard: (category: ArenaCategory) => `arena-leaderboard:${category}`,
   intelligenceIndex: "aa-models",
-  openSourceModels: (sort: string, direction: string, limit: number) => `opensource-models:${sort}:${direction}:${limit}`,
+  openSourceModels: (sort: string, direction: string, limit: number) =>
+    `opensource-models:${sort}:${direction}:${limit}`,
   openSourceReleases: "opensource-releases",
   news: (category: NewsCategory) => `news:${category}`,
   openRouterRankings: "openrouter-rankings",

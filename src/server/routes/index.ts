@@ -12,14 +12,16 @@ import { getHomeDashboard } from "@/server/sources/home";
 import { getNews } from "@/server/sources/news";
 import { getOpenRouterRankings } from "@/server/sources/openrouter";
 import { getSourcesStatusFull } from "@/server/sources/status";
-import { ARENA_CATEGORIES } from "@/shared/config";
+import { ARENA_CATEGORIES, rssConfig } from "@/shared/config";
 import type { ArenaCategory, NewsCategory } from "@/shared/types";
 
-/** Declarative route descriptor: path, optional query schema (validated per request), and the handler. */
+/** Declarative route descriptor: path, optional query schema (validated per request), cache policy, and the handler. */
 export interface RouteDef<P extends Record<string, string> = Record<string, string>, R = unknown> {
   path: string;
   query?: { [K in keyof P]: QuerySpec };
   warm?: boolean;
+  /** Skip browser/CDN caching for responses that must reflect live state (e.g. probe results). */
+  noStore?: boolean;
   handler(ctx: AppContext, params: P): Promise<R>;
 }
 
@@ -36,6 +38,14 @@ export function registerRoutes(app: Hono, routes: RouteDef[]): void {
         // Query params are validated against the route's schema before the handler runs.
         const params = validateQuery(c.req.query(), route.query ?? {});
         const data = await route.handler(context, params as Record<string, string>);
+        if (c.req.method === "GET") {
+          // Live-state routes opt out of caching; everything else gets short browser + longer CDN caching.
+          c.header("Cache-Control", route.noStore ? "no-store, max-age=0" : "public, max-age=60");
+          c.header(
+            "CDN-Cache-Control",
+            route.noStore ? "no-store" : "public, max-age=300, stale-while-revalidate=300, stale-if-error=86400",
+          );
+        }
         return c.json({ data });
       } finally {
         endTime(c, "upstream");
@@ -101,11 +111,12 @@ export const routeDefs: RouteDef[] = [
       direction: { type: "enum", values: ["-1", "1"], default: "-1" },
       limit: { type: "number", default: "500", min: 1, max: 500 },
     },
+    // validateQuery has already applied schema defaults; no fallbacks needed here.
     handler: (ctx, params) =>
       getModels(ctx, {
-        sort: params.sort ?? "trendingScore",
-        direction: params.direction ?? "-1",
-        limit: Number(params.limit ?? 500),
+        sort: params.sort!,
+        direction: params.direction!,
+        limit: Number(params.limit),
       }),
   },
   {
@@ -115,7 +126,11 @@ export const routeDefs: RouteDef[] = [
   {
     path: "/api/news",
     query: {
-      category: { type: "enum", values: ["industry", "opensource", "hardware", "funding"], default: "industry" },
+      category: {
+        type: "enum",
+        values: Object.keys(rssConfig),
+        default: Object.keys(rssConfig)[0],
+      },
     },
     warm: true,
     handler: (ctx, params) => getNews(ctx, { category: params.category as NewsCategory }),
@@ -128,6 +143,8 @@ export const routeDefs: RouteDef[] = [
     path: "/api/sources-status",
     query: { refresh: { type: "enum", values: ["1", "0"], default: "0" } },
     warm: false,
+    // Live probe results must not be cached by browsers or the CDN.
+    noStore: true,
     handler: (ctx, params) => getSourcesStatusFull(ctx, params.refresh === "1"),
   },
   {

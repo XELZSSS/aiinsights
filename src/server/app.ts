@@ -21,7 +21,6 @@ export interface Env {
 export interface AppContext {
   cache: CacheService;
   http: HttpClient;
-  version: string;
   kv: KVNamespace | null;
   log(level: "info" | "warn" | "error", msg: string, meta?: Record<string, unknown>): void;
 }
@@ -37,7 +36,6 @@ export function buildContext(env: Env): AppContext {
   return {
     cache: sharedCache,
     http: sharedHttp,
-    version: CACHE_VERSION,
     kv: env.METRICS ?? null,
     log: (level, msg, meta) => {
       const line = meta ? `${msg} ${JSON.stringify(meta)}` : msg;
@@ -59,24 +57,11 @@ export function createApp(routeDefs: RouteDef[]): Hono {
     "/api/*",
     cors({
       origin: "*",
-      allowMethods: ["GET", "HEAD", "POST", "OPTIONS"],
+      allowMethods: ["GET", "HEAD", "OPTIONS"],
       allowHeaders: ["content-type"],
       maxAge: 86400,
     }),
   );
-
-  app.use("/api/*", async (c, next) => {
-    await next();
-    if (c.req.method === "GET" && c.res.status === 200) {
-      // sources-status reflects live probe results and must not be cached; everything else gets short browser + longer CDN caching.
-      const noStore = c.req.path === "/api/sources-status";
-      c.header("Cache-Control", noStore ? "no-store, max-age=0" : "public, max-age=60");
-      c.header(
-        "CDN-Cache-Control",
-        noStore ? "no-store" : "public, max-age=300, stale-while-revalidate=300, stale-if-error=86400",
-      );
-    }
-  });
 
   registerRoutes(app, routeDefs);
 

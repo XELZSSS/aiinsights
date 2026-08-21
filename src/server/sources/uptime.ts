@@ -1,4 +1,5 @@
 import type { AppContext } from "@/server/app";
+import { errMsg } from "@/server/core/utils";
 
 const FIRST_LAUNCH_KEY = "uptime:first-launch";
 
@@ -22,7 +23,7 @@ export async function getUptime(ctx: AppContext): Promise<UptimePayload> {
     try {
       await kv.put(FIRST_LAUNCH_KEY, String(firstLaunchMs));
     } catch (err) {
-      ctx.log("warn", `[uptime] failed to persist first launch: ${err instanceof Error ? err.message : String(err)}`);
+      ctx.log("warn", `[uptime] failed to persist first launch: ${errMsg(err)}`);
     }
   }
 

@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router";
 import { DataTable } from "@/app/components/data";
 import { useTranslation } from "@/app/i18n";
 import { useCompareStore } from "@/app/stores";
-import { useFilteredData, useMonthlyCosts } from "@/app/hooks";
+import { useCompareModels, useFilteredData, useMonthlyCosts } from "@/app/hooks";
 import { modelId } from "@/shared/utils";
 import { TabButton, CompareChipBar, SegmentedGroup, CostEstimatorInputs } from "@/app/components/composite";
 
@@ -100,13 +100,13 @@ function FilterToolbar({
 export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnalysisModel[] }) {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const compareIds = useCompareStore((s) => s.compareIds);
   const toggleCompareModel = useCompareStore((s) => s.toggleCompareModel);
   const clearCompare = useCompareStore((s) => s.clearCompare);
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
   const { filtered, viewMode, setViewMode, reasoningFilter, setReasoningFilter } = useAARankingFilters(rankings);
   const { monthlyCosts, ...costInputs } = useMonthlyCosts(filtered);
+  const comparedModels = useCompareModels(rankings);
 
   const avgCost = useMemo(() => {
     const valid = monthlyCosts.filter((v): v is number => v != null);
@@ -141,9 +141,7 @@ export function ArtificialAnalysisView({ rankings }: { rankings: ArtificialAnaly
       )}
 
       <CompareChipBar
-        models={compareIds
-          .map((id) => rankings.find((m) => modelId(m) === id))
-          .filter((m): m is ArtificialAnalysisModel => !!m)}
+        models={comparedModels}
         onRemove={(model) => toggleCompareModel(model)}
         onClear={clearCompare}
         onCompare={() => navigate(viewMode === "pricing" ? "/price-compare" : "/compare")}

@@ -20,19 +20,10 @@ import {
   useSuspenseOpenRouterRankings,
   useAllOpenSourceModels,
 } from "@/app/api/queries";
-import { useHallucinationRankings } from "@/app/domain/hallucination";
-import {
-  findModel,
-  formatShortNumber,
-  formatDate,
-  orNA,
-} from "@/shared/utils";
+import { useSuspenseHallucinationRankings } from "@/app/domain/hallucination";
+import { findModel, formatShortNumber, formatDate, orNA } from "@/shared/utils";
 import { MODEL_SOURCES, type ModelSource } from "@/shared/config";
-import type {
-  HallucinationRankingEntry,
-  ArtificialAnalysisModel,
-  OpenSourceModelEntry,
-} from "@/shared/types";
+import type { HallucinationRankingEntry, ArtificialAnalysisModel, OpenSourceModelEntry } from "@/shared/types";
 
 // The wildcard route param carries the model id/slug, which may be URL-encoded
 // (e.g. slashes in Hugging Face ids); decode defensively.
@@ -123,7 +114,7 @@ function HallDetailContent({
 function HallDetail({ decodedId }: { decodedId: string }) {
   const { data: aaData } = useSuspenseArtificialRankings();
   // Hallucination metrics are derived from the same Artificial Analysis dataset.
-  const hallucinationRankings = useHallucinationRankings(aaData);
+  const hallucinationRankings = useSuspenseHallucinationRankings();
   const entry = findModel(hallucinationRankings, decodedId, "id", "slug");
   const aaModel = findModel(aaData, decodedId, "id", "slug");
   if (!entry) return <NotFound />;

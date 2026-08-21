@@ -4,6 +4,7 @@ import type { AppContext } from "@/server/app";
 import { num, str, strOr, bool, obj } from "@/server/parsers/primitives";
 import { findNextData, findArrayInTree, parseRscPayload } from "@/server/parsers/rsc";
 import { createSource } from "@/server/core/source";
+import { errMsg } from "@/server/core/utils";
 
 const RSC_HEADERS = { RSC: "1", "Next-Router-State-Tree": "%5B%5D" } as const;
 
@@ -147,6 +148,23 @@ function findLeaderboardModels(tree: unknown): Record<string, unknown>[] | null 
   );
 }
 
+/**
+ * Run an optional enrichment fetch; a failure only logs a warning and yields an
+ * empty list so the main catalog can still be served.
+ */
+async function tryEnrich(
+  ctx: AppContext,
+  label: string,
+  fn: () => Promise<Record<string, unknown>[]>,
+): Promise<Record<string, unknown>[]> {
+  try {
+    return await fn();
+  } catch (err) {
+    ctx.log("warn", `[artificial] ${label} enrichment failed: ${errMsg(err)}`);
+    return [];
+  }
+}
+
 function mergeBySlug(
   catalog: Record<string, unknown>[],
   ...enrich: Record<string, unknown>[][]
@@ -180,46 +198,30 @@ export const getIntelligenceIndex = createSource<Record<string, never>, Artifici
       return Array.isArray(arr) && arr.length > 100 ? arr : null;
     });
 
-    let modelsPageModels: Record<string, unknown>[] = [];
-    try {
-      const modelsBody = await fetchAaRsc(ctx, MODELS_PATH);
-      modelsPageModels = parseRscPayload<Record<string, unknown>>(modelsBody, "initialModels", (tree) =>
+    const modelsPageModels = await tryEnrich(ctx, "/models", async () =>
+      parseRscPayload<Record<string, unknown>>(await fetchAaRsc(ctx, MODELS_PATH), "initialModels", (tree) =>
         findNextData(tree, "initialModels"),
-      );
-    } catch (err) {
-      ctx.log("warn", `[artificial] /models enrichment failed: ${err instanceof Error ? err.message : String(err)}`);
-    }
+      ),
+    );
 
-    let omniscienceEnrich: Record<string, unknown>[] = [];
-    try {
+    const omniscienceEnrich = await tryEnrich(ctx, "omniscience", async () => {
       const omniscienceBody = await fetchAaRsc(ctx, OMNISCIENCE_PATH);
       const omniscienceModels = parseRscPayload<Record<string, unknown>>(omniscienceBody, "initialModels", (tree) => {
         const arr = findNextData<Record<string, unknown>>(tree, "initialModels");
         return Array.isArray(arr) && arr.some((m) => m.omniscienceBreakdown != null) ? arr : null;
       });
-      omniscienceEnrich = (omniscienceModels ?? []).map(compactOmniscienceEnrich);
-    } catch (err) {
-      ctx.log(
-        "warn",
-        `[artificial] omniscience enrichment failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
-    }
+      return (omniscienceModels ?? []).map(compactOmniscienceEnrich);
+    });
 
-    let leaderboardEnrich: Record<string, unknown>[] = [];
-    try {
+    const leaderboardEnrich = await tryEnrich(ctx, "leaderboard", async () => {
       const leaderboardBody = await fetchAaRsc(ctx, LEADERBOARD_PATH);
       const leaderboardModels = parseRscPayload<Record<string, unknown>>(
         leaderboardBody,
         "models",
         findLeaderboardModels,
       );
-      leaderboardEnrich = (leaderboardModels ?? []).map(compactLeaderboardEnrich);
-    } catch (err) {
-      ctx.log(
-        "warn",
-        `[artificial] leaderboard enrichment failed: ${err instanceof Error ? err.message : String(err)}`,
-      );
-    }
+      return (leaderboardModels ?? []).map(compactLeaderboardEnrich);
+    });
 
     const models = mergeBySlug(catalog, indexModels, modelsPageModels, omniscienceEnrich, leaderboardEnrich)
       .map(compact)
