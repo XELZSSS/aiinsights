@@ -1,52 +1,20 @@
 import { cors } from "hono/cors";
 import { timeout } from "hono/timeout";
 import { timing } from "hono/timing";
-import { Hono } from "hono";
 import { logger } from "hono/logger";
+import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { registerRoutes } from "@/server/routes";
 import type { RouteDef } from "@/server/routes";
 import { ApiError } from "@/server/core/errors";
-import { CacheService } from "@/server/core/cache";
-import { HttpClient } from "@/server/core/http";
-import { CACHE_VERSION } from "@/shared/config";
 
-/** Cloudflare Worker bindings: optional KV namespace and a static-assets fetcher for non-API routes. */
-export interface Env {
-  METRICS?: KVNamespace;
-  ASSETS?: Fetcher;
+/** Clamp an error status to a contentful HTTP status code for JSON responses. */
+function clampStatus(status: number): ContentfulStatusCode {
+  return (status >= 100 && status < 600 ? status : 500) as ContentfulStatusCode;
 }
 
-/** Dependency container handed to every route handler. */
-export interface AppContext {
-  cache: CacheService;
-  http: HttpClient;
-  kv: KVNamespace | null;
-  log(level: "info" | "warn" | "error", msg: string, meta?: Record<string, unknown>): void;
-}
-
-// Reuse the HTTP client and cache across warmup and request paths within the same isolate.
-let sharedHttp: HttpClient | null = null;
-let sharedCache: CacheService | null = null;
-
-/** Build the per-request context, wiring in the optional KV backend for the cache. */
-export function buildContext(env: Env): AppContext {
-  sharedHttp ??= new HttpClient();
-  sharedCache ??= new CacheService({ kv: env.METRICS ?? null, version: CACHE_VERSION });
-  return {
-    cache: sharedCache,
-    http: sharedHttp,
-    kv: env.METRICS ?? null,
-    log: (level, msg, meta) => {
-      const line = meta ? `${msg} ${JSON.stringify(meta)}` : msg;
-      if (level === "error") console.error(`[${level}] ${line}`);
-      else if (level === "warn") console.warn(`[${level}] ${line}`);
-      else console.log(`[${level}] ${line}`);
-    },
-  };
-}
-
-export function createApp(routeDefs: RouteDef[]): Hono {
+/** Build the Hono API app: logging/timing/timeout/CORS middleware plus the declarative route table. */
+export function createApp(routeDefs: readonly RouteDef[]): Hono {
   const app = new Hono();
 
   app.use("*", logger());
@@ -68,7 +36,7 @@ export function createApp(routeDefs: RouteDef[]): Hono {
   app.onError((err, c) => {
     // Map known API errors to their HTTP status; anything else is treated as an unexpected 500.
     if (err instanceof ApiError) {
-      const status = (err.status >= 100 && err.status < 600 ? err.status : 500) as ContentfulStatusCode;
+      const status = clampStatus(err.status);
       return c.json({ error: { code: status, message: err.message } }, status);
     }
     console.error("[unhandled]", err);

@@ -1,6 +1,6 @@
 import { upstreamConfig, DEFAULT_TTL_MS, cacheKeys } from "@/shared/config";
 import type { ArenaModel, ArenaPayload, ArenaCategory } from "@/shared/types";
-import type { AppContext } from "@/server/app";
+import type { AppContext } from "@/server/context";
 import { createSource } from "@/server/core/source";
 import { extractRscScripts, findNextData, parseRscPayload } from "@/server/parsers/rsc";
 

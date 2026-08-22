@@ -1,12 +1,12 @@
 import { createApp } from "@/server/app";
 import { buildWarmUrls, routeDefs } from "@/server/routes";
-import type { Env } from "@/server/app";
+import type { Env } from "@/server/context";
 
 const app = createApp(routeDefs);
 
 // Warmup goes through the worker's internal hostname so it exercises this Worker's own routing without leaving Cloudflare.
 const WARM_BASE = "https://aiinsights.internal";
-const WARM_URLS = buildWarmUrls(WARM_BASE);
+const WARM_URLS = buildWarmUrls(WARM_BASE, routeDefs);
 
 // Pre-populate caches and CDN edges for all warm routes on the scheduled trigger; batches keep memory bounded.
 async function warmUrls(env: Env): Promise<void> {

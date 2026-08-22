@@ -1,6 +1,6 @@
 import { upstreamConfig, DEFAULT_TTL_MS, THIRTY_MINUTES, PARTIAL_FAIL_TTL_MS, cacheKeys } from "@/shared/config";
 import type { OpenRouterRankingsPayload, OpenRouterRankEntry } from "@/shared/types";
-import type { AppContext } from "@/server/app";
+import type { AppContext } from "@/server/context";
 import { numOr } from "@/server/parsers/primitives";
 import { createSource } from "@/server/core/source";
 import { formatSettleErrors, errMsg } from "@/server/core/utils";

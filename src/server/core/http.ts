@@ -4,23 +4,34 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 const DEFAULT_MAX_RETRIES = 2;
 const BASE_DELAY_MS = 500;
 
-interface FetchOptions extends RequestInit {
+export interface FetchOptions extends RequestInit {
   retries?: number;
   timeoutMs?: number;
 }
 
-interface ProbeResult {
+/** Result of a lightweight availability probe: headers only, body cancelled. */
+export interface ProbeResult {
   ok: boolean;
   status: number | null;
   latencyMs: number | null;
   error: string | null;
 }
 
+/** Transient upstream failure (5xx / 429 / network) that is worth retrying. */
 class RetryableHttpError extends Error {
   constructor(status: number, url: string) {
     super(`HTTP ${status} for ${url}`);
     this.name = "RetryableHttpError";
   }
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+// Exponential backoff with jitter to spread retries across concurrent requests.
+function backoffDelayMs(attempt: number): number {
+  return BASE_DELAY_MS * (1 << attempt) + Math.random() * BASE_DELAY_MS;
 }
 
 function isRetryableError(e: unknown): boolean {
@@ -29,6 +40,34 @@ function isRetryableError(e: unknown): boolean {
   if (e instanceof TypeError) return true;
   if (e instanceof DOMException) return e.name === "TimeoutError";
   return false;
+}
+
+interface AttemptContext {
+  url: string;
+  headers: Record<string, string>;
+  signal: AbortSignal | undefined;
+  accept: string;
+}
+
+/**
+ * Perform a single fetch attempt. Non-ok responses throw: permanent for client
+ * errors except rate-limiting, retryable for everything else.
+ */
+async function attemptOnce({ url, headers, signal, accept }: AttemptContext): Promise<Response> {
+  const res = await fetch(url, { headers, signal });
+  if (res.ok) return res;
+  // 4xx (except rate-limit 429) reflects a bad request, not a transient failure, so capture the body and bail.
+  if (res.status >= 400 && res.status < 500 && res.status !== 429) {
+    const body = accept.includes("json") ? await res.text().catch(() => "") : "";
+    throw new Error(`HTTP ${res.status} for ${url}${body ? `: ${body.slice(0, 200)}` : ""}`);
+  }
+  throw new RetryableHttpError(res.status, url);
+}
+
+/** Combine the caller's signal (if any) with a per-attempt timeout. */
+function linkSignals(external: AbortSignal | null | undefined, timeoutMs: number): AbortSignal {
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  return external ? AbortSignal.any([external, timeoutSignal]) : timeoutSignal;
 }
 
 export class HttpClient {
@@ -50,32 +89,18 @@ export class HttpClient {
       accept,
       ...(rest.headers as Record<string, string> | undefined),
     };
-    const externalSignal = rest.signal;
+    const ctx: AttemptContext = { url, headers, accept, signal: undefined };
 
     let lastErr: unknown;
     // Retry transient failures with exponential backoff; client errors (except 429) are treated as permanent.
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
-        const timeoutSignal = AbortSignal.timeout(timeoutMs);
-        const signal = externalSignal ? AbortSignal.any([externalSignal, timeoutSignal]) : timeoutSignal;
-        const res = await fetch(url, { headers, signal });
-        if (!res.ok) {
-          // 4xx (except rate-limit 429) reflects a bad request, not a transient failure, so capture the body and bail.
-          if (res.status >= 400 && res.status < 500 && res.status !== 429) {
-            const body = accept.includes("json") ? await res.text().catch(() => "") : "";
-            throw new Error(`HTTP ${res.status} for ${url}${body ? `: ${body.slice(0, 200)}` : ""}`);
-          }
-          throw new RetryableHttpError(res.status, url);
-        }
-        return res;
+        ctx.signal = linkSignals(rest.signal, timeoutMs);
+        return await attemptOnce(ctx);
       } catch (e) {
         lastErr = e;
         if (!isRetryableError(e)) throw e;
-        if (attempt < retries) {
-          // Exponential backoff with jitter to spread retries across concurrent requests.
-          const delay = BASE_DELAY_MS * (1 << attempt) + Math.random() * BASE_DELAY_MS;
-          await new Promise((r) => setTimeout(r, delay));
-        }
+        if (attempt < retries) await sleep(backoffDelayMs(attempt));
       }
     }
     throw lastErr;

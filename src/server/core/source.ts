@@ -1,4 +1,4 @@
-import type { AppContext } from "@/server/app";
+import type { AppContext } from "@/server/context";
 
 interface SourceResult<Data> {
   data: Data;

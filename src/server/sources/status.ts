@@ -1,5 +1,5 @@
 import { upstreamConfig, rssConfig, cacheKeys } from "@/shared/config";
-import type { AppContext } from "@/server/app";
+import type { AppContext } from "@/server/context";
 import { createSource } from "@/server/core/source";
 import type { SourceStatus, SourcesStatusPayload } from "@/shared/types";
 import { getUptime } from "@/server/sources/uptime";

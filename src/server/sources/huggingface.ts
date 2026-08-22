@@ -1,6 +1,6 @@
 import { upstreamConfig, DEFAULT_TTL_MS, cacheKeys } from "@/shared/config";
 import type { OpenSourceModelEntry } from "@/shared/types";
-import type { AppContext } from "@/server/app";
+import type { AppContext } from "@/server/context";
 import { createSource } from "@/server/core/source";
 import { getOpenLicense } from "@/server/parsers/licenses";
 

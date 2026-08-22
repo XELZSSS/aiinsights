@@ -1,4 +1,4 @@
-import type { AppContext } from "@/server/app";
+import type { AppContext } from "@/server/context";
 import { errMsg } from "@/server/core/utils";
 
 const FIRST_LAUNCH_KEY = "uptime:first-launch";

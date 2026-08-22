@@ -1,13 +1,11 @@
-import { XMLParser } from "fast-xml-parser";
 import { rssConfig, NEWS_TTL_MS, PARTIAL_FAIL_TTL_MS, cacheKeys } from "@/shared/config";
 import type { NewsItem, NewsCategory } from "@/shared/types";
-import type { AppContext } from "@/server/app";
+import type { AppContext } from "@/server/context";
 import { ValidationError } from "@/server/core/errors";
 import { createSource } from "@/server/core/source";
-import { decodeEntities, stripHtml } from "@/server/parsers/html";
+import { FEED_ACCEPT, parseFeed } from "@/server/parsers/rss";
 
 const VALID_CATEGORIES = new Set(Object.keys(rssConfig));
-const MAX_ITEMS_PER_FEED = 50;
 const MAX_TOTAL = 50;
 
 function deduplicateBy<T>(arr: T[], keyFn: (item: T) => string): T[] {
@@ -20,42 +18,8 @@ function deduplicateBy<T>(arr: T[], keyFn: (item: T) => string): T[] {
   });
 }
 
-const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_" });
-
-function parseFeed(xml: string, sourceUrl: string): NewsItem[] {
-  const feed = parser.parse(xml);
-  const channel = feed?.rss?.channel || feed?.feed;
-  // An unparseable/garbage feed is a failure, not an empty success, so partial-failure
-  // accounting (failCount / PARTIAL_FAIL_TTL) can react to it.
-  if (!channel) throw new Error(`Unrecognized feed format at ${sourceUrl}`);
-  const rawTitle = channel.title;
-  const sourceName =
-    decodeEntities(typeof rawTitle === "string" ? rawTitle : ((rawTitle?.["#text"] as string | undefined) ?? "")) ||
-    (() => {
-      try {
-        return new URL(sourceUrl).hostname;
-      } catch {
-        return "Unknown";
-      }
-    })();
-  let items = channel.item || channel.entry || [];
-  if (!Array.isArray(items)) items = [items];
-  return items
-    .slice(0, MAX_ITEMS_PER_FEED)
-    .map((item: Record<string, unknown>) => {
-      const title = item.title;
-      const rawLink = item.link;
-      const link = typeof rawLink === "string" ? rawLink : (rawLink as Record<string, unknown>)?.href;
-      if (!title || !link) return null;
-      return {
-        id: String((item.guid as Record<string, unknown>)?.["#text"] || item.guid || item.id || link),
-        title: decodeEntities(stripHtml(String(title))),
-        link: String(link),
-        pubDate: String(item.pubDate || item.published || item.updated || "1970-01-01T00:00:00Z"),
-        source: String(sourceName),
-      };
-    })
-    .filter((x: NewsItem | null): x is NewsItem => x !== null);
+function pubDateMs(pubDate: string): number {
+  return new Date(pubDate).getTime() || 0;
 }
 
 export const getNews = createSource<{ category: NewsCategory }, NewsItem[]>({
@@ -71,10 +35,7 @@ export const getNews = createSource<{ category: NewsCategory }, NewsItem[]>({
     const urls = rssConfig[category];
     const results = await Promise.allSettled(
       urls.map(async (url) =>
-        parseFeed(
-          await ctx.http.text(url, { headers: { accept: "application/rss+xml,application/xml,text/xml,*/*" } }),
-          url,
-        ),
+        parseFeed(await ctx.http.text(url, { headers: { accept: FEED_ACCEPT } }), url),
       ),
     );
     const allItems: NewsItem[] = [];
@@ -85,11 +46,7 @@ export const getNews = createSource<{ category: NewsCategory }, NewsItem[]>({
     }
     if (failCount === results.length && results.length > 0)
       throw new Error(`All ${results.length} RSS feed(s) for "${category}" failed`);
-    allItems.sort((a, b) => {
-      const ta = new Date(a.pubDate).getTime() || 0;
-      const tb = new Date(b.pubDate).getTime() || 0;
-      return tb - ta;
-    });
+    allItems.sort((a, b) => pubDateMs(b.pubDate) - pubDateMs(a.pubDate));
     const unique = deduplicateBy(
       deduplicateBy(allItems, (i) => i.link),
       (i) => i.title.toLowerCase().trim(),

@@ -1,4 +1,4 @@
-import type { AppContext } from "@/server/app";
+import type { AppContext } from "@/server/context";
 import { getArenaLeaderboard } from "@/server/sources/arena";
 import { getModels } from "@/server/sources/huggingface";
 import { getOpenRouterRankings } from "@/server/sources/openrouter";

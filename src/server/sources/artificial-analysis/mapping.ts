@@ -1,18 +1,9 @@
-import { upstreamConfig, DEFAULT_TTL_MS, BENCHMARK_KEYS, cacheKeys } from "@/shared/config";
+import { BENCHMARK_KEYS } from "@/shared/config";
 import type { ArtificialAnalysisModel } from "@/shared/types";
-import type { AppContext } from "@/server/app";
 import { num, str, strOr, bool, obj } from "@/server/parsers/primitives";
-import { findNextData, findArrayInTree, parseRscPayload } from "@/server/parsers/rsc";
-import { createSource } from "@/server/core/source";
-import { errMsg } from "@/server/core/utils";
+import { findArrayInTree } from "@/server/parsers/rsc";
 
-const RSC_HEADERS = { RSC: "1", "Next-Router-State-Tree": "%5B%5D" } as const;
-
-const INDEX_PATH = "/evaluations/artificial-analysis-intelligence-index";
-const MODELS_PATH = "/models";
-const OMNISCIENCE_PATH = "/evaluations/omniscience";
-const LEADERBOARD_PATH = "/leaderboards/models";
-
+/** Upstream field name for every benchmark key exposed by the API. */
 const BENCHMARK_FIELDS: Record<(typeof BENCHMARK_KEYS)[number], string> = {
   aime25: "aime25",
   gpqa: "gpqa",
@@ -32,14 +23,6 @@ const BENCHMARK_FIELDS: Record<(typeof BENCHMARK_KEYS)[number], string> = {
   omniscience: "omniscience",
 };
 
-async function fetchAaRsc(ctx: AppContext, path: string): Promise<string> {
-  return ctx.http.text(`${upstreamConfig.artificialAnalysis}${path}`, {
-    headers: { ...RSC_HEADERS },
-    retries: 0,
-    timeoutMs: 30_000,
-  });
-}
-
 function compactBenchmarks(m: Record<string, unknown>): Record<string, number | null> {
   const benchmarks: Record<string, number | null> = {};
   for (const key of BENCHMARK_KEYS) {
@@ -56,7 +39,8 @@ function compactCodingIndex(m: Record<string, unknown>): number | null {
   return (values.reduce((a, b) => a + b, 0) / values.length) * 100;
 }
 
-function compact(m: Record<string, unknown>): ArtificialAnalysisModel {
+/** Project one raw upstream model record onto the public ArtificialAnalysisModel shape. */
+export function compact(m: Record<string, unknown>): ArtificialAnalysisModel {
   const creator = obj(m.creator);
   const agentic = num(m.analystAgent);
   const omniscience = num(m.omniscience);
@@ -118,7 +102,8 @@ function compact(m: Record<string, unknown>): ArtificialAnalysisModel {
   };
 }
 
-function compactOmniscienceEnrich(m: Record<string, unknown>): Record<string, unknown> {
+/** Partial fields merged into the catalog from the omniscience page. */
+export function compactOmniscienceEnrich(m: Record<string, unknown>): Record<string, unknown> {
   const breakdown = obj(m.omniscienceBreakdown);
   return {
     slug: str(m.slug),
@@ -134,14 +119,15 @@ function compactOmniscienceEnrich(m: Record<string, unknown>): Record<string, un
   };
 }
 
-function compactLeaderboardEnrich(m: Record<string, unknown>): Record<string, unknown> {
+/** Partial fields merged into the catalog from the leaderboard page. */
+export function compactLeaderboardEnrich(m: Record<string, unknown>): Record<string, unknown> {
   return {
     slug: str(m.slug),
     medianReasoningTimeSeconds: num(m.medianReasoningTimeSeconds),
   };
 }
 
-function findLeaderboardModels(tree: unknown): Record<string, unknown>[] | null {
+export function findLeaderboardModels(tree: unknown): Record<string, unknown>[] | null {
   return findArrayInTree<Record<string, unknown>>(
     tree,
     (m) => typeof m === "object" && m !== null && "medianReasoningTimeSeconds" in (m as Record<string, unknown>),
@@ -149,23 +135,10 @@ function findLeaderboardModels(tree: unknown): Record<string, unknown>[] | null 
 }
 
 /**
- * Run an optional enrichment fetch; a failure only logs a warning and yields an
- * empty list so the main catalog can still be served.
+ * Merge the base catalog with enrichment lists by slug; first occurrence wins for
+ * the catalog, later enrichments overlay their fields onto existing entries.
  */
-async function tryEnrich(
-  ctx: AppContext,
-  label: string,
-  fn: () => Promise<Record<string, unknown>[]>,
-): Promise<Record<string, unknown>[]> {
-  try {
-    return await fn();
-  } catch (err) {
-    ctx.log("warn", `[artificial] ${label} enrichment failed: ${errMsg(err)}`);
-    return [];
-  }
-}
-
-function mergeBySlug(
+export function mergeBySlug(
   catalog: Record<string, unknown>[],
   ...enrich: Record<string, unknown>[][]
 ): Record<string, unknown>[] {
@@ -184,50 +157,3 @@ function mergeBySlug(
   }
   return [...merged.values()];
 }
-
-export const getIntelligenceIndex = createSource<Record<string, never>, ArtificialAnalysisModel[]>({
-  cacheKey: () => cacheKeys.intelligenceIndex,
-  defaultTtl: DEFAULT_TTL_MS,
-  fetch: async (ctx: AppContext) => {
-    const indexBody = await fetchAaRsc(ctx, INDEX_PATH);
-    const indexModels = parseRscPayload<Record<string, unknown>>(indexBody, "initialModels", (tree) =>
-      findNextData(tree, "initialModels"),
-    );
-    const catalog = parseRscPayload<Record<string, unknown>>(indexBody, "models", (tree) => {
-      const arr = findNextData<Record<string, unknown>>(tree, "models");
-      return Array.isArray(arr) && arr.length > 100 ? arr : null;
-    });
-
-    const modelsPageModels = await tryEnrich(ctx, "/models", async () =>
-      parseRscPayload<Record<string, unknown>>(await fetchAaRsc(ctx, MODELS_PATH), "initialModels", (tree) =>
-        findNextData(tree, "initialModels"),
-      ),
-    );
-
-    const omniscienceEnrich = await tryEnrich(ctx, "omniscience", async () => {
-      const omniscienceBody = await fetchAaRsc(ctx, OMNISCIENCE_PATH);
-      const omniscienceModels = parseRscPayload<Record<string, unknown>>(omniscienceBody, "initialModels", (tree) => {
-        const arr = findNextData<Record<string, unknown>>(tree, "initialModels");
-        return Array.isArray(arr) && arr.some((m) => m.omniscienceBreakdown != null) ? arr : null;
-      });
-      return (omniscienceModels ?? []).map(compactOmniscienceEnrich);
-    });
-
-    const leaderboardEnrich = await tryEnrich(ctx, "leaderboard", async () => {
-      const leaderboardBody = await fetchAaRsc(ctx, LEADERBOARD_PATH);
-      const leaderboardModels = parseRscPayload<Record<string, unknown>>(
-        leaderboardBody,
-        "models",
-        findLeaderboardModels,
-      );
-      return (leaderboardModels ?? []).map(compactLeaderboardEnrich);
-    });
-
-    const models = mergeBySlug(catalog, indexModels, modelsPageModels, omniscienceEnrich, leaderboardEnrich)
-      .map(compact)
-      .sort((a, b) => (b.intelligence_index ?? -Infinity) - (a.intelligence_index ?? -Infinity));
-    const invalid = models.filter((m) => !m.slug || !m.name);
-    if (invalid.length > 0) ctx.log("warn", `[artificial] ${invalid.length} models with empty slug/name after mapping`);
-    return { data: models };
-  },
-});
