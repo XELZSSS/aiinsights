@@ -3,10 +3,10 @@ import { ShieldAlert } from "lucide-react";
 import { DataTable } from "@/app/components/data";
 
 import { Card } from "@/app/components/ui";
-import { OpenRouterModelDetail } from "@/app/components/composite";
+import { OpenRouterModelDetail } from "@/app/features/models/OpenRouterModelDetail";
 import type { OpenRouterRankingsPayload, OpenRouterRankEntry } from "@/shared/types";
 import { useTranslation } from "@/app/i18n";
-import { buildOpenRouterColumns } from "@/app/features/rankings/columns";
+import { buildOpenRouterColumns } from "@/app/features/rankings/openRouterColumns";
 
 const getModelRowId = (r: OpenRouterRankEntry) => r.id;
 

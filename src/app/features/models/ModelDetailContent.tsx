@@ -14,9 +14,7 @@ import {
   modelOutputPrice,
   modelCacheHitPrice,
 } from "@/shared/utils";
-import { DetailLayout, StatGrid, InfoGrid } from "./layout";
-import { InfoCard, InfoRow } from "./info-card";
-import { StatCard } from "./stat-card";
+import { DetailLayout, StatGrid, InfoGrid, InfoCard, InfoRow, StatCard } from "@/app/components/ui";
 
 // Tailwind classes colouring each input/output modality pill.
 const MODALITY_STYLES = {

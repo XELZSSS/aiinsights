@@ -2,7 +2,7 @@ import { memo, useMemo } from "react";
 import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 import { Card, CardContent } from "@/app/components/ui";
-import { CostEstimatorInputs } from "@/app/components/composite";
+import { CostEstimatorInputs } from "@/app/features/cost-estimator/CostEstimatorInputs";
 import {
   chartTooltipStyle,
   formatDollar,
@@ -13,9 +13,9 @@ import {
   modelOutputPrice,
   modelCacheHitPrice,
 } from "@/shared/utils";
-import { CompareTable, type CompareRow } from "@/app/components/data/compare-table";
+import { CompareTable, type CompareRow } from "@/app/features/compare/CompareTable";
 import { useTranslation } from "@/app/i18n";
-import { useMonthlyCosts } from "@/app/hooks";
+import { useMonthlyCosts } from "@/app/features/cost-estimator/useMonthlyCosts";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import type { TFunction } from "@/shared/i18n";
 

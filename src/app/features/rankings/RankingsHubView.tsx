@@ -10,10 +10,9 @@ import {
 import { useSuspenseHallucinationRankings } from "@/app/domain/hallucination";
 import { SuspenseQuery, Spinner, SearchInput } from "@/app/components/shared";
 import { ArtificialAnalysisView } from "@/app/features/rankings/ArtificialAnalysisView";
-import { TabContainer, type TabItem } from "@/app/components/composite";
+import { TabContainer, type TabItem, Dot } from "@/app/components/ui";
 import { PageContainer, PageHeader } from "@/app/components/layout";
 import { DataTable, type DataTableColumn } from "@/app/components/data";
-import { Dot } from "@/app/components/ui";
 import { formatScore, formatPricePerMillion, computeProviderStats, type ProviderStats } from "@/shared/utils";
 import type { ArtificialAnalysisModel } from "@/shared/types";
 import {

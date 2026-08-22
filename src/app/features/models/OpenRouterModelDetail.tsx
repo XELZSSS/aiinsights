@@ -10,9 +10,7 @@ import {
   openRouterCompletionPrice,
   openRouterPromptPrice,
 } from "@/shared/utils";
-import { DetailLayout, StatGrid, InfoGrid } from "./layout";
-import { InfoCard, InfoRow } from "./info-card";
-import { StatCard } from "./stat-card";
+import { DetailLayout, StatGrid, InfoGrid, InfoCard, InfoRow, StatCard } from "@/app/components/ui";
 
 // Prices are stored per token; convert to per-million-token for display consistency.
 function toPerMillion(price: number | null | undefined): number | undefined {

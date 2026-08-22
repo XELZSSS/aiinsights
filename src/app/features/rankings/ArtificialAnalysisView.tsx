@@ -4,12 +4,16 @@ import { useNavigate, useLocation } from "react-router";
 import { DataTable } from "@/app/components/data";
 import { useTranslation } from "@/app/i18n";
 import { useCompareStore } from "@/app/stores";
-import { useCompareModels, useFilteredData, useMonthlyCosts } from "@/app/hooks";
+import { useFilteredData } from "@/app/hooks";
 import { modelId } from "@/shared/utils";
-import { TabButton, CompareChipBar, SegmentedGroup, CostEstimatorInputs } from "@/app/components/composite";
+import { TabButton, SegmentedGroup } from "@/app/components/ui";
+import { CompareChipBar } from "@/app/features/compare/CompareChipBar";
+import { useCompareModels } from "@/app/features/compare/useCompareModels";
+import { CostEstimatorInputs } from "@/app/features/cost-estimator/CostEstimatorInputs";
+import { useMonthlyCosts } from "@/app/features/cost-estimator/useMonthlyCosts";
 
 import type { ArtificialAnalysisModel } from "@/shared/types";
-import { buildRankingColumns, buildPricingColumns, ModelExpandedDetail } from "@/app/features/rankings/columns";
+import { buildRankingColumns, buildPricingColumns, ModelExpandedDetail } from "@/app/features/rankings/aaColumns";
 
 type ViewMode = "rankings" | "pricing";
 type ReasoningFilter = "all" | "reasoning" | "non-reasoning";
@@ -66,26 +70,21 @@ function FilterToolbar({
                 {t("pricing")}
               </TabButton>
             </SegmentedGroup>
-            <>
-              <div className="w-px h-4 bg-border mx-1 shrink-0" />
-              <SegmentedGroup className="overflow-x-auto no-scrollbar">
-                <TabButton active={reasoningFilter === "all"} onClick={() => onReasoningFilterChange("all")}>
-                  {t("all")}
-                </TabButton>
-                <TabButton
-                  active={reasoningFilter === "reasoning"}
-                  onClick={() => onReasoningFilterChange("reasoning")}
-                >
-                  {t("reasoning")}
-                </TabButton>
-                <TabButton
-                  active={reasoningFilter === "non-reasoning"}
-                  onClick={() => onReasoningFilterChange("non-reasoning")}
-                >
-                  {t("nonReasoning")}
-                </TabButton>
-              </SegmentedGroup>
-            </>
+            <div className="w-px h-4 bg-border mx-1 shrink-0" />
+            <SegmentedGroup className="overflow-x-auto no-scrollbar">
+              <TabButton active={reasoningFilter === "all"} onClick={() => onReasoningFilterChange("all")}>
+                {t("all")}
+              </TabButton>
+              <TabButton active={reasoningFilter === "reasoning"} onClick={() => onReasoningFilterChange("reasoning")}>
+                {t("reasoning")}
+              </TabButton>
+              <TabButton
+                active={reasoningFilter === "non-reasoning"}
+                onClick={() => onReasoningFilterChange("non-reasoning")}
+              >
+                {t("nonReasoning")}
+              </TabButton>
+            </SegmentedGroup>
           </div>
         </div>
       </div>

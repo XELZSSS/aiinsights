@@ -5,7 +5,13 @@ import { Card, CardContent } from "@/app/components/ui";
 import { PageSection } from "@/app/components/layout";
 import { getModelColor, COOL_COLORS, chartTooltipStyle } from "@/shared/utils";
 import type { ArtificialAnalysisModel } from "@/shared/types";
-import type { HomeBarStat } from "@/app/features/home/HomeView";
+
+/** One ranked bar row: a display label, the numeric value, and its preformatted label. */
+export interface HomeBarStat {
+  label: string;
+  value: number;
+  valueLabel: string;
+}
 
 /**
  * Line chart of the top-10 models by intelligence index, plotting the coding index

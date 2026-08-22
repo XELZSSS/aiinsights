@@ -3,12 +3,14 @@ import { useNavigate } from "react-router";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Button, Card, CardContent } from "@/app/components/ui";
-import { BackButton, CompareChipBar } from "@/app/components/composite";
+import { BackButton } from "@/app/components/shared";
+import { CompareChipBar } from "./CompareChipBar";
 import { Spinner } from "@/app/components/shared";
-import { CompareTable, type CompareRow } from "@/app/components/data/compare-table";
+import { CompareTable, type CompareRow } from "./CompareTable";
 
 import { useTranslation } from "@/app/i18n";
-import { useCompareModels, useElementWidth } from "@/app/hooks";
+import { useElementWidth } from "@/app/hooks";
+import { useCompareModels } from "./useCompareModels";
 import { useCompareStore } from "@/app/stores";
 import { useArtificialRankings } from "@/app/api/queries";
 import {

@@ -1,5 +1,5 @@
 import { memo, type ComponentType, type ReactNode } from "react";
-import { Card, CardContent } from "@/app/components/ui";
+import { Card, CardContent } from "./card";
 import { cn } from "@/shared/utils";
 
 interface StatCardProps {

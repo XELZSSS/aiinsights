@@ -1,20 +1,12 @@
 import type { ComponentType } from "react";
 import { useParams } from "react-router";
 import { useTranslation } from "@/app/i18n";
-import {
-  BackButton,
-  StatCard,
-  InfoCard,
-  InfoRow,
-  ModelDetailContent,
-  OpenRouterModelDetail,
-  DetailLayout,
-  StatGrid,
-  InfoGrid,
-} from "@/app/components/composite";
-import { Badge } from "@/app/components/ui";
+import { BackButton } from "@/app/components/shared";
+import { StatCard, InfoCard, InfoRow, DetailLayout, StatGrid, InfoGrid, Badge } from "@/app/components/ui";
 import { SuspenseQuery, NotFound, Spinner } from "@/app/components/shared";
 import { PageContainer, PageHeader } from "@/app/components/layout";
+import { ModelDetailContent } from "./ModelDetailContent";
+import { OpenRouterModelDetail } from "./OpenRouterModelDetail";
 import {
   useSuspenseArtificialRankings,
   useSuspenseOpenRouterRankings,

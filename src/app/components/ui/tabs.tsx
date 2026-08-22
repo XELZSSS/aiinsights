@@ -1,5 +1,5 @@
 import { memo, type KeyboardEvent, type ReactNode } from "react";
-import { SegmentedGroup } from "./layout";
+import { SegmentedGroup } from "./grids";
 import { cn } from "@/shared/utils";
 
 interface TabButtonProps {

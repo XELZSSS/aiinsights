@@ -3,7 +3,7 @@ import { Languages, Moon, Sun, X } from "lucide-react";
 import { useTranslation } from "@/app/i18n";
 import { useThemeStore } from "@/app/stores";
 import { Button, Sheet } from "@/app/components/ui";
-import { SourcesStatusList } from "@/app/components/shared";
+import { SourcesStatusList } from "./SourcesStatus";
 import { REPO_URL } from "@/shared/config";
 
 const SettingRow = memo(function SettingRow({

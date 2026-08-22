@@ -6,7 +6,8 @@ import { useFilteredData } from "@/app/hooks";
 import { cn, formatDate } from "@/shared/utils";
 import { useSuspenseOpenSourceReleases, useSuspenseArtificialRankings } from "@/app/api/queries";
 import { SuspenseQuery, SearchInput } from "@/app/components/shared";
-import { TabContainer, type TabItem, RightAlignedText } from "@/app/components/composite";
+import { TabContainer, type TabItem } from "@/app/components/ui";
+import { RightAlignedText } from "@/app/components/data";
 import { PageContainer, PageHeader } from "@/app/components/layout";
 import type { OpenSourceModelEntry, ArtificialAnalysisModel } from "@/shared/types";
 

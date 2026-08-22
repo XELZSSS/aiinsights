@@ -4,12 +4,12 @@ import { useTranslation } from "@/app/i18n";
 import { useSuspenseArtificialRankings, useSuspenseHomeDashboard } from "@/app/api/queries";
 import { useSuspenseHallucinationRankings } from "@/app/domain/hallucination";
 import { SuspenseQuery, SearchInput } from "@/app/components/shared";
-import { StatCard, CardGrid } from "@/app/components/composite";
-import { Card, CardContent, Dot } from "@/app/components/ui";
+import { StatCard, CardGrid, Card, CardContent, Dot } from "@/app/components/ui";
 import { PageContainer, PageSection } from "@/app/components/layout";
 import { getModelColor, computeProviderStats, formatShortNumber } from "@/shared/utils";
 import type { ArenaModel, ArtificialAnalysisModel, HallucinationRankingEntry, HomeDashboardData } from "@/shared/types";
 import type { TranslationKey } from "@/shared/i18n";
+import type { HomeBarStat } from "./charts";
 
 interface HomeKpi {
   label: string;
@@ -22,12 +22,6 @@ interface HomeProviderStat {
   color: string;
   avgSpeed: number;
   count: number;
-}
-
-export interface HomeBarStat {
-  label: string;
-  value: number;
-  valueLabel: string;
 }
 
 /** Renders the ELO rating as a "point (lower–upper)" confidence interval when present. */

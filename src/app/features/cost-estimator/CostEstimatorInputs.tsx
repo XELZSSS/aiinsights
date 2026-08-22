@@ -3,7 +3,7 @@ import { Input } from "@/app/components/ui";
 import { useTranslation } from "@/app/i18n";
 import { formatDollar } from "@/shared/utils";
 import type { TFunction } from "@/shared/i18n";
-import type { CostInputState } from "@/app/hooks/useCostEstimator";
+import type { CostInputState } from "./useCostEstimator";
 
 interface CostFieldDef {
   value: string;
@@ -43,7 +43,7 @@ export const CostEstimatorInputs = memo(function CostEstimatorInputs({
 
   return (
     <>
-      {fields.map((field, _i) =>
+      {fields.map((field) =>
         layout === "label-input-unit" ? (
           <div key={field.label} className="flex items-center gap-2">
             <label className="text-xs text-text-secondary whitespace-nowrap">{field.label}</label>

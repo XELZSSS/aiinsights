@@ -6,7 +6,7 @@ import { Card, Dot, Pagination } from "@/app/components/ui";
 import { useNewsByCategory } from "@/app/api/queries";
 import { Spinner } from "@/app/components/shared";
 import { safeHref, formatRelativeTime, COOL_COLORS } from "@/shared/utils";
-import { TabContainer, type TabItem } from "@/app/components/composite";
+import { TabContainer, type TabItem } from "@/app/components/ui";
 import type { NewsItem, NewsCategory } from "@/shared/types";
 import { useDevice } from "@/app/device";
 import { usePagination } from "@/app/hooks";
