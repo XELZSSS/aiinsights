@@ -21,15 +21,3 @@ export const Badge = memo(function Badge({ variant = "default", className, child
   );
 });
 
-export const TagBadge = memo(function TagBadge({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center text-[11px] sm:text-xs leading-[16px] px-1.5 py-0.5 rounded-[4px] border border-border bg-bg-secondary text-text-secondary",
-        className,
-      )}
-    >
-      {children}
-    </span>
-  );
-});

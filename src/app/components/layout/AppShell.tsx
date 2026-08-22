@@ -38,18 +38,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         {t("skipToContent")}
       </a>
       <DesktopNav onSettingsOpen={() => setSettingsOpen(true)} />
-      {/* Bottom padding keeps content clear of the fixed mobile nav (plus iOS safe-area). */}
+      {/* Bottom padding keeps content clear of the floating mobile nav (plus iOS safe-area). */}
       <main
         ref={mainRef}
         id="main-content"
         tabIndex={-1}
-        className="flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable] pb-[calc(3.5rem+env(safe-area-inset-bottom,0px))] md:pb-4"
+        className="flex-1 min-h-0 overflow-y-auto [scrollbar-gutter:stable] pb-[calc(5rem+env(safe-area-inset-bottom,0px))] md:pb-4"
       >
         {children}
       </main>
-      <MobileNav onMoreOpen={() => setMobileMoreOpen(true)} />
+      <MobileNav onMoreOpen={() => setMobileMoreOpen(true)} onSettingsOpen={() => setSettingsOpen(true)} />
       <SettingsSheet open={settingsOpen} onClose={closeSettings} />
-      <MobileMoreSheet open={mobileMoreOpen} onClose={closeMore} onSettingsOpen={() => setSettingsOpen(true)} />
+      <MobileMoreSheet open={mobileMoreOpen} onClose={closeMore} />
     </div>
   );
 }

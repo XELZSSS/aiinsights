@@ -2,7 +2,7 @@
 export { Button } from "./button";
 export { Card, CardContent } from "./card";
 export { Input } from "./input";
-export { Badge, TagBadge } from "./badge";
+export { Badge } from "./badge";
 export { Dot } from "./dot";
 export { Th, Td, Tr } from "./table";
 export { Pagination } from "./pagination";
